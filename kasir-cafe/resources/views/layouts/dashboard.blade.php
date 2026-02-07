@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_','-', app()->getLocale()) }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ config('app.name','Kasir Cafe') }}</title>
+  @vite(['resources/css/app.css','resources/js/app.js'])
+</head>
+<body class="bg-gray-50">
+<div x-data="{ open:false }" class="min-h-screen">
+
+  <header class="sticky top-0 z-30 bg-white border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button @click="open=!open" class="lg:hidden p-2 rounded hover:bg-gray-100">☰</button>
+        <div class="font-semibold">{{ config('app.name','Kasir Cafe') }}</div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="text-sm text-gray-600">{{ auth()->user()->name }}</div>
+        <form method="POST" action="{{ route('logout') }}">
+          @csrf
+          <button class="text-sm px-3 py-1.5 rounded bg-gray-900 text-white hover:bg-gray-800">Logout</button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex">
+      <aside class="hidden lg:block w-64 py-6">
+        @include('partials.sidebar')
+      </aside>
+
+      <div class="lg:hidden">
+        <div x-show="open" class="fixed inset-0 z-40 bg-black/40" @click="open=false"></div>
+        <aside x-show="open" class="fixed z-50 top-0 left-0 w-72 h-full bg-white p-4 shadow">
+          <div class="flex items-center justify-between mb-4">
+            <div class="font-semibold">Menu</div>
+            <button @click="open=false" class="p-2 rounded hover:bg-gray-100">✕</button>
+          </div>
+          @include('partials.sidebar')
+        </aside>
+      </div>
+
+      <main class="flex-1 py-6 lg:pl-8">
+        @yield('content')
+      </main>
+    </div>
+  </div>
+</div>
+
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</body>
+</html>
