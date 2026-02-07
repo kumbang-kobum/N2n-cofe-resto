@@ -6,25 +6,47 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use App\Models\User;
+use App\Models\Unit;
+use App\Models\UnitConversion;
 
 class BootstrapSeeder extends Seeder
 {
     public function run(): void
     {
-        Role::firstOrCreate(['name' => 'admin']);
-        Role::firstOrCreate(['name' => 'manager']);
-        Role::firstOrCreate(['name' => 'cashier']);
+        // === Units ===
+        $g   = Unit::firstOrCreate(['symbol' => 'g'],   ['name' => 'Gram']);
+        $kg  = Unit::firstOrCreate(['symbol' => 'kg'],  ['name' => 'Kilogram']);
+        $ml  = Unit::firstOrCreate(['symbol' => 'ml'],  ['name' => 'Milliliter']);
+        $l   = Unit::firstOrCreate(['symbol' => 'l'],   ['name' => 'Liter']);
+        $pcs = Unit::firstOrCreate(['symbol' => 'pcs'], ['name' => 'Pieces']);
 
+        // === Unit Conversions ===
+        UnitConversion::firstOrCreate(
+            ['from_unit_id' => $kg->id, 'to_unit_id' => $g->id],
+            ['multiplier' => 1000]
+        );
+
+        UnitConversion::firstOrCreate(
+            ['from_unit_id' => $l->id, 'to_unit_id' => $ml->id],
+            ['multiplier' => 1000]
+        );
+
+        // === Roles ===
+        $adminRole   = Role::firstOrCreate(['name' => 'admin']);
+        $managerRole = Role::firstOrCreate(['name' => 'manager']);
+        $cashierRole = Role::firstOrCreate(['name' => 'cashier']);
+
+        // === Users ===
         $admin = User::firstOrCreate(
             ['email' => 'admin@demo.local'],
             ['name' => 'Admin', 'password' => Hash::make('password')]
         );
-        $admin->syncRoles(['admin']);
+        $admin->syncRoles([$adminRole]);
 
         $cashier = User::firstOrCreate(
             ['email' => 'kasir@demo.local'],
             ['name' => 'Kasir', 'password' => Hash::make('password')]
         );
-        $cashier->syncRoles(['cashier']);
+        $cashier->syncRoles([$cashierRole]);
     }
 }
