@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\AuditLog;
 
 class StockOpname extends Model
 {
@@ -30,5 +31,10 @@ class StockOpname extends Model
     public function poster(): BelongsTo
     {
         return $this->belongsTo(User::class, 'posted_by');
+    }
+
+    public function audits()
+    {
+        return $this->morphMany(AuditLog::class, 'auditable')->latest();
     }
 }

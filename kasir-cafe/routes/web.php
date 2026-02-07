@@ -51,18 +51,25 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/expired', [ExpiredController::class, 'index'])->name('admin.expired.index');
         Route::post('/expired/{batchId}/dispose', [ExpiredController::class, 'dispose'])->name('admin.expired.dispose');
 
-        // Stock Opname
+       // Stock Opname
         Route::get('/stock-opname', [StockOpnameController::class, 'index'])->name('admin.stock_opname.index');
         Route::get('/stock-opname/create', [StockOpnameController::class, 'create'])->name('admin.stock_opname.create');
         Route::post('/stock-opname', [StockOpnameController::class, 'store'])->name('admin.stock_opname.store');
 
         Route::get('/stock-opname/{id}', [StockOpnameController::class, 'show'])->name('admin.stock_opname.show');
-
-        // ✅ NEW: edit/update sebelum POST (isi expired & cost)
         Route::get('/stock-opname/{id}/edit', [StockOpnameController::class, 'edit'])->name('admin.stock_opname.edit');
         Route::post('/stock-opname/{id}/update', [StockOpnameController::class, 'update'])->name('admin.stock_opname.update');
 
         Route::post('/stock-opname/{id}/post', [StockOpnameController::class, 'post'])->name('admin.stock_opname.post');
+
+        // ✅ CANCEL
+        Route::post('/stock-opname/{id}/cancel', [StockOpnameController::class, 'cancel'])->name('admin.stock_opname.cancel');
+
+        // ✅ PDF
+        Route::get('/stock-opname/{id}/pdf', [StockOpnameController::class, 'pdf'])->name('admin.stock_opname.pdf');
+
+        // ✅ Report variance opname
+        Route::get('/reports/opname-variance', [ReportController::class,'opnameVariance'])->name('admin.reports.opname_variance');
     });
 
     // ======================
