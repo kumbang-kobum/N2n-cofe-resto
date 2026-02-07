@@ -11,26 +11,30 @@ class UnitConverter
     {
         if ($fromUnitId === $baseUnitId) return $qty;
 
-        $conv = UnitConversion::where('from_unit_id',$fromUnitId)
-            ->where('to_unit_id',$baseUnitId)
+        $conv = UnitConversion::where('from_unit_id', $fromUnitId)
+            ->where('to_unit_id', $baseUnitId)
             ->first();
 
-        if (!$conv) throw new RuntimeException("Konversi unit tidak ditemukan.");
+        if (!$conv) {
+            throw new RuntimeException("Konversi unit tidak ditemukan (from {$fromUnitId} -> base {$baseUnitId}).");
+        }
 
-        return $qty * (float)$conv->multiplier;
+        return $qty * (float) $conv->multiplier;
     }
 
     public function costToBase(float $unitCost, int $fromUnitId, int $baseUnitId): float
     {
         if ($fromUnitId === $baseUnitId) return $unitCost;
 
-        $conv = UnitConversion::where('from_unit_id',$fromUnitId)
-            ->where('to_unit_id',$baseUnitId)
+        $conv = UnitConversion::where('from_unit_id', $fromUnitId)
+            ->where('to_unit_id', $baseUnitId)
             ->first();
 
-        if (!$conv) throw new RuntimeException("Konversi unit untuk cost tidak ditemukan.");
+        if (!$conv) {
+            throw new RuntimeException("Konversi unit (cost) tidak ditemukan (from {$fromUnitId} -> base {$baseUnitId}).");
+        }
 
-        // cost per kg -> cost per g = cost/kg ÷ 1000
-        return $unitCost / (float)$conv->multiplier;
+        // contoh: cost per kg -> cost per g = cost/kg ÷ 1000
+        return $unitCost / (float) $conv->multiplier;
     }
 }

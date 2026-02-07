@@ -43,6 +43,12 @@
       </div>
 
       <main class="flex-1 py-6 lg:pl-8">
+        @if(session('status'))
+          <div class="mb-4 p-3 rounded bg-green-50 text-green-800 border border-green-200">
+            {{ session('status') }}
+          </div>
+        @endif
+
         @yield('content')
       </main>
     </div>
