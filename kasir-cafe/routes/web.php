@@ -2,19 +2,51 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
+use App\Http\Controllers\Manager\DashboardController as ManagerDashboard;
+use App\Http\Controllers\Cashier\PosController;
+use App\Http\Controllers\Admin\ReceivingController;
+use App\Http\Controllers\Admin\RecipeController;
+use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\ReportController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', fn() => view('welcome'));
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::middleware(['auth'])->group(function () {
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/dashboard', function () {
+        $u = auth()->user();
+        if ($u->hasRole('admin')) return redirect()->route('admin.dashboard');
+        if ($u->hasRole('manager')) return redirect()->route('manager.dashboard');
+        return redirect()->route('cashier.pos');
+    })->name('dashboard');
+
+    Route::prefix('admin')->middleware('role:admin')->group(function () {
+        Route::get('/dashboard', [AdminDashboard::class,'index'])->name('admin.dashboard');
+
+        Route::get('/receivings', [ReceivingController::class,'index'])->name('admin.receivings.index');
+        Route::get('/receivings/create', [ReceivingController::class,'create'])->name('admin.receivings.create');
+        Route::post('/receivings', [ReceivingController::class,'store'])->name('admin.receivings.store');
+
+        Route::get('/recipes', [RecipeController::class,'index'])->name('admin.recipes.index');
+        Route::get('/recipes/{productId}/edit', [RecipeController::class,'edit'])->name('admin.recipes.edit');
+        Route::post('/recipes/{productId}', [RecipeController::class,'update'])->name('admin.recipes.update');
+
+        Route::get('/stock', [StockController::class,'index'])->name('admin.stock.index');
+
+        Route::get('/reports/sales', [ReportController::class,'sales'])->name('admin.reports.sales');
+    });
+
+    Route::prefix('manager')->middleware('role:manager|admin')->group(function () {
+        Route::get('/dashboard', [ManagerDashboard::class,'index'])->name('manager.dashboard');
+    });
+
+    Route::prefix('cashier')->middleware('role:cashier|admin')->group(function () {
+        Route::get('/pos', [PosController::class,'index'])->name('cashier.pos');
+        Route::post('/pos/new', [PosController::class,'newSale'])->name('cashier.pos.new');
+        Route::post('/pos/add', [PosController::class,'addLine'])->name('cashier.pos.add');
+        Route::post('/pos/pay', [PosController::class,'pay'])->name('cashier.pos.pay');
+    });
 });
 
 require __DIR__.'/auth.php';
