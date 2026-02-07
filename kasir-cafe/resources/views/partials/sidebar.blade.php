@@ -68,4 +68,8 @@
     </a>
   @endif
 
+  <a href="{{ route('admin.reports.opname_variance') }}" class="block px-3 py-2 rounded hover:bg-gray-100">
+  Laporan Selisih Opname
+  </a>
+
 </nav>

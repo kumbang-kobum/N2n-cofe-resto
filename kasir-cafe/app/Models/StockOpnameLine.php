@@ -30,7 +30,7 @@ class StockOpnameLine extends Model
 
     public function item(): BelongsTo
     {
-        return $this->belongsTo(Item::class);
+        return $this->belongsTo(\App\Models\Item::class);
     }
 
     public function inputUnit(): BelongsTo

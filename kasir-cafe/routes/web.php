@@ -70,6 +70,13 @@ Route::middleware(['auth'])->group(function () {
 
         // ✅ Report variance opname
         Route::get('/reports/opname-variance', [ReportController::class,'opnameVariance'])->name('admin.reports.opname_variance');
+
+        // === Stock Opname Variance Report ===
+        Route::get('/reports/opname-variance', [\App\Http\Controllers\Admin\OpnameVarianceReportController::class, 'index'])
+            ->name('admin.reports.opname_variance');
+
+        Route::get('/reports/opname-variance/pdf', [\App\Http\Controllers\Admin\OpnameVarianceReportController::class, 'pdf'])
+            ->name('admin.reports.opname_variance.pdf');
     });
 
     // ======================
