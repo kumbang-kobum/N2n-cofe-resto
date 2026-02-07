@@ -17,10 +17,8 @@ class ReceivingController extends Controller
 {
     public function index()
     {
-        $purchases = Purchase::query()
-            ->with('lines.item')
+        $purchases = Purchase::with('lines.item')
             ->orderByDesc('received_at')
-            ->limit(50)
             ->get();
 
         return view('admin.receivings.index', compact('purchases'));
@@ -28,7 +26,11 @@ class ReceivingController extends Controller
 
     public function create()
     {
-        $items = Item::with('baseUnit')->where('is_active', true)->orderBy('name')->get();
+        $items = Item::with('baseUnit')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
         $units = Unit::orderBy('symbol')->get();
 
         return view('admin.receivings.create', compact('items', 'units'));
@@ -38,14 +40,13 @@ class ReceivingController extends Controller
     {
         $request->validate([
             'received_at' => ['required', 'date'],
-            'supplier_name' => ['nullable', 'string', 'max:255'],
-
+            'supplier_name' => ['nullable', 'string'],
             'lines' => ['required', 'array', 'min:1'],
             'lines.*.item_id' => ['required', 'exists:items,id'],
             'lines.*.qty' => ['required', 'numeric', 'gt:0'],
             'lines.*.unit_id' => ['required', 'exists:units,id'],
             'lines.*.unit_cost' => ['required', 'numeric', 'gte:0'],
-            'lines.*.expired_at' => ['required', 'date'], // wajib
+            'lines.*.expired_at' => ['required', 'date'],
         ]);
 
         DB::transaction(function () use ($request, $converter) {
@@ -57,39 +58,42 @@ class ReceivingController extends Controller
             ]);
 
             foreach ($request->lines as $line) {
-                /** @var \App\Models\Item $item */
-                $item = Item::findOrFail((int)$line['item_id']);
+                $item = Item::findOrFail($line['item_id']);
 
-                $qty = (float)$line['qty'];
-                $unitId = (int)$line['unit_id'];
-                $unitCost = (float)$line['unit_cost'];
-                $expiredAt = $line['expired_at'];
-
-                // simpan purchase_lines (audit input)
+                // simpan audit purchase_line
                 $pl = PurchaseLine::create([
                     'purchase_id' => $purchase->id,
                     'item_id' => $item->id,
-                    'qty' => $qty,
-                    'unit_id' => $unitId,
-                    'unit_cost' => $unitCost,
-                    'expired_at' => $expiredAt,
+                    'qty' => $line['qty'],
+                    'unit_id' => $line['unit_id'],
+                    'unit_cost' => $line['unit_cost'],
+                    'expired_at' => $line['expired_at'],
                 ]);
 
                 // konversi ke base unit
-                $qtyBase = $converter->toBase($qty, $unitId, $item->base_unit_id);
-                $costBase = $converter->costToBase($unitCost, $unitId, $item->base_unit_id);
+                $qtyBase = $converter->toBase(
+                    $line['qty'],
+                    $line['unit_id'],
+                    $item->base_unit_id
+                );
 
-                // create batch
+                $costBase = $converter->costToBase(
+                    $line['unit_cost'],
+                    $line['unit_id'],
+                    $item->base_unit_id
+                );
+
+                // batch expired
                 $batch = ItemBatch::create([
                     'item_id' => $item->id,
                     'received_at' => $purchase->received_at,
-                    'expired_at' => $expiredAt,
+                    'expired_at' => $line['expired_at'],
                     'qty_on_hand_base' => $qtyBase,
                     'unit_cost_base' => $costBase,
                     'status' => 'ACTIVE',
                 ]);
 
-                // stock move receipt (+)
+                // ledger receipt
                 StockMove::create([
                     'moved_at' => $purchase->received_at,
                     'item_id' => $item->id,
@@ -99,11 +103,12 @@ class ReceivingController extends Controller
                     'ref_type' => 'purchase_line',
                     'ref_id' => $pl->id,
                     'created_by' => auth()->id(),
-                    'note' => $purchase->supplier_name,
                 ]);
             }
         });
 
-        return redirect()->route('admin.receivings.index')->with('status', 'Penerimaan stok tersimpan.');
+        return redirect()
+            ->route('admin.receivings.index')
+            ->with('status', 'Penerimaan stok berhasil');
     }
 }

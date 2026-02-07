@@ -1,20 +1,71 @@
-<nav class="space-y-2">
-  @role('admin')
-    <a class="block px-3 py-2 rounded hover:bg-gray-100" href="{{ route('admin.dashboard') }}">Admin</a>
-    <a class="block px-3 py-2 rounded hover:bg-gray-100" href="{{ route('admin.units.index') }}">Satuan & Konversi</a>
-    <a class="block px-3 py-2 rounded hover:bg-gray-100" href="{{ route('admin.items.index') }}">Master Bahan</a>
-    <a class="block px-3 py-2 rounded hover:bg-gray-100" href="{{ route('admin.products.index') }}">Master Menu</a>
-    <a class="block px-3 py-2 rounded hover:bg-gray-100" href="{{ route('admin.recipes.index') }}">Resep (BOM)</a>
-    <a class="block px-3 py-2 rounded hover:bg-gray-100" href="{{ route('admin.receivings.index') }}">Penerimaan Stok</a>
-    <a class="block px-3 py-2 rounded hover:bg-gray-100" href="{{ route('admin.stock.index') }}">Stok</a>
-    <a class="block px-3 py-2 rounded hover:bg-gray-100" href="{{ route('admin.reports.sales') }}">Laporan</a>
-  @endrole
+<nav class="space-y-1">
 
-  @role('admin|manager')
-    <a class="block px-3 py-2 rounded hover:bg-gray-100" href="{{ route('manager.dashboard') }}">Manajer</a>
-  @endrole
+  {{-- DASHBOARD --}}
+  @if(Route::has('admin.dashboard'))
+    <a href="{{ route('admin.dashboard') }}" class="block px-3 py-2 rounded hover:bg-gray-100">
+      Dashboard
+    </a>
+  @endif
 
-  @role('admin|cashier')
-    <a class="block px-3 py-2 rounded hover:bg-gray-100" href="{{ route('cashier.pos') }}">Kasir (POS)</a>
-  @endrole
+  {{-- MASTER DATA --}}
+  <div class="mt-4 text-xs font-semibold text-gray-500 uppercase">Master Data</div>
+
+  @if(Route::has('admin.units.index'))
+    <a href="{{ route('admin.units.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100">
+      Units
+    </a>
+  @endif
+
+  @if(Route::has('admin.items.index'))
+    <a href="{{ route('admin.items.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100">
+      Items / Bahan
+    </a>
+  @endif
+
+  @if(Route::has('admin.products.index'))
+    <a href="{{ route('admin.products.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100">
+      Produk / Menu
+    </a>
+  @endif
+
+  {{-- OPERASIONAL --}}
+  <div class="mt-4 text-xs font-semibold text-gray-500 uppercase">Operasional</div>
+
+  @if(Route::has('admin.recipes.index'))
+    <a href="{{ route('admin.recipes.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100">
+      Resep / BOM
+    </a>
+  @endif
+
+  @if(Route::has('admin.receivings.index'))
+    <a href="{{ route('admin.receivings.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100">
+      Receiving Stok
+    </a>
+  @endif
+
+  @if(Route::has('admin.stock.index'))
+    <a href="{{ route('admin.stock.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100">
+      Stok Bahan
+    </a>
+  @endif
+
+  @if(Route::has('admin.expired.index'))
+    <a href="{{ route('admin.expired.index') }}" class="block px-3 py-2 rounded hover:bg-gray-100 text-red-600">
+      Expired Disposal
+    </a>
+  @endif
+
+  @if(Route::has('admin.stock_opname.index'))
+  <a class="block px-3 py-2 rounded hover:bg-gray-100" href="{{ route('admin.stock_opname.index') }}">Stock Opname</a>
+@endif
+
+  {{-- LAPORAN --}}
+  <div class="mt-4 text-xs font-semibold text-gray-500 uppercase">Laporan</div>
+
+  @if(Route::has('admin.reports.sales'))
+    <a href="{{ route('admin.reports.sales') }}" class="block px-3 py-2 rounded hover:bg-gray-100">
+      Laporan Penjualan
+    </a>
+  @endif
+
 </nav>
