@@ -28,4 +28,30 @@ class ReportController extends Controller
 
         return view('admin.reports.sales', compact('sales', 'from', 'to', 'summary'));
     }
+
+    public function opnameVariance(Request $request)
+    {
+        $from = $request->input('from', now()->startOfMonth()->toDateString());
+        $to   = $request->input('to', now()->toDateString());
+
+        $rows = \App\Models\StockOpnameLine::query()
+            ->select([
+                'stock_opname_lines.*',
+                'stock_opnames.code as opname_code',
+                'stock_opnames.counted_at',
+                'stock_opnames.status as opname_status',
+                'items.name as item_name',
+            ])
+            ->join('stock_opnames','stock_opnames.id','=','stock_opname_lines.stock_opname_id')
+            ->join('items','items.id','=','stock_opname_lines.item_id')
+            ->whereBetween('stock_opnames.counted_at', [$from, $to])
+            ->where('stock_opnames.status','!=','CANCELLED')
+            ->whereRaw('ABS(stock_opname_lines.diff_qty_base) > 0.000001')
+            ->orderByDesc('stock_opnames.counted_at')
+            ->orderBy('items.name')
+            ->paginate(50)
+            ->withQueryString();
+
+        return view('admin.reports.opname_variance', compact('rows','from','to'));
+    }
 }

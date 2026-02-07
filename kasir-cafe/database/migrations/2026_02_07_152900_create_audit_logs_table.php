@@ -9,18 +9,14 @@ return new class extends Migration {
     {
         Schema::create('audit_logs', function (Blueprint $table) {
             $table->id();
-
             $table->unsignedBigInteger('actor_id')->nullable()->index();
             $table->string('action', 80)->index();
-
             $table->string('auditable_type', 120)->index();
             $table->unsignedBigInteger('auditable_id')->index();
-
             $table->json('meta')->nullable();
-
             $table->timestamps();
 
-            $table->index(['auditable_type', 'auditable_id']);
+            $table->index(['auditable_type','auditable_id']);
         });
     }
 
