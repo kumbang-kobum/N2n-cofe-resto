@@ -28,7 +28,7 @@ class StockOpnameController extends Controller
     public function create()
     {
         $items = Item::with('baseUnit')
-            ->where('is_active', true)
+            ->where('is_active', 1) // ✅ lebih aman daripada true
             ->orderBy('name')
             ->get();
 
@@ -48,6 +48,7 @@ class StockOpnameController extends Controller
         $request->validate([
             'counted_at' => ['required', 'date'],
             'note' => ['nullable', 'string', 'max:500'],
+
             'lines' => ['required', 'array', 'min:1'],
             'lines.*.item_id' => ['required', 'exists:items,id'],
             'lines.*.physical_qty' => ['required', 'numeric', 'gte:0'],
@@ -57,6 +58,7 @@ class StockOpnameController extends Controller
         ]);
 
         $opname = DB::transaction(function () use ($request, $converter) {
+
             $code = $this->nextCode($request->counted_at);
 
             $opname = StockOpname::create([
@@ -71,9 +73,9 @@ class StockOpnameController extends Controller
                 $item = Item::findOrFail($line['item_id']);
 
                 $physicalBase = $converter->toBase(
-                    $line['physical_qty'],
-                    $line['unit_id'],
-                    $item->base_unit_id
+                    (float)$line['physical_qty'],
+                    (int)$line['unit_id'],
+                    (int)$item->base_unit_id
                 );
 
                 $systemBase = (float) ItemBatch::where('item_id', $item->id)
@@ -82,24 +84,26 @@ class StockOpnameController extends Controller
 
                 $diff = $physicalBase - $systemBase;
 
-                // simpan semua line (audit), tapi kamu boleh skip jika physical_qty kosong
-                $unitCostBase = 0;
+                $unitCostBase = 0.0;
                 if (!empty($line['unit_cost'])) {
                     $unitCostBase = $converter->costToBase(
-                        $line['unit_cost'],
-                        $line['unit_id'],
-                        $item->base_unit_id
+                        (float)$line['unit_cost'],
+                        (int)$line['unit_id'],
+                        (int)$item->base_unit_id
                     );
                 }
 
                 StockOpnameLine::create([
                     'stock_opname_id' => $opname->id,
                     'item_id' => $item->id,
+
                     'system_qty_base' => $systemBase,
                     'physical_qty_base' => $physicalBase,
                     'diff_qty_base' => $diff,
-                    'physical_qty' => $line['physical_qty'],
-                    'input_unit_id' => $line['unit_id'],
+
+                    'physical_qty' => (float)$line['physical_qty'],
+                    'input_unit_id' => (int)$line['unit_id'],
+
                     'expired_at' => $line['expired_at'] ?? null,
                     'unit_cost_base' => $unitCostBase,
                 ]);
@@ -120,10 +124,58 @@ class StockOpnameController extends Controller
         return view('admin.stock_opname.show', compact('opname'));
     }
 
+    // ✅ NEW: edit untuk isi expired/cost sebelum post
+    public function edit(int $id)
+    {
+        $opname = StockOpname::with(['lines.item.baseUnit'])->findOrFail($id);
+        abort_if($opname->status !== 'DRAFT', 400, 'Opname sudah diposting / dibatalkan.');
+
+        return view('admin.stock_opname.edit', compact('opname'));
+    }
+
+    // ✅ NEW: update untuk expired/cost sebelum post
+    public function update(Request $request, int $id)
+    {
+        $opname = StockOpname::with(['lines.item'])->findOrFail($id);
+        abort_if($opname->status !== 'DRAFT', 400, 'Opname sudah diposting / dibatalkan.');
+
+        $request->validate([
+            'lines' => ['required', 'array'],
+            'lines.*.id' => ['required', 'exists:stock_opname_lines,id'],
+            'lines.*.expired_at' => ['nullable', 'date'],
+            'lines.*.unit_cost_base' => ['nullable', 'numeric', 'gte:0'],
+        ]);
+
+        foreach ($request->lines as $l) {
+            $line = $opname->lines->firstWhere('id', (int)$l['id']);
+            if (!$line) continue;
+
+            // expired WAJIB kalau diff plus
+            if ((float)$line->diff_qty_base > 0 && empty($l['expired_at'])) {
+                return back()
+                    ->withErrors(["expired_at" => "Expired wajib untuk item {$line->item->name} karena selisih plus."])
+                    ->withInput();
+            }
+
+            $line->expired_at = $l['expired_at'] ?? null;
+
+            if (isset($l['unit_cost_base']) && $l['unit_cost_base'] !== null && $l['unit_cost_base'] !== '') {
+                $line->unit_cost_base = (float)$l['unit_cost_base'];
+            }
+
+            $line->save();
+        }
+
+        return redirect()->route('admin.stock_opname.show', $opname->id)
+            ->with('status', 'Opname diupdate. Sekarang bisa POST.');
+    }
+
     public function post(int $id, UnitConverter $converter, FefoAllocator $allocator)
     {
-        DB::transaction(function () use ($id, $converter, $allocator) {
-            $opname = StockOpname::lockForUpdate()->with(['lines.item'])->findOrFail($id);
+        DB::transaction(function () use ($id, $allocator) {
+            $opname = StockOpname::lockForUpdate()
+                ->with(['lines.item'])
+                ->findOrFail($id);
 
             if ($opname->status !== 'DRAFT') {
                 abort(400, 'Opname sudah diposting / dibatalkan.');
@@ -170,7 +222,7 @@ class StockOpnameController extends Controller
 
                     foreach ($allocs as $a) {
                         $batch = $a['batch'];
-                        $take  = $a['take'];
+                        $take  = (float)$a['take'];
 
                         $batch->qty_on_hand_base -= $take;
                         if ($batch->qty_on_hand_base <= 0) {
