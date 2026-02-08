@@ -13,8 +13,17 @@ use App\Http\Controllers\Admin\ReportController;
 
 use App\Http\Controllers\Admin\ExpiredController;
 use App\Http\Controllers\Admin\StockOpnameController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Models\Product;
 
-Route::get('/', fn() => view('welcome'));
+Route::get('/', function () {
+    $products = Product::where('is_active', true)
+        ->orderBy('name')
+        ->take(12)
+        ->get();
+
+    return view('welcome', compact('products'));
+})->name('landing');
 
 Route::middleware(['auth'])->group(function () {
 
@@ -59,6 +68,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/stock-opname/{id}/cancel', [StockOpnameController::class,'cancel'])->name('admin.stock_opname.cancel');
 
         Route::get('/stock-opname/{id}/pdf', [StockOpnameController::class,'pdf'])->name('admin.stock_opname.pdf');
+        Route::resource('products', ProductController::class);
     });
 
     Route::prefix('manager')->middleware('role:manager|admin')->group(function () {

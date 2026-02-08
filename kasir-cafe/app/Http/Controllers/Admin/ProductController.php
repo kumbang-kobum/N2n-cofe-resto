@@ -26,25 +26,22 @@ class ProductController extends Controller
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:255'],
             'price_default' => ['required', 'numeric', 'min:0'],
-            'is_active'     => ['required', 'boolean'],
-            'image'         => ['nullable', 'image', 'max:2048'], // 2MB
+            'is_active'     => ['nullable', 'boolean'],
+            'image'         => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
-        $imagePath = null;
+        $data['is_active'] = $request->boolean('is_active');
+
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('products', 'public');
+            // simpan ke storage/app/public/products
+            $data['image_path'] = $request->file('image')->store('products', 'public');
         }
 
-        Product::create([
-            'name'          => $data['name'],
-            'price_default' => $data['price_default'],
-            'is_active'     => $data['is_active'],
-            'image_path'    => $imagePath,
-        });
+        Product::create($data);
 
         return redirect()
             ->route('admin.products.index')
-            ->with('status', 'Produk berhasil dibuat.');
+            ->with('status', 'Produk berhasil ditambahkan.');
     }
 
     public function edit(Product $product)
@@ -57,22 +54,21 @@ class ProductController extends Controller
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:255'],
             'price_default' => ['required', 'numeric', 'min:0'],
-            'is_active'     => ['required', 'boolean'],
-            'image'         => ['nullable', 'image', 'max:2048'],
+            'is_active'     => ['nullable', 'boolean'],
+            'image'         => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
+        $data['is_active'] = $request->boolean('is_active');
+
         if ($request->hasFile('image')) {
-            if ($product->image_path && Storage::disk('public')->exists($product->image_path)) {
+            if ($product->image_path) {
                 Storage::disk('public')->delete($product->image_path);
             }
 
-            $product->image_path = $request->file('image')->store('products', 'public');
+            $data['image_path'] = $request->file('image')->store('products', 'public');
         }
 
-        $product->name          = $data['name'];
-        $product->price_default = $data['price_default'];
-        $product->is_active     = $data['is_active'];
-        $product->save();
+        $product->update($data);
 
         return redirect()
             ->route('admin.products.index')
@@ -81,7 +77,7 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        if ($product->image_path && Storage::disk('public')->exists($product->image_path)) {
+        if ($product->image_path) {
             Storage::disk('public')->delete($product->image_path);
         }
 
@@ -89,6 +85,6 @@ class ProductController extends Controller
 
         return redirect()
             ->route('admin.products.index')
-            ->with('status', 'Produk dihapus.');
+            ->with('status', 'Produk berhasil dihapus.');
     }
 }
