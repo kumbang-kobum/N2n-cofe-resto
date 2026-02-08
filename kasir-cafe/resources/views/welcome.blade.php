@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>{{ config('app.name','Kasir Cafe') }}</title>
+  <title>{{ config('app.name','n2N Kasir Cafe') }}</title>
 
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -23,7 +23,7 @@
               {{ config('app.name','Kasir Cafe') }}
             </div>
             <div class="text-xs text-slate-500">
-              Sistem Kasir & Stok untuk Cafe & Resto
+              n2N Sistem Kasir & Stok untuk Cafe & Resto
             </div>
           </div>
         </div>
@@ -31,7 +31,7 @@
         <div class="flex items-center gap-2">
           <a href="{{ route('login') }}"
              class="hidden sm:inline-flex px-3 py-2 rounded border border-blue-600 text-blue-600 text-sm hover:bg-blue-50">
-            Login Admin / Kasir
+            Login Admin / Kasir / Manager
           </a>
           @if (Route::has('register'))
             <a href="{{ route('register') }}"
@@ -210,8 +210,8 @@
 
     <footer class="mt-auto border-t bg-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
-        <div>&copy; {{ date('Y') }} {{ config('app.name','Kasir Cafe') }}</div>
-        <div>Sistem kasir & stok untuk cafe & resto</div>
+        <div>&copy; {{ date('Y') }} {{ config('app.name','n2N Kasir Cafe') }}</div>
+        <div>n2N Sistem kasir & stok untuk cafe & resto</div>
       </div>
     </footer>
   </div>
