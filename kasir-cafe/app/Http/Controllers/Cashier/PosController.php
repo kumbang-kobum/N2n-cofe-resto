@@ -19,6 +19,30 @@ class PosController extends Controller
     /**
      * Halaman utama POS kasir.
      */
+    protected function generateReceiptNo(): string
+    {
+        $today = Carbon::today();
+
+        // Cari nota terakhir di hari ini
+        $last = Sale::whereDate('created_at', $today->toDateString())
+            ->whereNotNull('receipt_no')
+            ->orderByDesc('id')
+            ->first();
+
+        $seq = 1;
+
+        if ($last && $last->receipt_no) {
+            // Format: NT/dd/mm/YYYY/000001  → ambil angka terakhir
+            $parts = explode('/', $last->receipt_no);
+            $lastNumber = (int) end($parts);
+            $seq = $lastNumber + 1;
+        }
+
+        $number = str_pad($seq, 6, '0', STR_PAD_LEFT);
+
+        return 'NT/' . $today->format('d/m/Y') . '/' . $number;
+    }
+
     public function index(Request $request)
     {
         $sale = null;
@@ -66,9 +90,10 @@ class PosController extends Controller
     public function newSale()
     {
         $sale = Sale::create([
-            'status'     => 'DRAFT',
+            'receipt_no' => $this->generateReceiptNo(),
+            'status' => 'DRAFT',
             'cashier_id' => auth()->id(),
-            'total'      => 0,
+            'total' => 0,
         ]);
 
         return redirect()
@@ -223,11 +248,11 @@ class PosController extends Controller
 
             // Update status transaksi
             $sale->update([
-                'status'        => 'PAID',
-                'paid_at'       => now(),
-                'payment_method'=> $request->payment_method,
-                'cogs_total'    => round($cogs, 2),
-                'profit_gross'  => round($sale->total - $cogs, 2),
+                'status' => 'PAID',
+                'paid_at' => now(),
+                'payment_method' => strtoupper($request->payment_method),
+                'cogs_total' => round($cogs, 2),
+                'profit_gross' => round($sale->total - $cogs, 2),
             ]);
         });
 

@@ -133,7 +133,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/stock-opname/{id}/pdf', [StockOpnameController::class, 'pdf'])->name('stock_opname.pdf');
 
             // Laporan
-            Route::get('/reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
+            Route::get('/reports/sales', [\App\Http\Controllers\Admin\ReportController::class, 'sales'])
+            ->name('reports.sales');
             Route::get('/reports/stock-opname-diff', [ReportController::class, 'stockOpnameDiff'])->name('reports.opname_variance');
         });
 
@@ -172,6 +173,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/pos/new', [PosController::class, 'newSale'])->name('pos.new');
             Route::post('/pos/add', [PosController::class, 'addLine'])->name('pos.add');
             Route::post('/pos/pay', [PosController::class, 'pay'])->name('pos.pay');
+            // >>> Laporan penjualan kasir (transaksi milik kasir login) <<<
+            Route::get('/reports/sales', [\App\Http\Controllers\Admin\ReportController::class, 'sales'])
+            ->name('reports.sales');
         });
 });
 

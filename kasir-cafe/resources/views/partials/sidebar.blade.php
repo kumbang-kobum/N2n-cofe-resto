@@ -135,6 +135,12 @@
                           {{ request()->routeIs('cashier.pos') ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-50' }}">
                     <span>POS Kasir</span>
                 </a>
+
+                {{-- Tambahan: menu laporan penjualan kasir --}}
+                <a href="{{ route('cashier.reports.sales') }}"
+                class="block px-3 py-2 rounded-md text-sm {{ request()->routeIs('cashier.reports.sales') ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
+                    Laporan Penjualan
+                </a>
             </div>
         @endrole
 

@@ -10,6 +10,7 @@ class Sale extends Model
     use HasFactory;
 
     protected $fillable = [
+        'receipt_no',
         'status',
         'cashier_id',
         'total',
