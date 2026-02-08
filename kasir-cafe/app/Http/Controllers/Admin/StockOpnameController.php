@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
+//aktual base dari mbak Arum 2A
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;

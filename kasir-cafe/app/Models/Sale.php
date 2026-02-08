@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Sale extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'status',
         'cashier_id',
@@ -19,18 +20,18 @@ class Sale extends Model
     ];
 
     protected $casts = [
-        'total' => 'float',
-        'cogs_total' => 'float',
+        'total'        => 'float',
+        'cogs_total'   => 'float',
         'profit_gross' => 'float',
-        'paid_at' => 'datetime',
+        'paid_at'      => 'datetime',
     ];
 
-    public function lines(): HasMany
+    public function lines()
     {
         return $this->hasMany(SaleLine::class);
     }
 
-    public function cashier(): BelongsTo
+    public function cashier()
     {
         return $this->belongsTo(User::class, 'cashier_id');
     }
