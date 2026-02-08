@@ -19,6 +19,7 @@ class StockOpname extends Model
     protected $casts = [
         'counted_at' => 'date',
         'posted_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     public function lines(): HasMany

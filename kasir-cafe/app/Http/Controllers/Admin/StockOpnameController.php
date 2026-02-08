@@ -10,7 +10,6 @@ use App\Models\StockMove;
 use App\Models\StockOpname;
 use App\Models\StockOpnameLine;
 use App\Models\Unit;
-use App\Models\UnitConversion;
 use App\Services\FefoAllocator;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -35,139 +34,96 @@ class StockOpnameController extends Controller
         return view('admin.stock_opname.create', compact('items', 'units'));
     }
 
-    /**
-     * Konversi qty dari unit input -> base unit item.
-     */
-    private function toBaseQty(int $itemBaseUnitId, int $inputUnitId, float $qtyInput): float
-    {
-        if ($qtyInput < 0) {
-            return 0;
-        }
-
-        if ($inputUnitId === $itemBaseUnitId) {
-            return $qtyInput;
-        }
-
-        $conv = UnitConversion::query()
-            ->where('from_unit_id', $inputUnitId)
-            ->where('to_unit_id', $itemBaseUnitId)
-            ->first();
-
-        if (!$conv) {
-            // Coba arah sebaliknya (jika yang tersimpan to->from)
-            $reverse = UnitConversion::query()
-                ->where('from_unit_id', $itemBaseUnitId)
-                ->where('to_unit_id', $inputUnitId)
-                ->first();
-
-            if ($reverse && (float)$reverse->multiplier != 0.0) {
-                return $qtyInput / (float) $reverse->multiplier;
-            }
-
-            throw new \RuntimeException("Konversi unit tidak ditemukan.");
-        }
-
-        return $qtyInput * (float) $conv->multiplier;
-    }
-
     public function store(Request $request)
     {
-        // ✅ Form mengirim physical_qty & unit_id, bukan physical_qty_base
         $request->validate([
             'counted_at' => ['required', 'date'],
             'note'       => ['nullable', 'string'],
 
-            'lines'              => ['required', 'array', 'min:1'],
-            'lines.*.item_id'    => ['required', 'exists:items,id'],
+            'lines'                => ['required', 'array', 'min:1'],
+            'lines.*.item_id'      => ['required', 'exists:items,id'],
+            'lines.*.unit_id'      => ['required', 'exists:units,id'],
             'lines.*.physical_qty' => ['required', 'numeric', 'min:0'],
-            'lines.*.unit_id'    => ['required', 'exists:units,id'],
-            'lines.*.expired_at' => ['nullable', 'date'],
-            'lines.*.unit_cost_base' => ['nullable', 'numeric', 'min:0'],
+            'lines.*.expired_at'   => ['nullable', 'date'],
+            'lines.*.unit_cost'    => ['nullable', 'numeric', 'min:0'],
         ], [
+            'lines.required'                => 'Minimal 1 baris opname.',
+            'lines.*.item_id.required'      => 'Item wajib dipilih.',
             'lines.*.physical_qty.required' => 'Qty fisik wajib diisi.',
-            'lines.*.unit_id.required'      => 'Unit wajib dipilih.',
         ]);
 
-        return DB::transaction(function () use ($request) {
+        $opname = DB::transaction(function () use ($request) {
 
-            $countedAt = $request->date('counted_at');
-
+            /** @var \App\Models\StockOpname $opname */
             $opname = StockOpname::create([
-                'code'       => StockOpname::nextCode($countedAt),
-                'counted_at' => $countedAt,
-                'status'     => 'DRAFT',
-                'note'       => $request->note,
-                'created_by' => auth()->id(),
+                'code'        => StockOpname::nextCode($request->date('counted_at')),
+                'counted_at'  => $request->date('counted_at'),
+                'status'      => 'DRAFT',
+                'note'        => $request->note,
+                'created_by'  => auth()->id(),
             ]);
 
-            // Optimasi query: ambil semua item sekali
-            $itemIds = collect($request->lines)->pluck('item_id')->unique()->values();
-            $items = Item::with('baseUnit')
-                ->whereIn('id', $itemIds)
-                ->get()
-                ->keyBy('id');
+            $linesToInsert = [];
 
-            $linesInsert = [];
+            foreach ($request->lines as $line) {
+                // item & unit input
+                $item = Item::with('baseUnit')->findOrFail($line['item_id']);
+                $unit = Unit::findOrFail($line['unit_id']);
 
-            foreach ($request->lines as $row) {
-                /** @var Item $item */
-                $item = $items[(int)$row['item_id']] ?? null;
-                if (!$item) {
-                    continue;
-                }
+                // konversi qty input ke base
+                $factor       = $unit->to_base_factor ?? 1;
+                $physicalBase = (float) $line['physical_qty'] * $factor;
 
-                $systemQtyBase = (float) ItemBatch::query()
+                // stok sistem (base) per item
+                $systemBase = (float) ItemBatch::query()
                     ->where('item_id', $item->id)
                     ->where('status', 'ACTIVE')
                     ->sum('qty_on_hand_base');
 
-                $qtyInput = (float) $row['physical_qty'];
-                $unitId   = (int) $row['unit_id'];
+                $diffBase = $physicalBase - $systemBase;
 
-                try {
-                    $physicalQtyBase = (float) $this->toBaseQty((int)$item->base_unit_id, $unitId, $qtyInput);
-                } catch (\Throwable $e) {
-                    return back()->withErrors([
-                        "Konversi unit untuk item {$item->name} tidak ditemukan. Tambahkan di Unit Conversion."
-                    ])->withInput();
+                // cost per base (kalau diisi di satuan input)
+                $unitCostBase = null;
+                if (isset($line['unit_cost']) && $line['unit_cost'] !== '') {
+                    $inputCost   = (float) $line['unit_cost'];  // harga per unit input
+                    $unitCostBase = $factor > 0 ? $inputCost / $factor : 0; // harga per base
                 }
 
-                $diff = $physicalQtyBase - $systemQtyBase;
-
-                $linesInsert[] = [
-                    'stock_opname_id'  => $opname->id,
-                    'item_id'          => $item->id,
-                    'system_qty_base'  => $systemQtyBase,
-                    'physical_qty_base'=> $physicalQtyBase,
-                    'diff_qty_base'    => $diff,
-
-                    // boleh diisi dari create (opsional)
-                    'expired_at'       => $row['expired_at'] ?? null,
-                    'unit_cost_base'   => $row['unit_cost_base'] ?? null,
-
-                    'created_at'       => now(),
-                    'updated_at'       => now(),
+                $linesToInsert[] = [
+                    'stock_opname_id'   => $opname->id,
+                    'item_id'           => $item->id,
+                    'system_qty_base'   => $systemBase,
+                    'physical_qty_base' => $physicalBase,
+                    'diff_qty_base'     => $diffBase,
+                    'input_unit_id'     => $unit->id,
+                    'expired_at'        => $line['expired_at'] ?? null,
+                    'unit_cost_base'    => $unitCostBase,
+                    'created_at'        => now(),
+                    'updated_at'        => now(),
                 ];
             }
 
-            StockOpnameLine::insert($linesInsert);
+            StockOpnameLine::insert($linesToInsert);
 
             AuditLog::log(auth()->id(), 'STOCK_OPNAME_CREATED', $opname, [
                 'code'       => $opname->code,
                 'counted_at' => (string) $opname->counted_at,
-                'lines'      => count($linesInsert),
+                'lines'      => count($linesToInsert),
             ]);
 
-            return redirect()->route('admin.stock_opname.show', $opname->id)
-                ->with('status', 'Stock opname dibuat.');
+            return $opname;
         });
+
+        return redirect()
+            ->route('admin.stock_opname.show', $opname->id)
+            ->with('status', 'Stock opname dibuat.');
     }
 
     public function show($id)
     {
         $opname = StockOpname::with([
             'lines.item.baseUnit',
-            'audits' => fn ($q) => $q->orderBy('id'),
+            'audits' => fn ($q) => $q->orderBy('created_at')->orderBy('id'),
         ])->findOrFail($id);
 
         return view('admin.stock_opname.show', compact('opname'));
@@ -180,65 +136,64 @@ class StockOpnameController extends Controller
 
         abort_if($opname->status !== 'DRAFT', 403, 'Hanya DRAFT yang bisa diedit.');
 
-        $units = Unit::orderBy('symbol')->get();
-
-        return view('admin.stock_opname.edit', compact('opname', 'units'));
+        return view('admin.stock_opname.edit', compact('opname'));
     }
 
     public function update(Request $request, $id)
     {
-        $opname = StockOpname::with(['lines.item.baseUnit'])->findOrFail($id);
+        /** @var StockOpname $opname */
+        $opname = StockOpname::with(['lines.item'])->findOrFail($id);
 
         abort_if($opname->status !== 'DRAFT', 403, 'Hanya DRAFT yang bisa diedit.');
 
-        // ✅ konsisten: edit juga pakai physical_qty + unit_id
+        // VALIDASI – sudah TIDAK ada input_unit_id & physical_qty_input
         $request->validate([
             'note' => ['nullable', 'string'],
             'lines' => ['required', 'array', 'min:1'],
             'lines.*.id' => ['required', 'exists:stock_opname_lines,id'],
-            'lines.*.physical_qty' => ['required', 'numeric', 'min:0'],
-            'lines.*.unit_id' => ['required', 'exists:units,id'],
+            'lines.*.physical_qty_base' => ['required', 'numeric', 'min:0'],
             'lines.*.expired_at' => ['nullable', 'date'],
             'lines.*.unit_cost_base' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         return DB::transaction(function () use ($request, $opname) {
 
+            // update note
             $opname->note = $request->note;
             $opname->save();
 
             foreach ($request->lines as $row) {
-                /** @var StockOpnameLine|null $line */
+                /** @var \App\Models\StockOpnameLine $line */
                 $line = $opname->lines->firstWhere('id', (int) $row['id']);
-                if (!$line) continue;
+                if (! $line) {
+                    continue;
+                }
 
-                $item = $line->item;
-
+                // hitung ulang stok sistem (base) dari batch aktif
                 $systemQtyBase = (float) ItemBatch::query()
-                    ->where('item_id', $item->id)
+                    ->where('item_id', $line->item_id)
                     ->where('status', 'ACTIVE')
                     ->sum('qty_on_hand_base');
 
-                $qtyInput = (float) $row['physical_qty'];
-                $unitId   = (int) $row['unit_id'];
-
-                try {
-                    $physicalQtyBase = (float) $this->toBaseQty((int)$item->base_unit_id, $unitId, $qtyInput);
-                } catch (\Throwable $e) {
-                    return back()->withErrors([
-                        "Konversi unit untuk item {$item->name} tidak ditemukan. Tambahkan di Unit Conversion."
-                    ])->withInput();
-                }
-
+                $physicalQtyBase = (float) $row['physical_qty_base'];
                 $diff = $physicalQtyBase - $systemQtyBase;
 
                 $line->system_qty_base   = $systemQtyBase;
                 $line->physical_qty_base = $physicalQtyBase;
                 $line->diff_qty_base     = $diff;
 
-                $line->expired_at     = $row['expired_at'] ?? null;
-                $line->unit_cost_base = $row['unit_cost_base'] ?? null;
+                // expired & cost hanya relevan jika selisih plus
+                if ($diff > 0) {
+                    $line->expired_at     = $row['expired_at'] ?? null;
+                    $line->unit_cost_base = $row['unit_cost_base'] ?? 0;
+                } else {
+                    // kalau selisih 0 atau minus, kosongkan saja
+                    $line->expired_at     = null;
+                    $line->unit_cost_base = null;
+                }
 
+                // catatan: kolom input_unit_id & physical_qty_input di tabel
+                // dibiarkan apa adanya (nilai awal dari saat create)
                 $line->save();
             }
 
@@ -246,119 +201,125 @@ class StockOpnameController extends Controller
                 'lines_updated' => count($request->lines),
             ]);
 
-            return redirect()->route('admin.stock_opname.show', $opname->id)
+            return redirect()
+                ->route('admin.stock_opname.show', $opname->id)
                 ->with('status', 'Stock opname berhasil diupdate.');
         });
     }
 
     public function post($id)
-    {
-        $allocator = app(FefoAllocator::class);
+{
+    $allocator = app(FefoAllocator::class);
 
-        return DB::transaction(function () use ($id, $allocator) {
+    return DB::transaction(function () use ($id, $allocator) {
 
-            /** @var StockOpname $opname */
-            $opname = StockOpname::with(['lines.item'])
-                ->lockForUpdate()
-                ->findOrFail($id);
+        /** @var StockOpname $opname */
+        $opname = StockOpname::with(['lines.item'])
+            ->lockForUpdate()
+            ->findOrFail($id);
 
-            abort_if($opname->status !== 'DRAFT', 403, 'Hanya DRAFT yang bisa di-POST.');
+        abort_if($opname->status !== 'DRAFT', 403, 'Hanya DRAFT yang bisa di-POST.');
 
-            // Validasi: jika diff plus, expired_at wajib
-            $missingExpired = $opname->lines
-                ->where('diff_qty_base', '>', 0)
-                ->whereNull('expired_at')
-                ->count();
+        // Validasi: jika diff plus, expired_at wajib
+        $missingExpired = $opname->lines
+            ->where('diff_qty_base', '>', 0)
+            ->whereNull('expired_at')
+            ->count();
 
-            if ($missingExpired > 0) {
-                return back()->withErrors([
-                    "Ada {$missingExpired} item selisih plus yang belum diisi expired."
+        if ($missingExpired > 0) {
+            return back()->withErrors([
+                "Ada {$missingExpired} item selisih plus yang belum diisi expired."
+            ]);
+        }
+
+        foreach ($opname->lines as $line) {
+            $item = $line->item;
+            $diff = (float) $line->diff_qty_base;
+
+            if (abs($diff) < 0.000001) {
+                continue;
+            }
+
+            // ===== SELISIH PLUS -> BUAT BATCH BARU =====
+            if ($diff > 0) {
+                $batch = ItemBatch::create([
+                    'item_id'          => $item->id,
+                    'received_at'      => $opname->counted_at,
+                    'expired_at'       => $line->expired_at,
+                    'qty_on_hand_base' => $diff,
+                    'unit_cost_base'   => (float) ($line->unit_cost_base ?? 0),
+                    'status'           => 'ACTIVE',
+                ]);
+
+                StockMove::create([
+                    'moved_at'   => $opname->counted_at,
+                    'item_id'    => $item->id,
+                    'batch_id'   => $batch->id,
+                    'qty_base'   => $diff,          // + masuk
+                    'type'       => 'ADJUSTMENT',   // enum di migration
+                    'ref_type'   => 'stock_opname',
+                    'ref_id'     => $opname->id,
+                    'created_by' => auth()->id(),
+                    'note'       => $opname->code,
                 ]);
             }
 
-            foreach ($opname->lines as $line) {
-                $item = $line->item;
+            // ===== SELISIH MINUS -> FEFO KELUAR BATCH =====
+            if ($diff < 0) {
+                $need = abs($diff);
 
-                $diff = (float) $line->diff_qty_base;
-                if (abs($diff) < 0.000001) continue;
-
-                // PLUS: buat batch baru
-                if ($diff > 0) {
-                    $batch = ItemBatch::create([
-                        'item_id'          => $item->id,
-                        'received_at'      => $opname->counted_at, // date => 00:00
-                        'expired_at'       => $line->expired_at,
-                        'qty_on_hand_base' => $diff,
-                        'unit_cost_base'   => (float) ($line->unit_cost_base ?? 0),
-                        'status'           => 'ACTIVE',
-                    ]);
-
-                    StockMove::create([
-                        'moved_at'    => $opname->counted_at,
-                        'item_id'     => $item->id,
-                        'batch_id'    => $batch->id,
-                        'qty_base'    => $diff,
-                        'type'        => 'ADJUSTMENT',
-                        'ref_type'    => 'stock_opname',
-                        'ref_id'      => $opname->id,
-                        'created_by'  => auth()->id(),
-                        'note'        => $opname->code,
-                    ]);
+                try {
+                    // FefoAllocator sekarang mengembalikan array of ['batch' => ItemBatch, 'take' => float]
+                    $allocs = $allocator->allocate($item->id, $need);
+                } catch (\RuntimeException $e) {
+                    // kalau stok tidak cukup, tampilkan pesan dari allocator
+                    return back()->withErrors([$e->getMessage()]);
                 }
 
-                // MINUS: FEFO kurangi dari batch aktif
-                if ($diff < 0) {
-                    $need = abs($diff);
+                foreach ($allocs as $alloc) {
+                    /** @var \App\Models\ItemBatch $batch */
+                    $batch = $alloc['batch'];
+                    $take  = (float) $alloc['take'];
 
-                    $allocs = $allocator->allocate($item->id, $need);
+                    // kurangi qty batch
+                    $batch->qty_on_hand_base = max(0, (float) $batch->qty_on_hand_base - $take);
 
-                    if ($allocs['unfilled'] > 0.000001) {
-                        return back()->withErrors([
-                            "Stok tidak cukup untuk item {$item->name}. Dibutuhkan {$need}, tersedia " . ($need - $allocs['unfilled'])
-                        ]);
+                    if ($batch->qty_on_hand_base <= 0.000001) {
+                        $batch->qty_on_hand_base = 0;
+                        $batch->status = 'DEPLETED';
                     }
 
-                    foreach ($allocs['lines'] as $a) {
-                        $batch = ItemBatch::lockForUpdate()->findOrFail($a['batch_id']);
-                        $take  = (float) $a['qty_base'];
+                    $batch->save();
 
-                        $batch->qty_on_hand_base = max(0, (float) $batch->qty_on_hand_base - $take);
-
-                        if ($batch->qty_on_hand_base <= 0.000001) {
-                            $batch->qty_on_hand_base = 0;
-                            $batch->status = 'DEPLETED';
-                        }
-
-                        $batch->save();
-
-                        StockMove::create([
-                            'moved_at'    => $opname->counted_at,
-                            'item_id'     => $item->id,
-                            'batch_id'    => $batch->id,
-                            'qty_base'    => -$take,
-                            'type'        => 'ADJUSTMENT',
-                            'ref_type'    => 'stock_opname',
-                            'ref_id'      => $opname->id,
-                            'created_by'  => auth()->id(),
-                            'note'        => $opname->code,
-                        ]);
-                    }
+                    // catat pergerakan stok keluar
+                    StockMove::create([
+                        'moved_at'   => $opname->counted_at,
+                        'item_id'    => $item->id,
+                        'batch_id'   => $batch->id,
+                        'qty_base'   => -$take,        // - keluar
+                        'type'       => 'ADJUSTMENT',  // enum di migration
+                        'ref_type'   => 'stock_opname',
+                        'ref_id'     => $opname->id,
+                        'created_by' => auth()->id(),
+                        'note'       => $opname->code,
+                    ]);
                 }
             }
+        }
 
-            $opname->status    = 'POSTED';
-            $opname->posted_by = auth()->id();
-            $opname->posted_at = now();
-            $opname->save();
+        $opname->status    = 'POSTED';
+        $opname->posted_by = auth()->id();
+        $opname->posted_at = now();
+        $opname->save();
 
-            AuditLog::log(auth()->id(), 'STOCK_OPNAME_POSTED', $opname, [
-                'code' => $opname->code,
-            ]);
+        AuditLog::log(auth()->id(), 'STOCK_OPNAME_POSTED', $opname, [
+            'code' => $opname->code,
+        ]);
 
-            return redirect()->route('admin.stock_opname.show', $opname->id)
-                ->with('status', 'Stock opname berhasil diposting.');
-        });
-    }
+        return redirect()->route('admin.stock_opname.show', $opname->id)
+            ->with('status', 'Stock opname berhasil diposting.');
+    });
+}
 
     public function cancel(Request $request, $id)
     {
@@ -376,7 +337,8 @@ class StockOpnameController extends Controller
             'reason' => $opname->cancel_reason,
         ]);
 
-        return redirect()->route('admin.stock_opname.show', $opname->id)
+        return redirect()
+            ->route('admin.stock_opname.show', $opname->id)
             ->with('status', 'Stock opname dibatalkan.');
     }
 
