@@ -1,91 +1,142 @@
-{{-- resources/views/patrials/sidebar.blade.php --}}
-<aside class="w-full sm:w-64 bg-white border-r min-h-screen">
-  <div class="px-4 py-4 text-lg font-semibold text-blue-700">
-    Laravel
-  </div>
+{{-- resources/views/partials/sidebar.blade.php --}}
 
-  <nav class="px-2 pb-6 space-y-6 text-sm">
-
-    {{-- MAIN --}}
-    <div>
-      <a href="{{ route('admin.dashboard') }}"
-         class="flex items-center px-3 py-2 rounded
-                {{ request()->routeIs('admin.dashboard') ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
-        Dashboard
-      </a>
+<aside class="hidden md:flex md:flex-col w-64 border-r bg-white/90 backdrop-blur">
+    {{-- Brand / Logo --}}
+    <div class="flex items-center h-16 px-4 border-b bg-blue-50">
+        <div class="text-lg font-semibold text-blue-700">
+            {{ config('app.name', 'Kasir Cafe') }}
+        </div>
     </div>
 
-    {{-- MASTER DATA --}}
-    <div>
-      <div class="px-3 mb-1 text-[11px] font-semibold tracking-wide text-gray-400 uppercase">
-        Master Data
-      </div>
+    <div class="flex-1 overflow-y-auto px-3 py-4 text-sm text-gray-700 space-y-6">
 
-      {{-- PRODUK / MENU (BARU) --}}
-      <a href="{{ route('admin.products.index') }}"
-         class="flex items-center px-3 py-2 rounded
-                {{ request()->routeIs('admin.products.*') ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
-        Produk / Menu
-      </a>
+        {{-- ====================== ADMIN ====================== --}}
+        @role('admin')
+            {{-- Dashboard --}}
+            <div>
+                <div class="text-[11px] font-semibold tracking-widest text-gray-400 uppercase mb-1">
+                    Main
+                </div>
 
-      {{-- Contoh: Resep / BOM (kalau sudah ada route-nya) --}}
-      <a href="{{ route('admin.recipes.index') }}"
-         class="flex items-center px-3 py-2 rounded
-                {{ request()->routeIs('admin.recipes.*') ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
-        Resep / BOM
-      </a>
+                <a href="{{ route('admin.dashboard') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('admin.dashboard') ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-50' }}">
+                    <span>Admin Dashboard</span>
+                </a>
+            </div>
 
-      {{-- Item / Stok Bahan (sesuaikan route-nya dengan projectmu) --}}
-      <a href="{{ route('admin.items.index') }}"
-         class="flex items-center px-3 py-2 rounded
-                {{ request()->routeIs('admin.items.*') ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
-        Stok Bahan
-      </a>
+            {{-- Master Data --}}
+            <div>
+                <div class="text-[11px] font-semibold tracking-widest text-gray-400 uppercase mb-1 mt-4">
+                    Master Data
+                </div>
+
+                {{-- Produk / Menu --}}
+                <a href="{{ route('admin.products.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('admin.products.*') ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-50' }}">
+                    <span>Produk / Menu</span>
+                </a>
+
+                {{-- Resep / BOM --}}
+                <a href="{{ route('admin.recipes.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('admin.recipes.*') ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-50' }}">
+                    <span>Resep / BOM</span>
+                </a>
+
+                {{-- Stok Bahan --}}
+                <a href="{{ route('admin.items.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('admin.items.*') ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-50' }}">
+                    <span>Stok Bahan</span>
+                </a>
+
+                {{-- Satuan --}}
+                <a href="{{ route('admin.units.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('admin.units.*') ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-50' }}">
+                    <span>Satuan</span>
+                </a>
+            </div>
+
+            {{-- Operasional --}}
+            <div>
+                <div class="text-[11px] font-semibold tracking-widest text-gray-400 uppercase mb-1 mt-4">
+                    Operasional
+                </div>
+
+                {{-- Receiving Stok --}}
+                <a href="{{ route('admin.receivings.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('admin.receivings.*') ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-50' }}">
+                    <span>Receiving Stok</span>
+                </a>
+
+                {{-- Expired Disposal --}}
+                <a href="{{ route('admin.expired.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('admin.expired.*') ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-50' }}">
+                    <span>Expired Disposal</span>
+                </a>
+
+                {{-- Stock Opname --}}
+                <a href="{{ route('admin.stock_opname.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('admin.stock_opname.*') ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-50' }}">
+                    <span>Stock Opname</span>
+                </a>
+
+                {{-- POS Kasir (akses juga dari admin) --}}
+                <a href="{{ route('cashier.pos') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('cashier.pos') ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-50' }}">
+                    <span>POS Kasir</span>
+                </a>
+            </div>
+
+            {{-- Laporan --}}
+            <div>
+                <div class="text-[11px] font-semibold tracking-widest text-gray-400 uppercase mb-1 mt-4">
+                    Laporan
+                </div>
+
+                <a href="{{ route('admin.reports.sales') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('admin.reports.sales') ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-50' }}">
+                    <span>Laporan Penjualan</span>
+                </a>
+
+                <a href="{{ route('admin.reports.opname_variance') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('admin.reports.opname_variance') ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-50' }}">
+                    <span>Laporan Selisih Opname</span>
+                </a>
+            </div>
+        @endrole
+
+        {{-- ====================== CASHIER ====================== --}}
+        @role('cashier')
+            <div>
+                <div class="text-[11px] font-semibold tracking-widest text-gray-400 uppercase mb-1">
+                    Kasir
+                </div>
+
+                {{-- Dashboard Kasir (redirect ke POS) --}}
+                <a href="{{ route('cashier.dashboard') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('cashier.dashboard') ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-50' }}">
+                    <span>Dashboard</span>
+                </a>
+
+                {{-- POS Kasir --}}
+                <a href="{{ route('cashier.pos') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('cashier.pos') ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-50' }}">
+                    <span>POS Kasir</span>
+                </a>
+            </div>
+        @endrole
+
     </div>
-
-    {{-- OPERASIONAL --}}
-    <div>
-      <div class="px-3 mb-1 text-[11px] font-semibold tracking-wide text-gray-400 uppercase">
-        Operasional
-      </div>
-
-      <a href="{{ route('admin.receiving.index') }}"
-         class="flex items-center px-3 py-2 rounded
-                {{ request()->routeIs('admin.receiving.*') ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
-        Receiving Stok
-      </a>
-
-      <a href="{{ route('admin.expired_disposal.index') }}"
-         class="flex items-center px-3 py-2 rounded
-                {{ request()->routeIs('admin.expired_disposal.*') ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
-        Expired Disposal
-      </a>
-
-      <a href="{{ route('admin.stock_opname.index') }}"
-         class="flex items-center px-3 py-2 rounded
-                {{ request()->routeIs('admin.stock_opname.*') ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
-        Stock Opname
-      </a>
-    </div>
-
-    {{-- LAPORAN --}}
-    <div>
-      <div class="px-3 mb-1 text-[11px] font-semibold tracking-wide text-gray-400 uppercase">
-        Laporan
-      </div>
-
-      <a href="{{ route('admin.report.sales') }}"
-         class="flex items-center px-3 py-2 rounded
-                {{ request()->routeIs('admin.report.sales') ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
-        Laporan Penjualan
-      </a>
-
-      <a href="{{ route('admin.report.stock_opname_diff') }}"
-         class="flex items-center px-3 py-2 rounded
-                {{ request()->routeIs('admin.report.stock_opname_diff') ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
-        Laporan Selisih Opname
-      </a>
-    </div>
-
-  </nav>
 </aside>

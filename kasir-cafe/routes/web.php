@@ -10,12 +10,17 @@ use App\Http\Controllers\Admin\ReceivingController;
 use App\Http\Controllers\Admin\RecipeController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\ReportController;
-
 use App\Http\Controllers\Admin\ExpiredController;
 use App\Http\Controllers\Admin\StockOpnameController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Models\Product;
 
+/*
+|--------------------------------------------------------------------------
+| Landing Page (sebelum login)
+|--------------------------------------------------------------------------
+| Menampilkan katalog menu (produk aktif) + nama resto, dsb.
+*/
 Route::get('/', function () {
     $products = Product::where('is_active', true)
         ->orderBy('name')
@@ -25,62 +30,149 @@ Route::get('/', function () {
     return view('welcome', compact('products'));
 })->name('landing');
 
-Route::middleware(['auth'])->group(function () {
+/*
+|--------------------------------------------------------------------------
+| Area yang butuh login
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'verified'])->group(function () {
 
+    /*
+    |--------------------------------------------------------------------------
+    | ROUTE DASHBOARD UMUM (dipakai setelah login)
+    |--------------------------------------------------------------------------
+    | AuthenticatedSessionController@store memanggil route('dashboard')
+    | Di sini kita arahkan sesuai role:
+    |  - admin   -> admin.dashboard
+    |  - manager -> manager.dashboard
+    |  - cashier -> cashier.pos
+    */
     Route::get('/dashboard', function () {
-        $u = auth()->user();
-        if ($u->hasRole('admin')) return redirect()->route('admin.dashboard');
-        if ($u->hasRole('manager')) return redirect()->route('manager.dashboard');
-        return redirect()->route('cashier.pos');
+        $user = auth()->user();
+
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // Admin -> dashboard admin
+        if ($user->hasRole('admin')) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        // Manager -> dashboard manager
+        if ($user->hasRole('manager')) {
+            return redirect()->route('manager.dashboard');
+        }
+
+        // Kasir -> langsung ke POS
+        if ($user->hasRole('cashier')) {
+            return redirect()->route('cashier.pos');
+        }
+
+        // Fallback kalau ada role lain
+        return redirect()->route('landing');
     })->name('dashboard');
 
-    Route::prefix('admin')->middleware('role:admin')->group(function () {
+    /*
+    |--------------------------------------------------------------------------
+    | ADMIN AREA
+    | URL prefix : /admin/...
+    | Nama route : admin.***
+    | Role       : admin
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('admin')
+        ->as('admin.')
+        ->middleware('role:admin')
+        ->group(function () {
 
-        Route::get('/dashboard', [AdminDashboard::class,'index'])->name('admin.dashboard');
+            // Dashboard Admin (sekarang di /admin/dashboard)
+            Route::get('/dashboard', [AdminDashboard::class, 'index'])
+                ->name('dashboard');
 
-        Route::get('/receivings', [ReceivingController::class,'index'])->name('admin.receivings.index');
-        Route::get('/receivings/create', [ReceivingController::class,'create'])->name('admin.receivings.create');
-        Route::post('/receivings', [ReceivingController::class,'store'])->name('admin.receivings.store');
+            // MASTER DATA
 
-        Route::get('/recipes', [RecipeController::class,'index'])->name('admin.recipes.index');
-        Route::get('/recipes/{productId}/edit', [RecipeController::class,'edit'])->name('admin.recipes.edit');
-        Route::post('/recipes/{productId}', [RecipeController::class,'update'])->name('admin.recipes.update');
+            // Produk / Menu (katalog yang dipakai kasir)
+            Route::resource('products', ProductController::class);
 
-        Route::get('/stock', [StockController::class,'index'])->name('admin.stock.index');
+            // Resep / BOM
+            Route::resource('recipes', RecipeController::class);
 
-        Route::get('/reports/sales', [ReportController::class,'sales'])->name('admin.reports.sales');
-        Route::get('/reports/opname-variance', [ReportController::class,'opnameVariance'])
-            ->name('admin.reports.opname_variance');
+            // Stok bahan (item) & satuan
+            Route::resource('items', \App\Http\Controllers\Admin\ItemController::class);
+            Route::resource('units', \App\Http\Controllers\Admin\UnitController::class);
 
-        Route::get('/expired', [ExpiredController::class, 'index'])->name('admin.expired.index');
-        Route::post('/expired/{batchId}/dispose', [ExpiredController::class, 'dispose'])->name('admin.expired.dispose');
+            // Ringkasan stok
+            Route::get('/stocks', [StockController::class, 'index'])->name('stock.index');
 
-        // === STOCK OPNAME ===
-        Route::get('/stock-opname', [StockOpnameController::class,'index'])->name('admin.stock_opname.index');
-        Route::get('/stock-opname/create', [StockOpnameController::class,'create'])->name('admin.stock_opname.create');
-        Route::post('/stock-opname', [StockOpnameController::class,'store'])->name('admin.stock_opname.store');
+            // Receiving stok (barang masuk)
+            Route::get('/receivings', [ReceivingController::class, 'index'])->name('receivings.index');
+            Route::get('/receivings/create', [ReceivingController::class, 'create'])->name('receivings.create');
+            Route::post('/receivings', [ReceivingController::class, 'store'])->name('receivings.store');
+            Route::get('/receivings/{id}', [ReceivingController::class, 'show'])->name('receivings.show');
 
-        Route::get('/stock-opname/{id}', [StockOpnameController::class,'show'])->name('admin.stock_opname.show');
-        Route::get('/stock-opname/{id}/edit', [StockOpnameController::class,'edit'])->name('admin.stock_opname.edit');
-        Route::put('/stock-opname/{id}', [StockOpnameController::class,'update'])->name('admin.stock_opname.update');
+            // Expired disposal
+            Route::get('/expired', [ExpiredController::class, 'index'])->name('expired.index');
+            Route::get('/expired/create', [ExpiredController::class, 'create'])->name('expired.create');
+            Route::post('/expired', [ExpiredController::class, 'store'])->name('expired.store');
+            Route::get('/expired/{id}', [ExpiredController::class, 'show'])->name('expired.show');
 
-        Route::post('/stock-opname/{id}/post', [StockOpnameController::class,'post'])->name('admin.stock_opname.post');
-        Route::post('/stock-opname/{id}/cancel', [StockOpnameController::class,'cancel'])->name('admin.stock_opname.cancel');
+            // Stock opname
+            Route::get('/stock-opname', [StockOpnameController::class, 'index'])->name('stock_opname.index');
+            Route::get('/stock-opname/create', [StockOpnameController::class, 'create'])->name('stock_opname.create');
+            Route::post('/stock-opname', [StockOpnameController::class, 'store'])->name('stock_opname.store');
+            Route::get('/stock-opname/{id}', [StockOpnameController::class, 'show'])->name('stock_opname.show');
+            Route::get('/stock-opname/{id}/edit', [StockOpnameController::class, 'edit'])->name('stock_opname.edit');
+            Route::put('/stock-opname/{id}', [StockOpnameController::class, 'update'])->name('stock_opname.update');
 
-        Route::get('/stock-opname/{id}/pdf', [StockOpnameController::class,'pdf'])->name('admin.stock_opname.pdf');
-        Route::resource('products', \App\Http\Controllers\Admin\ProductController::class);
-    });
+            // POST / CANCEL opname
+            Route::post('/stock-opname/{id}/post', [StockOpnameController::class, 'post'])->name('stock_opname.post');
+            Route::post('/stock-opname/{id}/cancel', [StockOpnameController::class, 'cancel'])->name('stock_opname.cancel');
 
-    Route::prefix('manager')->middleware('role:manager|admin')->group(function () {
-        Route::get('/dashboard', [ManagerDashboard::class,'index'])->name('manager.dashboard');
-    });
+            // Export PDF
+            Route::get('/stock-opname/{id}/pdf', [StockOpnameController::class, 'pdf'])->name('stock_opname.pdf');
 
-    Route::prefix('cashier')->middleware('role:cashier|admin')->group(function () {
-        Route::get('/pos', [PosController::class,'index'])->name('cashier.pos');
-        Route::post('/pos/new', [PosController::class,'newSale'])->name('cashier.pos.new');
-        Route::post('/pos/add', [PosController::class,'addLine'])->name('cashier.pos.add');
-        Route::post('/pos/pay', [PosController::class,'pay'])->name('cashier.pos.pay');
-    });
+            // Laporan
+            Route::get('/reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
+            Route::get('/reports/stock-opname-diff', [ReportController::class, 'stockOpnameDiff'])->name('reports.opname_variance');
+        });
+
+    /*
+    |--------------------------------------------------------------------------
+    | MANAGER AREA
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('manager')
+        ->as('manager.')
+        ->middleware('role:manager')
+        ->group(function () {
+            Route::get('/dashboard', [ManagerDashboard::class, 'index'])->name('dashboard');
+        });
+
+    /*
+    |--------------------------------------------------------------------------
+    | CASHIER AREA (POS)
+    | URL prefix : /cashier/...
+    | Nama route : cashier.***
+    | Role       : cashier atau admin
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('cashier')
+        ->as('cashier.')
+        ->middleware('role:cashier|admin')
+        ->group(function () {
+
+            // Dashboard kasir sederhana -> redirect ke POS
+            Route::get('/dashboard', function () {
+                return redirect()->route('cashier.pos');
+            })->name('dashboard');
+
+            // POS Kasir
+            Route::get('/pos', [PosController::class, 'index'])->name('pos');
+            Route::post('/pos/new', [PosController::class, 'newSale'])->name('pos.new');
+            Route::post('/pos/add', [PosController::class, 'addLine'])->name('pos.add');
+            Route::post('/pos/pay', [PosController::class, 'pay'])->name('pos.pay');
+        });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
