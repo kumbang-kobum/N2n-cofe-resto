@@ -68,7 +68,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/stock-opname/{id}/cancel', [StockOpnameController::class,'cancel'])->name('admin.stock_opname.cancel');
 
         Route::get('/stock-opname/{id}/pdf', [StockOpnameController::class,'pdf'])->name('admin.stock_opname.pdf');
-        Route::resource('products', ProductController::class);
+        Route::resource('products', \App\Http\Controllers\Admin\ProductController::class);
     });
 
     Route::prefix('manager')->middleware('role:manager|admin')->group(function () {
