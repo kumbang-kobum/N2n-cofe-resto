@@ -29,7 +29,7 @@ Sistem kasir & stok bahan untuk cafe/resto dengan fitur:
 4. **Monitoring & Laporan**
    - Owner/admin cek stok, opname, penjualan, COGS, laba, pajak.
 
-## Cara Install (Local)
+## Cara Install (Development)
 1. Copy `.env`:
    ```bash
    cp .env.example .env
@@ -52,6 +52,32 @@ Sistem kasir & stok bahan untuk cafe/resto dengan fitur:
    ```bash
    php artisan serve
    ```
+
+## Cara Install (Server / Production)
+1. Upload kode ke server (Nginx/Apache + PHP + MySQL).
+2. Buat `.env` (copy dari `.env.example`) dan isi:
+   - `APP_ENV=production`
+   - `APP_DEBUG=false`
+   - `APP_URL=https://domain-client.com`
+   - `DB_*` sesuai server
+   - `LICENSE_MASTER_KEY=...`
+3. Install dependency:
+   ```bash
+   composer install --no-dev --optimize-autoloader
+   ```
+4. Migrasi & storage:
+   ```bash
+   php artisan migrate --force
+   php artisan storage:link
+   ```
+5. Cache config/route/view:
+   ```bash
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache
+   ```
+6. Pastikan permission:
+   - `storage/` dan `bootstrap/cache/` writable.
 
 ## Deployment Otomatis (Server)
 1. Pastikan `.env` sudah benar (`APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, `DB_*`, `LICENSE_MASTER_KEY`).
