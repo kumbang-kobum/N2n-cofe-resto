@@ -72,6 +72,19 @@
                           {{ request()->routeIs('admin.settings.edit') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
                     <span>Pengaturan Resto</span>
                 </a>
+
+                {{-- Inventaris --}}
+                <a href="{{ route('admin.assets.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('admin.assets.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Inventaris</span>
+                </a>
+
+                <a href="{{ route('admin.asset_incidents.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('admin.asset_incidents.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Kerusakan/Pemusnahan</span>
+                </a>
             </div>
 
             {{-- Operasional --}}
@@ -171,6 +184,18 @@
                    class="flex items-center gap-2 rounded-md px-3 py-2
                           {{ request()->routeIs('manager.settings.edit') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
                     <span>Pengaturan Resto</span>
+                </a>
+
+                <a href="{{ route('manager.assets.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('manager.assets.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Inventaris</span>
+                </a>
+
+                <a href="{{ route('manager.asset_incidents.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('manager.asset_incidents.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Kerusakan/Pemusnahan</span>
                 </a>
 
                 <a href="{{ route('manager.reports.sales') }}"

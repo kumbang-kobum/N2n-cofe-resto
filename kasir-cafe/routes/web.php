@@ -16,6 +16,8 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\AssetController;
+use App\Http\Controllers\Admin\AssetIncidentController;
 use App\Http\Controllers\SaleRefundController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Product;
@@ -126,6 +128,10 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
             Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
 
+            // Inventaris
+            Route::resource('assets', AssetController::class);
+            Route::resource('asset-incidents', AssetIncidentController::class)->except(['show'])->names('asset_incidents');
+
             // Ringkasan stok
             Route::get('/stocks', [StockController::class, 'index'])->name('stock.index');
 
@@ -187,6 +193,10 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             // Pengaturan Resto
             Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
             Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
+
+            // Inventaris
+            Route::resource('assets', AssetController::class);
+            Route::resource('asset-incidents', AssetIncidentController::class)->except(['show'])->names('asset_incidents');
 
             // Laporan Penjualan & Selisih Opname
             Route::get('/reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
