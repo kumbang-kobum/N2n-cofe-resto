@@ -8,6 +8,9 @@
 
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
+@php
+  $settings = \App\Models\Setting::first();
+@endphp
 <body class="bg-slate-50 text-slate-900">
   <div class="min-h-screen flex flex-col">
 
@@ -15,15 +18,19 @@
     <header class="border-b bg-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
-            {{ strtoupper(substr(config('app.name','KC'),0,2)) }}
-          </div>
+          @if (!empty($settings?->logo_path))
+            <img src="{{ asset('storage/' . $settings->logo_path) }}" alt="Logo" class="w-9 h-9 object-contain bg-blue-600/10 rounded-full p-1">
+          @else
+            <div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+              {{ strtoupper(substr(config('app.name','KC'),0,2)) }}
+            </div>
+          @endif
           <div>
             <div class="font-semibold text-blue-700 text-sm sm:text-base">
-              {{ config('app.name','Kasir Cafe') }}
+              {{ $settings->restaurant_name ?? config('app.name','Kasir Cafe') }}
             </div>
             <div class="text-xs text-slate-500">
-              n2N Sistem Kasir & Stok untuk Cafe & Resto
+              {{ $settings->restaurant_address ?? 'n2N Sistem Kasir & Stok untuk Cafe & Resto' }}
             </div>
           </div>
         </div>
