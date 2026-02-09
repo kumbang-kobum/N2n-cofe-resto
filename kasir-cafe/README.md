@@ -22,6 +22,29 @@ Sistem kasir & stok bahan untuk cafe/resto dengan fitur:
 - Audit log perubahan harga & stok
 - Inventaris resto + laporan kerusakan/pemusnahan
 
+Cara membaca ringkasan di atas:
+
+Subtotal = total sebelum diskon & pajak
+Diskon = potongan uang
+Pajak = 10% dari (Subtotal − Diskon)
+Omzet = (Subtotal − Diskon) + Pajak
+Refund = total refund pada periode
+COGS (HPP) = harga pokok bahan
+Laba Kotor = (Subtotal − Diskon) − COGS
+→ Jadi bisa negatif kalau COGS lebih besar dari penjualan
+
+Cara yang benar untuk kenaikan harga bahan baku:
+
+Saat ada pembelian baru (harga 135.000/kg), input lewat Penerimaan Barang.
+Sistem akan membuat batch baru dengan biaya 135.000.
+COGS otomatis pakai harga sesuai batch yang dipakai (FEFO/FIFO), jadi:
+Stok lama tetap pakai harga 130.000
+Stok baru pakai harga 135.000
+Laba jadi akurat sesuai “harga asli saat dibeli”.
+Jadi bukan mengikuti harga terbaru untuk semua stok. Yang terbaik adalah pisah per batch 
+
+Kalau kamu hanya “mengganti harga” tanpa ada pembelian baru, itu akan mengubah cost untuk stok lama dan bikin COGS jadi tidak akurat. Lebih baik selalu lewat penerimaan barang.
+
 ## Alur Kerja Sistem
 1. **Input Bahan & Stok Awal**
    - Admin input bahan (item), satuan, stok awal melalui receiving/stock opname.

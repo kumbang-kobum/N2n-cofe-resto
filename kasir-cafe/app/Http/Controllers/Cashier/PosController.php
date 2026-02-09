@@ -210,6 +210,7 @@ class PosController extends Controller
             'sale_id'        => ['required', 'exists:sales,id'],
             'payment_method' => ['required', 'in:CASH,QRIS,DEBIT'],
             'discount_amount' => ['nullable', 'numeric', 'min:0'],
+            'paid_amount' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $sale = Sale::with([
@@ -325,6 +326,14 @@ class PosController extends Controller
             $taxAmount = round($taxBase * $taxRate, 2);
             $grandTotal = $taxBase + $taxAmount;
 
+            $paidAmount = (float) $request->input('paid_amount', 0);
+            if ($paidAmount < $grandTotal) {
+                throw ValidationException::withMessages([
+                    'paid_amount' => 'Uang dibayar kurang dari total.',
+                ]);
+            }
+            $changeAmount = $paidAmount - $grandTotal;
+
             $sale->status         = 'PAID';
             $sale->payment_method = $request->payment_method;
             $sale->paid_at        = now();
@@ -333,6 +342,8 @@ class PosController extends Controller
             $sale->tax_rate       = $taxRate;
             $sale->tax_amount     = $taxAmount;
             $sale->grand_total    = $grandTotal;
+            $sale->paid_amount    = $paidAmount;
+            $sale->change_amount  = $changeAmount;
         $sale->profit_gross   = max(0, $taxBase) - $cogs;
         $sale->save();
 

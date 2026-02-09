@@ -207,6 +207,21 @@
                            class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                 </div>
 
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Uang Dibayar (Rp)</label>
+                    <input type="number"
+                           name="paid_amount"
+                           value="{{ old('paid_amount', 0) }}"
+                           min="0"
+                           step="1000"
+                           class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Kembalian</span>
+                    <span class="font-semibold text-gray-800" id="change-display">Rp 0</span>
+                </div>
+
                 <select name="payment_method"
                         class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                     <option value="CASH">CASH</option>
@@ -262,6 +277,8 @@
             const discountDisplay = summaryEl.querySelector('[data-discount]');
             const taxDisplay = summaryEl.querySelector('[data-tax]');
             const totalDisplay = summaryEl.querySelector('[data-total]');
+            const paidInput = document.querySelector('input[name="paid_amount"]');
+            const changeDisplay = document.getElementById('change-display');
 
             const formatRp = (n) => new Intl.NumberFormat('id-ID').format(n);
 
@@ -277,9 +294,17 @@
                 if (discountDisplay) discountDisplay.textContent = 'Rp ' + formatRp(discount);
                 if (taxDisplay) taxDisplay.textContent = 'Rp ' + formatRp(tax);
                 if (totalDisplay) totalDisplay.textContent = 'Rp ' + formatRp(total);
+
+                if (paidInput && changeDisplay) {
+                    let paid = parseFloat(paidInput.value || '0');
+                    if (Number.isNaN(paid) || paid < 0) paid = 0;
+                    const change = Math.max(0, paid - total);
+                    changeDisplay.textContent = 'Rp ' + formatRp(change);
+                }
             };
 
             discountInput.addEventListener('input', recalc);
+            if (paidInput) paidInput.addEventListener('input', recalc);
             recalc();
         }
     });

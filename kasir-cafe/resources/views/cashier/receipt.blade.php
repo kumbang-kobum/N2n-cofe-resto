@@ -95,6 +95,14 @@
                 <span>Total</span>
                 <span>{{ number_format($grand, 0, ',', '.') }}</span>
             </div>
+            <div class="flex justify-between">
+                <span>Dibayar</span>
+                <span>{{ number_format($sale->paid_amount ?? 0, 0, ',', '.') }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span>Kembalian</span>
+                <span>{{ number_format($sale->change_amount ?? 0, 0, ',', '.') }}</span>
+            </div>
         </div>
 
         <div class="my-2 border-t border-dashed"></div>
