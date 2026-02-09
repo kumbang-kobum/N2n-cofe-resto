@@ -121,6 +121,10 @@ class PosController extends Controller
                         $warning = 'Stok kosong/kurang';
                         break;
                     }
+
+                    if ($warning === null && $item->min_stock !== null && $available <= (float) $item->min_stock) {
+                        $warning = 'Stok menipis';
+                    }
                 }
             }
 
