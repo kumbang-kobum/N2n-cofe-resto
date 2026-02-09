@@ -40,12 +40,7 @@
              class="hidden sm:inline-flex px-3 py-2 rounded border border-blue-600 text-blue-600 text-sm hover:bg-blue-50">
             Login Admin / Kasir / Manager
           </a>
-          @if (Route::has('register'))
-            <a href="{{ route('register') }}"
-               class="px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700">
-              Daftar
-            </a>
-          @endif
+          {{-- Registrasi dinonaktifkan --}}
         </div>
       </div>
     </header>
