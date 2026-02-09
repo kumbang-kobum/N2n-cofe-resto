@@ -111,6 +111,10 @@ Restore:
 bash scripts/db_restore.sh backups/backup_YYYYMMDD_HHMMSS.sql
 ```
 
+## Auto Backup 8 Jam
+Lihat panduan cron:
+`docs/cron_backup.md`
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

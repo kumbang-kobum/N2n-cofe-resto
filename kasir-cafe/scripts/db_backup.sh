@@ -19,15 +19,16 @@ DB_PASSWORD="$(php -r '$e=parse_ini_file($argv[1]); echo $e["DB_PASSWORD"] ?? ""
 BACKUP_DIR="$ROOT_DIR/backups"
 mkdir -p "$BACKUP_DIR"
 
-TS="$(date +"%Y%m%d_%H%M%S")"
+TS="$(date +"%d%m%Y%H%M")"
 
 if [ "$DB_CONNECTION" = "sqlite" ]; then
   if [ -z "$DB_DATABASE" ]; then
     echo "DB_DATABASE empty for sqlite"
     exit 1
   fi
-  cp "$DB_DATABASE" "$BACKUP_DIR/backup_${TS}.sqlite"
-  echo "Backup created: $BACKUP_DIR/backup_${TS}.sqlite"
+  cp "$DB_DATABASE" "$BACKUP_DIR/${DB_DATABASE}_${TS}.sqlite"
+  echo "Backup created: $BACKUP_DIR/${DB_DATABASE}_${TS}.sqlite"
+  ls -1t "$BACKUP_DIR"/*sqlite 2>/dev/null | tail -n +21 | xargs -r rm -f
   exit 0
 fi
 
@@ -45,6 +46,7 @@ MYSQL_PWD="$DB_PASSWORD" mysqldump \
   --host="$DB_HOST" \
   --port="$DB_PORT" \
   --user="$DB_USERNAME" \
-  "$DB_DATABASE" > "$BACKUP_DIR/backup_${TS}.sql"
+  "$DB_DATABASE" > "$BACKUP_DIR/${DB_DATABASE}_${TS}.sql"
 
-echo "Backup created: $BACKUP_DIR/backup_${TS}.sql"
+echo "Backup created: $BACKUP_DIR/${DB_DATABASE}_${TS}.sql"
+ls -1t "$BACKUP_DIR"/*sql 2>/dev/null | tail -n +21 | xargs -r rm -f
