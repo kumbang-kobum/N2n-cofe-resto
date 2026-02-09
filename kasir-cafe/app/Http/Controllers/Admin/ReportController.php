@@ -107,6 +107,56 @@ class ReportController extends Controller
      */
     public function stockOpnameDiff(Request $request)
     {
-        return $this->opnameVariance($request);
+        $from   = $request->input('from', now()->startOfMonth()->toDateString());
+        $to     = $request->input('to',   now()->toDateString());
+        $status = $request->input('status', ''); // <-- default kosong / ALL
+
+        $query = StockOpnameLine::query()
+            ->select([
+                'stock_opname_lines.*',
+                'stock_opnames.code as opname_code',
+                'stock_opnames.counted_at',
+                'stock_opnames.status as opname_status',
+                'items.name as item_name',
+            ])
+            ->join('stock_opnames','stock_opnames.id','=','stock_opname_lines.stock_opname_id')
+            ->join('items','items.id','=','stock_opname_lines.item_id')
+            ->whereBetween('stock_opnames.counted_at', [$from, $to])
+            ->where('stock_opnames.status','!=','CANCELLED')
+            ->whereRaw('ABS(stock_opname_lines.diff_qty_base) > 0.000001');
+
+        // kalau di form ada filter status, kita terapkan
+        if ($status === 'POSTED') {
+            $query->where('stock_opnames.status', 'POSTED');
+        } elseif ($status === 'DRAFT') {
+            $query->where('stock_opnames.status', 'DRAFT');
+        }
+        // kalau kosong: pakai semua status kecuali CANCELLED (sudah difilter di atas)
+
+        $rows = $query
+            ->orderByDesc('stock_opnames.counted_at')
+            ->orderBy('items.name')
+            ->paginate(50)
+            ->withQueryString();
+
+        $filters = [
+            'from'   => $from,
+            'to'     => $to,
+            'status' => $status,  // <-- penting, biar $filters['status'] selalu ada
+        ];
+
+        $collection = $rows->getCollection();
+
+        $summary = [
+            'total_rows'  => $rows->total(),
+            'total_plus'  => (float) $collection
+                ->where('diff_qty_base', '>', 0)
+                ->sum('diff_qty_base'),
+            'total_minus' => (float) $collection
+                ->where('diff_qty_base', '<', 0)
+                ->sum('diff_qty_base'),
+        ];
+
+        return view('admin.reports.opname_variance', compact('rows', 'filters', 'summary'));
     }
 }

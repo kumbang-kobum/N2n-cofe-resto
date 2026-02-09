@@ -110,6 +110,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/receivings/create', [ReceivingController::class, 'create'])->name('receivings.create');
             Route::post('/receivings', [ReceivingController::class, 'store'])->name('receivings.store');
             Route::get('/receivings/{id}', [ReceivingController::class, 'show'])->name('receivings.show');
+            // 👉 alias untuk link "Dispose" di index.blade.php
+            Route::get('/expired/{id}/dispose', [ExpiredController::class, 'create'])->name('expired.dispose'); 
 
             // Expired disposal
             Route::get('/expired', [ExpiredController::class, 'index'])->name('expired.index');

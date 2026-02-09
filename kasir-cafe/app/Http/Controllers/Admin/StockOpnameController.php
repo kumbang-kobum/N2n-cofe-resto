@@ -83,10 +83,12 @@ class StockOpnameController extends Controller
 
                 $diffBase = $physicalBase - $systemBase;
 
-                // cost per base (kalau diisi di satuan input)
-                $unitCostBase = null;
+                // === COST BASE (TIDAK BOLEH NULL) ===
+                // default 0
+                $unitCostBase = 0;
+
                 if (isset($line['unit_cost']) && $line['unit_cost'] !== '') {
-                    $inputCost   = (float) $line['unit_cost'];  // harga per unit input
+                    $inputCost    = (float) $line['unit_cost'];   // harga per unit input
                     $unitCostBase = $factor > 0 ? $inputCost / $factor : 0; // harga per base
                 }
 
@@ -98,7 +100,7 @@ class StockOpnameController extends Controller
                     'diff_qty_base'     => $diffBase,
                     'input_unit_id'     => $unit->id,
                     'expired_at'        => $line['expired_at'] ?? null,
-                    'unit_cost_base'    => $unitCostBase,
+                    'unit_cost_base'    => $unitCostBase,   // <-- selalu angka, minimal 0
                     'created_at'        => now(),
                     'updated_at'        => now(),
                 ];
@@ -186,11 +188,14 @@ class StockOpnameController extends Controller
                 // expired & cost hanya relevan jika selisih plus
                 if ($diff > 0) {
                     $line->expired_at     = $row['expired_at'] ?? null;
-                    $line->unit_cost_base = $row['unit_cost_base'] ?? 0;
+                    $line->unit_cost_base = isset($row['unit_cost_base']) && $row['unit_cost_base'] !== ''
+                        ? (float) $row['unit_cost_base']
+                        : 0;
                 } else {
-                    // kalau selisih 0 atau minus, kosongkan saja
+                    // kalau selisih 0 atau minus, expired boleh dikosongkan,
+                    // tapi unit_cost_base jangan NULL karena kolom NOT NULL
                     $line->expired_at     = null;
-                    $line->unit_cost_base = null;
+                    $line->unit_cost_base = 0;
                 }
 
                 // catatan: kolom input_unit_id & physical_qty_input di tabel
