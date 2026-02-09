@@ -15,6 +15,7 @@ class Sale extends Model
         'cashier_id',
         'total',
         'discount_amount',
+        'refund_total',
         'tax_rate',
         'tax_amount',
         'grand_total',
@@ -27,6 +28,7 @@ class Sale extends Model
     protected $casts = [
         'total'        => 'float',
         'discount_amount' => 'float',
+        'refund_total' => 'float',
         'tax_rate'     => 'float',
         'tax_amount'   => 'float',
         'grand_total'  => 'float',
@@ -38,6 +40,11 @@ class Sale extends Model
     public function lines()
     {
         return $this->hasMany(SaleLine::class);
+    }
+
+    public function refunds()
+    {
+        return $this->hasMany(SaleRefund::class);
     }
 
     public function cashier()

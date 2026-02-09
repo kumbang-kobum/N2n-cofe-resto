@@ -39,6 +39,7 @@ class ReportController extends Controller
             'discount' => (float) $sales->sum('discount_amount'),
             'tax'      => (float) $sales->sum('tax_amount'),
             'omzet'    => (float) $sales->sum('grand_total'),
+            'refund'   => (float) $sales->sum('refund_total'),
             'cogs'     => (float) $sales->sum('cogs_total'),
             'profit'   => (float) $sales->sum('profit_gross'),
             'per_payment' => [],

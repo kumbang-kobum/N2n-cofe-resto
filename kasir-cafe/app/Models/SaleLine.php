@@ -28,4 +28,9 @@ class SaleLine extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function refundLines()
+    {
+        return $this->hasMany(SaleRefundLine::class, 'sale_line_id');
+    }
 }

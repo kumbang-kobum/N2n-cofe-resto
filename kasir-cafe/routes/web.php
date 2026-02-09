@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\SaleRefundController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Product;
 
@@ -40,6 +41,15 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified', 'license'])->group(function () {
+    // Refund (cashier/admin/manager)
+    Route::middleware('role:cashier|admin|manager')->group(function () {
+        Route::get('/sales/{sale}/refund', [SaleRefundController::class, 'create'])->name('cashier.refunds.create');
+        Route::post('/sales/{sale}/refund', [SaleRefundController::class, 'store'])->name('cashier.refunds.store');
+        Route::get('/manager/sales/{sale}/refund', [SaleRefundController::class, 'create'])->name('manager.refunds.create');
+        Route::post('/manager/sales/{sale}/refund', [SaleRefundController::class, 'store'])->name('manager.refunds.store');
+        Route::get('/admin/sales/{sale}/refund', [SaleRefundController::class, 'create'])->name('admin.refunds.create');
+        Route::post('/admin/sales/{sale}/refund', [SaleRefundController::class, 'store'])->name('admin.refunds.store');
+    });
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

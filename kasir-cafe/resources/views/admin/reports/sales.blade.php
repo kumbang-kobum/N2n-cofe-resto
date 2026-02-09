@@ -66,7 +66,7 @@
     </div>
 
     {{-- Ringkasan Utama --}}
-    <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-7 gap-4 mb-4">
         <div class="bg-white border rounded-lg p-4">
             <div class="text-xs text-gray-500 mb-1">Subtotal</div>
             <div class="text-lg font-semibold">
@@ -85,6 +85,13 @@
             <div class="text-xs text-gray-500 mb-1">Pajak</div>
             <div class="text-lg font-semibold">
                 Rp {{ number_format($summary['tax'] ?? 0, 0, ',', '.') }}
+            </div>
+        </div>
+
+        <div class="bg-white border rounded-lg p-4">
+            <div class="text-xs text-gray-500 mb-1">Refund</div>
+            <div class="text-lg font-semibold">
+                Rp {{ number_format($summary['refund'] ?? 0, 0, ',', '.') }}
             </div>
         </div>
 
@@ -159,8 +166,10 @@
                         <th class="text-right p-2 border-b">Diskon</th>
                         <th class="text-right p-2 border-b">Pajak</th>
                         <th class="text-right p-2 border-b">Total</th>
+                        <th class="text-right p-2 border-b">Refund</th>
                         <th class="text-right p-2 border-b">COGS</th>
                         <th class="text-right p-2 border-b">Laba</th>
+                        <th class="text-center p-2 border-b">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -194,15 +203,22 @@
                                 Rp {{ number_format($s->grand_total ?? ($s->total - ($s->discount_amount ?? 0) + ($s->tax_amount ?? 0)), 0, ',', '.') }}
                             </td>
                             <td class="p-2 text-right align-top">
+                                Rp {{ number_format($s->refund_total ?? 0, 0, ',', '.') }}
+                            </td>
+                            <td class="p-2 text-right align-top">
                                 Rp {{ number_format($s->cogs_total ?? 0, 0, ',', '.') }}
                             </td>
                             <td class="p-2 text-right align-top">
                                 Rp {{ number_format($s->profit_gross ?? 0, 0, ',', '.') }}
                             </td>
+                            <td class="p-2 text-center align-top">
+                                <a href="{{ route(request()->routeIs('cashier.*') ? 'cashier.refunds.create' : (request()->routeIs('manager.*') ? 'manager.refunds.create' : 'admin.refunds.create'), $s) }}"
+                                   class="text-xs text-blue-600 hover:underline">Refund</a>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="p-4 text-center text-gray-500">
+                            <td colspan="13" class="p-4 text-center text-gray-500">
                                 Belum ada transaksi pada periode ini.
                             </td>
                         </tr>
