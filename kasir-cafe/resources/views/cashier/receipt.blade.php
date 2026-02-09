@@ -54,16 +54,22 @@
 
         <div class="my-2 border-t border-dashed"></div>
 
-        @php
+@php
             $taxRate = (float) ($sale->tax_rate ?? config('pos.tax_rate', 0.10));
+            $discount = (float) ($sale->discount_amount ?? 0);
+            $taxBase = max(0, (float) $sale->total - $discount);
             $taxAmount = (float) ($sale->tax_amount ?? 0);
-            $grand = (float) ($sale->grand_total ?? ($sale->total + $taxAmount));
+            $grand = (float) ($sale->grand_total ?? ($taxBase + $taxAmount));
         @endphp
 
         <div class="text-[11px] space-y-1">
             <div class="flex justify-between">
                 <span>Subtotal</span>
                 <span>{{ number_format($sale->total, 0, ',', '.') }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span>Diskon</span>
+                <span>{{ number_format($discount, 0, ',', '.') }}</span>
             </div>
             <div class="flex justify-between">
                 <span>Pajak ({{ (int) ($taxRate * 100) }}%)</span>

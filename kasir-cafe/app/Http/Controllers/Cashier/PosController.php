@@ -204,6 +204,7 @@ class PosController extends Controller
         $request->validate([
             'sale_id'        => ['required', 'exists:sales,id'],
             'payment_method' => ['required', 'in:CASH,QRIS,DEBIT'],
+            'discount_amount' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $sale = Sale::with([
@@ -301,17 +302,27 @@ class PosController extends Controller
 
             // Update status & ringkasan keuangan sale
             $taxRate = (float) config('pos.tax_rate', 0.10);
-            $taxAmount = round((float) $sale->total * $taxRate, 2);
-            $grandTotal = (float) $sale->total + $taxAmount;
+            $discount = (float) $request->input('discount_amount', 0);
+            if ($discount < 0) {
+                $discount = 0;
+            }
+            if ($discount > (float) $sale->total) {
+                $discount = (float) $sale->total;
+            }
+
+            $taxBase = max(0, (float) $sale->total - $discount);
+            $taxAmount = round($taxBase * $taxRate, 2);
+            $grandTotal = $taxBase + $taxAmount;
 
             $sale->status         = 'PAID';
             $sale->payment_method = $request->payment_method;
             $sale->paid_at        = now();
             $sale->cogs_total     = $cogs;
+            $sale->discount_amount = $discount;
             $sale->tax_rate       = $taxRate;
             $sale->tax_amount     = $taxAmount;
             $sale->grand_total    = $grandTotal;
-            $sale->profit_gross   = $sale->total - $cogs;
+            $sale->profit_gross   = max(0, $taxBase) - $cogs;
             $sale->save();
         });
 

@@ -66,11 +66,18 @@
     </div>
 
     {{-- Ringkasan Utama --}}
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
         <div class="bg-white border rounded-lg p-4">
             <div class="text-xs text-gray-500 mb-1">Subtotal</div>
             <div class="text-lg font-semibold">
                 Rp {{ number_format($summary['subtotal'] ?? 0, 0, ',', '.') }}
+            </div>
+        </div>
+
+        <div class="bg-white border rounded-lg p-4">
+            <div class="text-xs text-gray-500 mb-1">Diskon</div>
+            <div class="text-lg font-semibold">
+                Rp {{ number_format($summary['discount'] ?? 0, 0, ',', '.') }}
             </div>
         </div>
 
@@ -149,6 +156,7 @@
                         <th class="text-left p-2 border-b">Kasir</th>
                         <th class="text-left p-2 border-b">Metode</th>
                         <th class="text-right p-2 border-b">Subtotal</th>
+                        <th class="text-right p-2 border-b">Diskon</th>
                         <th class="text-right p-2 border-b">Pajak</th>
                         <th class="text-right p-2 border-b">Total</th>
                         <th class="text-right p-2 border-b">COGS</th>
@@ -177,10 +185,13 @@
                                 Rp {{ number_format($s->total, 0, ',', '.') }}
                             </td>
                             <td class="p-2 text-right align-top">
+                                Rp {{ number_format($s->discount_amount ?? 0, 0, ',', '.') }}
+                            </td>
+                            <td class="p-2 text-right align-top">
                                 Rp {{ number_format($s->tax_amount ?? 0, 0, ',', '.') }}
                             </td>
                             <td class="p-2 text-right align-top">
-                                Rp {{ number_format($s->grand_total ?? ($s->total + ($s->tax_amount ?? 0)), 0, ',', '.') }}
+                                Rp {{ number_format($s->grand_total ?? ($s->total - ($s->discount_amount ?? 0) + ($s->tax_amount ?? 0)), 0, ',', '.') }}
                             </td>
                             <td class="p-2 text-right align-top">
                                 Rp {{ number_format($s->cogs_total ?? 0, 0, ',', '.') }}
@@ -191,7 +202,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="p-4 text-center text-gray-500">
+                            <td colspan="11" class="p-4 text-center text-gray-500">
                                 Belum ada transaksi pada periode ini.
                             </td>
                         </tr>

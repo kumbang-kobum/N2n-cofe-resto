@@ -157,11 +157,16 @@
 
             @php
                 $taxRate = (float) config('pos.tax_rate', 0.10);
-                $taxAmount = round((float) $sale->total * $taxRate, 2);
-                $grandTotal = (float) $sale->total + $taxAmount;
+                $discountAmount = (float) ($sale->discount_amount ?? 0);
+                $taxBase = max(0, (float) $sale->total - $discountAmount);
+                $taxAmount = round($taxBase * $taxRate, 2);
+                $grandTotal = $taxBase + $taxAmount;
             @endphp
 
-            <div class="mt-4 text-sm text-gray-600 space-y-1">
+            <div class="mt-4 text-sm text-gray-600 space-y-1"
+                 data-summary
+                 data-subtotal="{{ (float) $sale->total }}"
+                 data-tax-rate="{{ (float) $taxRate }}">
                 <div class="flex items-center justify-between">
                     <span>Subtotal</span>
                     <span class="font-semibold text-gray-800">
@@ -169,14 +174,20 @@
                     </span>
                 </div>
                 <div class="flex items-center justify-between">
+                    <span>Diskon</span>
+                    <span class="font-semibold text-gray-800" data-discount>
+                        Rp {{ number_format($discountAmount, 0, ',', '.') }}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between">
                     <span>Pajak ({{ (int) ($taxRate * 100) }}%)</span>
-                    <span class="font-semibold text-gray-800">
+                    <span class="font-semibold text-gray-800" data-tax>
                         Rp {{ number_format($taxAmount, 0, ',', '.') }}
                     </span>
                 </div>
                 <div class="flex items-center justify-between text-base">
                     <span>Total</span>
-                    <span class="font-semibold">
+                    <span class="font-semibold" data-total>
                         Rp {{ number_format($grandTotal, 0, ',', '.') }}
                     </span>
                 </div>
@@ -185,6 +196,16 @@
             <form method="POST" action="{{ route('cashier.pos.pay') }}" class="mt-4 space-y-2">
                 @csrf
                 <input type="hidden" name="sale_id" value="{{ $sale->id }}">
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Diskon (Rp)</label>
+                    <input type="number"
+                           name="discount_amount"
+                           value="{{ old('discount_amount', 0) }}"
+                           min="0"
+                           step="100"
+                           class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                </div>
 
                 <select name="payment_method"
                         class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
@@ -209,6 +230,8 @@
         const searchInput = document.getElementById('product-search');
         const cards      = document.querySelectorAll('.product-card');
         const forms      = document.querySelectorAll('.product-card');
+        const discountInput = document.querySelector('input[name="discount_amount"]');
+        const summaryEl = document.querySelector('[data-summary]');
 
         if (!searchInput) return;
 
@@ -232,6 +255,33 @@
                 }
             });
         });
+
+        if (discountInput && summaryEl) {
+            const subtotal = parseFloat(summaryEl.dataset.subtotal || '0');
+            const taxRate = parseFloat(summaryEl.dataset.taxRate || '0');
+            const discountDisplay = summaryEl.querySelector('[data-discount]');
+            const taxDisplay = summaryEl.querySelector('[data-tax]');
+            const totalDisplay = summaryEl.querySelector('[data-total]');
+
+            const formatRp = (n) => new Intl.NumberFormat('id-ID').format(n);
+
+            const recalc = () => {
+                let discount = parseFloat(discountInput.value || '0');
+                if (Number.isNaN(discount) || discount < 0) discount = 0;
+                if (discount > subtotal) discount = subtotal;
+
+                const taxBase = Math.max(0, subtotal - discount);
+                const tax = Math.round(taxBase * taxRate);
+                const total = taxBase + tax;
+
+                if (discountDisplay) discountDisplay.textContent = 'Rp ' + formatRp(discount);
+                if (taxDisplay) taxDisplay.textContent = 'Rp ' + formatRp(tax);
+                if (totalDisplay) totalDisplay.textContent = 'Rp ' + formatRp(total);
+            };
+
+            discountInput.addEventListener('input', recalc);
+            recalc();
+        }
     });
 </script>
 @endpush

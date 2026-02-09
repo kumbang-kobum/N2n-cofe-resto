@@ -36,6 +36,7 @@ class ReportController extends Controller
 
         $summary = [
             'subtotal' => (float) $sales->sum('total'),
+            'discount' => (float) $sales->sum('discount_amount'),
             'tax'      => (float) $sales->sum('tax_amount'),
             'omzet'    => (float) $sales->sum('grand_total'),
             'cogs'     => (float) $sales->sum('cogs_total'),
@@ -50,7 +51,8 @@ class ReportController extends Controller
                 $summary['per_payment'][$method] = 0;
             }
 
-            $summary['per_payment'][$method] += (float) ($s->grand_total ?: ($s->total + ($s->tax_amount ?? 0)));
+            $fallbackTotal = (float) $s->total - (float) ($s->discount_amount ?? 0) + (float) ($s->tax_amount ?? 0);
+            $summary['per_payment'][$method] += (float) ($s->grand_total ?: $fallbackTotal);
         }
 
         return [$sales, $summary, $from, $to];
