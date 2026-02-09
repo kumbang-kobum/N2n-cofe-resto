@@ -163,6 +163,20 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
         ->middleware('role:manager')
         ->group(function () {
             Route::get('/dashboard', [ManagerDashboard::class, 'index'])->name('dashboard');
+
+            // Produk / Menu
+            Route::resource('products', ProductController::class);
+
+            // Resep / BOM
+            Route::resource('recipes', RecipeController::class);
+
+            // Pengaturan Resto
+            Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
+            Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
+
+            // Laporan Penjualan & Selisih Opname
+            Route::get('/reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
+            Route::get('/reports/stock-opname-diff', [ReportController::class, 'stockOpnameDiff'])->name('reports.opname_variance');
         });
 
     /*

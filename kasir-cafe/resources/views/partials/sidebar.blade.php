@@ -136,6 +136,57 @@
             </div>
         @endrole
 
+        {{-- ====================== MANAGER ====================== --}}
+        @role('manager')
+            <div>
+                <div class="text-[11px] font-semibold tracking-widest text-blue-200/80 uppercase mb-1">
+                    Manager
+                </div>
+
+                <a href="{{ route('manager.dashboard') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('manager.dashboard') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="{{ route('manager.products.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('manager.products.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Produk / Menu</span>
+                </a>
+
+                <a href="{{ route('manager.recipes.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('manager.recipes.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Resep / BOM</span>
+                </a>
+
+                <a href="{{ route('manager.settings.edit') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('manager.settings.edit') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Pengaturan Resto</span>
+                </a>
+
+                <a href="{{ route('manager.reports.sales') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('manager.reports.sales') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Laporan Penjualan</span>
+                </a>
+
+                <a href="{{ route('manager.reports.opname_variance') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('manager.reports.opname_variance') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Laporan Selisih Opname</span>
+                </a>
+
+                <a href="{{ route('profile.edit') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('profile.edit') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Ubah Password</span>
+                </a>
+            </div>
+        @endrole
+
         {{-- ====================== CASHIER ====================== --}}
         @role('cashier')
             <div>
