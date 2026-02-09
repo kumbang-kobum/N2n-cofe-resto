@@ -14,6 +14,9 @@ class Sale extends Model
         'status',
         'cashier_id',
         'total',
+        'tax_rate',
+        'tax_amount',
+        'grand_total',
         'paid_at',
         'payment_method',
         'cogs_total',
@@ -22,6 +25,9 @@ class Sale extends Model
 
     protected $casts = [
         'total'        => 'float',
+        'tax_rate'     => 'float',
+        'tax_amount'   => 'float',
+        'grand_total'  => 'float',
         'cogs_total'   => 'float',
         'profit_gross' => 'float',
         'paid_at'      => 'datetime',

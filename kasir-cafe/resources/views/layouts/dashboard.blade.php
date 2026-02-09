@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ config('app.name','Kasir Cafe') }}</title>
   @vite(['resources/css/app.css','resources/js/app.js'])
+  @stack('styles')
 </head>
 <body class="bg-gray-50">
 <div x-data="{ open:false }" class="min-h-screen">
@@ -56,5 +57,6 @@
 </div>
 
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+@stack('scripts')
 </body>
 </html>

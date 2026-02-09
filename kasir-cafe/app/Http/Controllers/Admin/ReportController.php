@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Sale;
 use App\Models\StockOpnameLine;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
@@ -34,9 +35,11 @@ class ReportController extends Controller
         $sales = $query->orderByDesc('paid_at')->get();
 
         $summary = [
-            'omzet'  => (float) $sales->sum('total'),
-            'cogs'   => (float) $sales->sum('cogs_total'),
-            'profit' => (float) $sales->sum('profit_gross'),
+            'subtotal' => (float) $sales->sum('total'),
+            'tax'      => (float) $sales->sum('tax_amount'),
+            'omzet'    => (float) $sales->sum('grand_total'),
+            'cogs'     => (float) $sales->sum('cogs_total'),
+            'profit'   => (float) $sales->sum('profit_gross'),
             'per_payment' => [],
         ];
 
@@ -47,7 +50,7 @@ class ReportController extends Controller
                 $summary['per_payment'][$method] = 0;
             }
 
-            $summary['per_payment'][$method] += (float) $s->total;
+            $summary['per_payment'][$method] += (float) ($s->grand_total ?: ($s->total + ($s->tax_amount ?? 0)));
         }
 
         return [$sales, $summary, $from, $to];
@@ -58,9 +61,15 @@ class ReportController extends Controller
      */
     public function sales(Request $request)
     {
-        [$sales, $summary, $from, $to] = $this->buildSalesData($request, null);
+        $cashierId = $request->query('cashier_id');
+        $cashierId = $cashierId !== null && $cashierId !== '' ? (int) $cashierId : null;
 
-        return view('admin.reports.sales', compact('sales', 'summary', 'from', 'to'));
+        [$sales, $summary, $from, $to] = $this->buildSalesData($request, $cashierId);
+
+        $cashiers = User::role('cashier')->orderBy('name')->get();
+        $selectedCashier = $cashierId;
+
+        return view('admin.reports.sales', compact('sales', 'summary', 'from', 'to', 'cashiers', 'selectedCashier'));
     }
 
     /**

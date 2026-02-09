@@ -175,9 +175,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/pos/new', [PosController::class, 'newSale'])->name('pos.new');
             Route::post('/pos/add', [PosController::class, 'addLine'])->name('pos.add');
             Route::post('/pos/pay', [PosController::class, 'pay'])->name('pos.pay');
+            Route::get('/pos/receipt/{sale}', [PosController::class, 'receipt'])->name('pos.receipt');
             // >>> Laporan penjualan kasir (transaksi milik kasir login) <<<
-            Route::get('/reports/sales', [\App\Http\Controllers\Admin\ReportController::class, 'sales'])
-            ->name('reports.sales');
+            Route::get('/reports/sales', [\App\Http\Controllers\Admin\ReportController::class, 'salesForCashier'])
+                ->name('reports.sales');
         });
 });
 

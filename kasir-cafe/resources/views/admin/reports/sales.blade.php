@@ -40,6 +40,20 @@
                 >
             </div>
 
+            @if (!request()->routeIs('cashier.*'))
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Kasir</label>
+                    <select name="cashier_id" class="border rounded px-3 py-2 text-sm">
+                        <option value="">Semua Kasir</option>
+                        @foreach(($cashiers ?? []) as $c)
+                            <option value="{{ $c->id }}" @selected(($selectedCashier ?? null) === $c->id)>
+                                {{ $c->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
+
             <div>
                 <button
                     type="submit"
@@ -52,7 +66,21 @@
     </div>
 
     {{-- Ringkasan Utama --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+        <div class="bg-white border rounded-lg p-4">
+            <div class="text-xs text-gray-500 mb-1">Subtotal</div>
+            <div class="text-lg font-semibold">
+                Rp {{ number_format($summary['subtotal'] ?? 0, 0, ',', '.') }}
+            </div>
+        </div>
+
+        <div class="bg-white border rounded-lg p-4">
+            <div class="text-xs text-gray-500 mb-1">Pajak</div>
+            <div class="text-lg font-semibold">
+                Rp {{ number_format($summary['tax'] ?? 0, 0, ',', '.') }}
+            </div>
+        </div>
+
         <div class="bg-white border rounded-lg p-4">
             <div class="text-xs text-gray-500 mb-1">Omzet</div>
             <div class="text-lg font-semibold">
@@ -120,6 +148,8 @@
                         <th class="text-left p-2 border-b">No. Nota</th>
                         <th class="text-left p-2 border-b">Kasir</th>
                         <th class="text-left p-2 border-b">Metode</th>
+                        <th class="text-right p-2 border-b">Subtotal</th>
+                        <th class="text-right p-2 border-b">Pajak</th>
                         <th class="text-right p-2 border-b">Total</th>
                         <th class="text-right p-2 border-b">COGS</th>
                         <th class="text-right p-2 border-b">Laba</th>
@@ -147,6 +177,12 @@
                                 Rp {{ number_format($s->total, 0, ',', '.') }}
                             </td>
                             <td class="p-2 text-right align-top">
+                                Rp {{ number_format($s->tax_amount ?? 0, 0, ',', '.') }}
+                            </td>
+                            <td class="p-2 text-right align-top">
+                                Rp {{ number_format($s->grand_total ?? ($s->total + ($s->tax_amount ?? 0)), 0, ',', '.') }}
+                            </td>
+                            <td class="p-2 text-right align-top">
                                 Rp {{ number_format($s->cogs_total ?? 0, 0, ',', '.') }}
                             </td>
                             <td class="p-2 text-right align-top">
@@ -155,7 +191,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="p-4 text-center text-gray-500">
+                            <td colspan="10" class="p-4 text-center text-gray-500">
                                 Belum ada transaksi pada periode ini.
                             </td>
                         </tr>

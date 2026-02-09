@@ -57,7 +57,8 @@
                         <form method="POST"
                               action="{{ route('cashier.pos.add') }}"
                               class="product-card group bg-gray-50 rounded-lg border hover:border-blue-400 hover:bg-blue-50/40 transition cursor-pointer flex flex-col"
-                              data-name="{{ Str::lower($p->name) }}">
+                              data-name="{{ Str::lower($p->name) }}"
+                              data-warning="{{ $p->stock_warning ?? '' }}">
                             @csrf
                             <input type="hidden" name="sale_id" value="{{ $sale->id }}">
                             <input type="hidden" name="product_id" value="{{ $p->id }}">
@@ -80,6 +81,11 @@
                                 <div class="text-sm font-semibold leading-tight line-clamp-2">
                                     {{ $p->name }}
                                 </div>
+                                @if (!empty($p->stock_warning))
+                                    <div class="mt-1 text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                                        {{ $p->stock_warning }}
+                                    </div>
+                                @endif
                                 <div class="text-xs text-gray-500">
                                     Rp {{ number_format($p->price_default, 0, ',', '.') }}
                                 </div>
@@ -149,10 +155,30 @@
                 </table>
             </div>
 
-            <div class="mt-4 flex items-center justify-between">
-                <div class="text-sm text-gray-600">Total</div>
-                <div class="text-lg font-semibold">
-                    Rp {{ number_format($sale->total, 0, ',', '.') }}
+            @php
+                $taxRate = (float) config('pos.tax_rate', 0.10);
+                $taxAmount = round((float) $sale->total * $taxRate, 2);
+                $grandTotal = (float) $sale->total + $taxAmount;
+            @endphp
+
+            <div class="mt-4 text-sm text-gray-600 space-y-1">
+                <div class="flex items-center justify-between">
+                    <span>Subtotal</span>
+                    <span class="font-semibold text-gray-800">
+                        Rp {{ number_format($sale->total, 0, ',', '.') }}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span>Pajak ({{ (int) ($taxRate * 100) }}%)</span>
+                    <span class="font-semibold text-gray-800">
+                        Rp {{ number_format($taxAmount, 0, ',', '.') }}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between text-base">
+                    <span>Total</span>
+                    <span class="font-semibold">
+                        Rp {{ number_format($grandTotal, 0, ',', '.') }}
+                    </span>
                 </div>
             </div>
 
@@ -182,6 +208,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         const searchInput = document.getElementById('product-search');
         const cards      = document.querySelectorAll('.product-card');
+        const forms      = document.querySelectorAll('.product-card');
 
         if (!searchInput) return;
 
@@ -191,6 +218,18 @@
             cards.forEach(card => {
                 const name = card.dataset.name || '';
                 card.style.display = name.includes(q) ? '' : 'none';
+            });
+        });
+
+        forms.forEach(form => {
+            form.addEventListener('submit', function (e) {
+                const warning = (this.dataset.warning || '').trim();
+                if (!warning) return;
+
+                const ok = window.confirm('Perhatian: ' + warning + '.\nTetap tambahkan ke keranjang?');
+                if (!ok) {
+                    e.preventDefault();
+                }
             });
         });
     });
