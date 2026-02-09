@@ -160,7 +160,9 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
 
             // Laporan
             Route::get('/reports/sales', [\App\Http\Controllers\Admin\ReportController::class, 'sales'])
-            ->name('reports.sales');
+                ->name('reports.sales');
+            Route::get('/reports/sales/export', [\App\Http\Controllers\Admin\ReportController::class, 'exportSales'])
+                ->name('reports.sales.export');
             Route::get('/reports/stock-opname-diff', [ReportController::class, 'stockOpnameDiff'])->name('reports.opname_variance');
             Route::get('/reports/audit-logs', [AuditLogController::class, 'index'])->name('reports.audit_logs');
         });
@@ -188,6 +190,7 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
 
             // Laporan Penjualan & Selisih Opname
             Route::get('/reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
+            Route::get('/reports/sales/export', [ReportController::class, 'exportSales'])->name('reports.sales.export');
             Route::get('/reports/stock-opname-diff', [ReportController::class, 'stockOpnameDiff'])->name('reports.opname_variance');
         });
 
@@ -218,6 +221,8 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             // >>> Laporan penjualan kasir (transaksi milik kasir login) <<<
             Route::get('/reports/sales', [\App\Http\Controllers\Admin\ReportController::class, 'salesForCashier'])
                 ->name('reports.sales');
+            Route::get('/reports/sales/export', [\App\Http\Controllers\Admin\ReportController::class, 'exportSalesForCashier'])
+                ->name('reports.sales.export');
         });
 });
 

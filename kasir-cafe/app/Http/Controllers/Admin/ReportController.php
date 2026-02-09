@@ -59,6 +59,58 @@ class ReportController extends Controller
         return [$sales, $summary, $from, $to];
     }
 
+    protected function exportSalesCsv($sales, string $from, string $to)
+    {
+        $filename = 'laporan_penjualan_' . $from . '_to_' . $to . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($sales) {
+            $out = fopen('php://output', 'w');
+
+            fputcsv($out, [
+                'Tanggal',
+                'ID',
+                'No Nota',
+                'Kasir',
+                'Metode',
+                'Subtotal',
+                'Diskon',
+                'Pajak',
+                'Total',
+                'Refund',
+                'COGS',
+                'Laba',
+            ]);
+
+            foreach ($sales as $s) {
+                $grand = $s->grand_total ?? ($s->total - ($s->discount_amount ?? 0) + ($s->tax_amount ?? 0));
+
+                fputcsv($out, [
+                    optional($s->paid_at)->format('Y-m-d H:i:s'),
+                    $s->id,
+                    $s->receipt_no ?? '-',
+                    optional($s->cashier)->name ?? '-',
+                    strtoupper($s->payment_method ?? '-'),
+                    (float) $s->total,
+                    (float) ($s->discount_amount ?? 0),
+                    (float) ($s->tax_amount ?? 0),
+                    (float) $grand,
+                    (float) ($s->refund_total ?? 0),
+                    (float) ($s->cogs_total ?? 0),
+                    (float) ($s->profit_gross ?? 0),
+                ]);
+            }
+
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     /**
      * Laporan penjualan (ADMIN) – semua kasir.
      */
@@ -75,6 +127,16 @@ class ReportController extends Controller
         return view('admin.reports.sales', compact('sales', 'summary', 'from', 'to', 'cashiers', 'selectedCashier'));
     }
 
+    public function exportSales(Request $request)
+    {
+        $cashierId = $request->query('cashier_id');
+        $cashierId = $cashierId !== null && $cashierId !== '' ? (int) $cashierId : null;
+
+        [$sales, $summary, $from, $to] = $this->buildSalesData($request, $cashierId);
+
+        return $this->exportSalesCsv($sales, $from, $to);
+    }
+
     /**
      * Laporan penjualan untuk KASIR (hanya transaksi kasir yang login).
      */
@@ -83,6 +145,13 @@ class ReportController extends Controller
         [$sales, $summary, $from, $to] = $this->buildSalesData($request, auth()->id());
 
         return view('admin.reports.sales', compact('sales', 'summary', 'from', 'to'));
+    }
+
+    public function exportSalesForCashier(Request $request)
+    {
+        [$sales, $summary, $from, $to] = $this->buildSalesData($request, auth()->id());
+
+        return $this->exportSalesCsv($sales, $from, $to);
     }
 
     /**

@@ -11,6 +11,12 @@
                 <span class="font-medium">{{ $to }}</span>
             </p>
         </div>
+        <div>
+            <a href="{{ route(request()->routeIs('cashier.*') ? 'cashier.reports.sales.export' : (request()->routeIs('manager.*') ? 'manager.reports.sales.export' : 'admin.reports.sales.export'), request()->query()) }}"
+               class="px-3 py-2 rounded bg-green-600 text-white text-sm font-medium hover:bg-green-700">
+                Export Excel
+            </a>
+        </div>
     </div>
 
     {{-- Filter Periode --}}
