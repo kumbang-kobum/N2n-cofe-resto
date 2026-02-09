@@ -146,119 +146,104 @@ class PosController extends Controller
     /**
      * Bayar transaksi + FEFO konsumsi bahan resep.
      */
-    public function pay(
-        Request $request,
-        FefoAllocator $allocator,
-        UnitConverter $converter
-    ) {
-        $request->validate([
-            'sale_id'        => ['required', 'exists:sales,id'],
-            'payment_method' => ['required', 'string'],
-        ]);
+    public function pay(Request $request, FefoAllocator $allocator)
+{
+    $request->validate([
+        'sale_id'        => ['required', 'exists:sales,id'],
+        'payment_method' => ['required', 'in:CASH,QRIS,DEBIT'],
+    ]);
 
-        DB::transaction(function () use ($request, $allocator, $converter) {
+    $sale = Sale::with([
+        'lines.menu',
+        'lines.recipe.details.item',
+    ])->findOrFail($request->sale_id);
 
-            /** @var Sale $sale */
-            $sale = Sale::with('lines.product.recipe.lines.item')
-                ->where('cashier_id', auth()->id())
-                ->lockForUpdate()
-                ->findOrFail($request->sale_id);
+    abort_if($sale->status !== 'DRAFT', 400, 'Transaksi sudah dibayar.');
 
-            if ($sale->status !== 'DRAFT') {
-                abort(400, 'Transaksi bukan DRAFT.');
+    DB::transaction(function () use ($request, $sale, $allocator) {
+
+        // Kumpulkan kebutuhan bahan (dalam base unit) dari semua recipe
+        $needs = [];
+        foreach ($sale->lines as $line) {
+            $recipe = $line->recipe;
+            if (! $recipe) {
+                continue;
             }
 
-            // Kumpulkan kebutuhan bahan (dalam base unit)
-            $needs = [];
+            foreach ($recipe->details as $detail) {
+                $itemId  = $detail->item_id;
+                // qty_base di detail sudah dalam base unit
+                $qtyBase = (float) $detail->qty_base * (float) $line->qty;
 
-            foreach ($sale->lines as $line) {
-                $product = $line->product;
+                if (! isset($needs[$itemId])) {
+                    $needs[$itemId] = 0;
+                }
+                $needs[$itemId] += $qtyBase;
+            }
+        }
 
-                // Kalau belum ada resep, lewati (tidak kurangi stok bahan)
-                if (!$product->recipe) {
+        $cogs = 0;
+
+        // Alokasikan dari batch FEFO dan kurangi stok
+        foreach ($needs as $itemId => $needBase) {
+            // FefoAllocator sekarang mengembalikan array of ['batch' => ItemBatch, 'take' => float]
+            $allocs = $allocator->allocate($itemId, $needBase);
+
+            $takenTotal = 0;
+
+            foreach ($allocs as $alloc) {
+                /** @var \App\Models\ItemBatch $batch */
+                $batch = $alloc['batch'];
+                $take  = (float) $alloc['take'];
+
+                if ($take <= 0) {
                     continue;
                 }
 
-                foreach ($product->recipe->lines as $rl) {
-                    $item = $rl->item;
+                $takenTotal += $take;
 
-                    $qtyNeeded = (float) $rl->qty * (float) $line->qty;
-
-                    $qtyBase = $converter->toBase(
-                        $qtyNeeded,
-                        $rl->unit_id,
-                        $item->base_unit_id
-                    );
-
-                    if (!isset($needs[$item->id])) {
-                        $needs[$item->id] = 0.0;
-                    }
-
-                    $needs[$item->id] += $qtyBase;
+                // Kurangi stok batch
+                $batch->qty_on_hand_base = max(0, (float) $batch->qty_on_hand_base - $take);
+                if ($batch->qty_on_hand_base <= 0.000001) {
+                    $batch->qty_on_hand_base = 0;
+                    $batch->status = 'DEPLETED';
                 }
+                $batch->save();
+
+                // Catat pergerakan stok (keluar untuk penjualan)
+                StockMove::create([
+                    'moved_at'   => now(),          // boleh diganti $sale->sale_date kalau mau
+                    'item_id'    => $itemId,
+                    'batch_id'   => $batch->id,
+                    'qty_base'   => -$take,
+                    'type'       => 'CONSUMPTION',  // pastikan enum di DB sama
+                    'ref_type'   => 'sale',
+                    'ref_id'     => $sale->id,
+                    'created_by' => auth()->id(),
+                    'note'       => 'POS #' . $sale->id,
+                ]);
+
+                // Tambah COGS
+                $cogs += $take * (float) $batch->unit_cost_base;
             }
 
-            $cogs = 0.0;
-
-            // FEFO konsumsi stok tiap bahan
-            foreach ($needs as $itemId => $qtyBase) {
-
-                $result   = $allocator->allocate($itemId, $qtyBase);
-                $unfilled = isset($result['unfilled']) ? (float) $result['unfilled'] : 0.0;
-
-                if ($unfilled > 0.000001) {
-                    // stok kurang
-                    throw ValidationException::withMessages([
-                        'sale_id' => 'Stok tidak cukup untuk salah satu bahan.',
-                    ]);
-                }
-
-                if (!empty($result['lines'])) {
-                    foreach ($result['lines'] as $a) {
-                        /** @var ItemBatch $batch */
-                        $batch = ItemBatch::lockForUpdate()->findOrFail($a['batch_id']);
-                        $take  = (float) $a['qty_base'];
-
-                        // Kurangi stok batch
-                        $batch->qty_on_hand_base = (float) $batch->qty_on_hand_base - $take;
-
-                        if ($batch->qty_on_hand_base <= 0.000001) {
-                            $batch->qty_on_hand_base = 0;
-                            $batch->status = 'DEPLETED';
-                        }
-
-                        $batch->save();
-
-                        // Catat pergerakan stok
-                        StockMove::create([
-                            'moved_at'   => now(),
-                            'item_id'    => $itemId,
-                            'batch_id'   => $batch->id,
-                            'qty_base'   => -$take,
-                            'type'       => 'CONSUMPTION',   // pastikan cocok dengan enum di DB
-                            'ref_type'   => 'sale',
-                            'ref_id'     => $sale->id,
-                            'created_by' => auth()->id(),
-                            'note'       => 'POS #' . $sale->id,
-                        ]);
-
-                        $cogs += $take * (float) $batch->unit_cost_base;
-                    }
-                }
+            // Safety check: pastikan stok yang diambil sama dengan kebutuhan
+            if (abs($takenTotal - $needBase) > 0.000001) {
+                throw new \RuntimeException('Stok tidak cukup untuk item id: ' . $itemId);
             }
+        }
 
-            // Update status transaksi
-            $sale->update([
-                'status' => 'PAID',
-                'paid_at' => now(),
-                'payment_method' => strtoupper($request->payment_method),
-                'cogs_total' => round($cogs, 2),
-                'profit_gross' => round($sale->total - $cogs, 2),
-            ]);
-        });
+        // Update status & ringkasan keuangan sale
+        $sale->status         = 'PAID';
+        $sale->payment_method = $request->payment_method;
+        $sale->paid_at        = now();
+        $sale->cogs_total     = $cogs;
+        $sale->profit_total   = $sale->grand_total - $cogs;
+        $sale->save();
+    });
 
-        return redirect()
-            ->route('cashier.pos')
-            ->with('status', 'Pembayaran berhasil.');
-    }
+    return redirect()
+        ->route('cashier.pos')
+        ->with('status', 'Pembayaran berhasil.');
+}
 }
