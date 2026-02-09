@@ -11,5 +11,8 @@ class Setting extends Model
         'restaurant_address',
         'restaurant_phone',
         'logo_path',
+        'license_key',
+        'installed_at',
+        'installation_code',
     ];
 }

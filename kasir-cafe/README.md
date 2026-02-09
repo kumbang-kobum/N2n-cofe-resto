@@ -7,9 +7,85 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## About Laravel
+## Kasir Cafe
 
 ![alt text](<Screenshot 2026-02-09 at 12.40.18.png>)
+
+Sistem kasir & stok bahan untuk cafe/resto dengan fitur:
+- POS kasir + struk thermal 80mm
+- Stok bahan dengan FEFO + batch expiry
+- Resep / BOM untuk pemotongan stok otomatis
+- Laporan penjualan, COGS, laba, pajak, diskon
+- Multi user (admin/manager/kasir)
+- Lisensi aplikasi (trial 30 hari + license key tervalidasi)
+
+## Alur Kerja Sistem
+1. **Input Bahan & Stok Awal**
+   - Admin input bahan (item), satuan, stok awal melalui receiving/stock opname.
+2. **Input Menu & Resep**
+   - Admin buat produk/menu dan set resep per porsi (gram/ml/dll).
+3. **Kasir Melayani Pesanan**
+   - Kasir input pesanan di POS → bayar → stok bahan otomatis berkurang berdasarkan resep.
+4. **Monitoring & Laporan**
+   - Owner/admin cek stok, opname, penjualan, COGS, laba, pajak.
+
+## Cara Install (Local)
+1. Copy `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Set database & key:
+   ```bash
+   php artisan key:generate
+   ```
+3. Install dependency:
+   ```bash
+   composer install
+   npm install && npm run build
+   ```
+4. Migrasi & storage:
+   ```bash
+   php artisan migrate
+   php artisan storage:link
+   ```
+5. Jalankan:
+   ```bash
+   php artisan serve
+   ```
+
+## Deployment Otomatis (Server)
+1. Pastikan `.env` sudah benar (`APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, `DB_*`, `LICENSE_MASTER_KEY`).
+2. Jalankan script:
+   ```bash
+   bash scripts/deploy.sh
+   ```
+
+## Lisensi
+1. Set `LICENSE_MASTER_KEY` di `.env`.
+2. Login admin → **Pengaturan Resto** → copy **Installation Code**.
+3. Generate license:
+   ```bash
+   php scripts/generate_license.php INSTALLATION_CODE MASTER_KEY
+   ```
+4. Input hasilnya ke **License Key** di Pengaturan Resto.
+
+## Smoke Test POS
+```bash
+bash scripts/smoke_pos.sh
+```
+
+## Backup & Restore DB
+Backup:
+```bash
+bash scripts/db_backup.sh
+```
+
+Restore:
+```bash
+bash scripts/db_restore.sh backups/backup_YYYYMMDD_HHMMSS.sql
+```
+
+## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 

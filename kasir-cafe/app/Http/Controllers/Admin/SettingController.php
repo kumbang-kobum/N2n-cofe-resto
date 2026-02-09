@@ -23,6 +23,7 @@ class SettingController extends Controller
             'restaurant_address' => ['nullable', 'string', 'max:255'],
             'restaurant_phone' => ['nullable', 'string', 'max:255'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+            'license_key' => ['nullable', 'string', 'max:255'],
         ]);
 
         $setting = Setting::first() ?? new Setting();
@@ -30,6 +31,7 @@ class SettingController extends Controller
         $setting->restaurant_name = $data['restaurant_name'] ?? null;
         $setting->restaurant_address = $data['restaurant_address'] ?? null;
         $setting->restaurant_phone = $data['restaurant_phone'] ?? null;
+        $setting->license_key = $data['license_key'] ?? null;
 
         if ($request->hasFile('logo')) {
             if ($setting->logo_path) {
