@@ -133,6 +133,12 @@
                           {{ request()->routeIs('admin.reports.opname_variance') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
                     <span>Laporan Selisih Opname</span>
                 </a>
+
+                <a href="{{ route('admin.reports.audit_logs') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('admin.reports.audit_logs') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Audit Log</span>
+                </a>
             </div>
         @endrole
 

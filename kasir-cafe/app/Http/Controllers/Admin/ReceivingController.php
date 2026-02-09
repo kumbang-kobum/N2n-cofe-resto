@@ -9,6 +9,7 @@ use App\Models\Purchase;
 use App\Models\PurchaseLine;
 use App\Models\Unit;
 use App\Models\StockMove;
+use App\Models\AuditLog;
 use App\Services\UnitConverter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -83,6 +84,12 @@ class ReceivingController extends Controller
                     $item->base_unit_id
                 );
 
+                // cek perubahan harga terakhir (unit_cost_base)
+                $lastCost = ItemBatch::where('item_id', $item->id)
+                    ->whereNotNull('unit_cost_base')
+                    ->orderByDesc('id')
+                    ->value('unit_cost_base');
+
                 // batch expired
                 $batch = ItemBatch::create([
                     'item_id' => $item->id,
@@ -104,6 +111,24 @@ class ReceivingController extends Controller
                     'ref_id' => $pl->id,
                     'created_by' => auth()->id(),
                 ]);
+
+                AuditLog::log(auth()->id(), 'STOCK_RECEIPT', $batch, [
+                    'item_id' => $item->id,
+                    'item_name' => $item->name,
+                    'qty_base' => (float) $qtyBase,
+                    'unit_cost_base' => (float) $costBase,
+                    'purchase_id' => $purchase->id,
+                ]);
+
+                if ($lastCost !== null && abs((float) $lastCost - (float) $costBase) > 0.000001) {
+                    AuditLog::log(auth()->id(), 'ITEM_COST_CHANGED', $batch, [
+                        'item_id' => $item->id,
+                        'item_name' => $item->name,
+                        'old_cost_base' => (float) $lastCost,
+                        'new_cost_base' => (float) $costBase,
+                        'purchase_id' => $purchase->id,
+                    ]);
+                }
             }
         });
 

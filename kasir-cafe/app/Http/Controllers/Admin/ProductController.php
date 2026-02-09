@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -68,7 +69,18 @@ class ProductController extends Controller
             $data['image_path'] = $request->file('image')->store('products', 'public');
         }
 
+        $oldPrice = (float) $product->price_default;
         $product->update($data);
+
+        $newPrice = (float) $product->price_default;
+        if (abs($oldPrice - $newPrice) > 0.000001) {
+            AuditLog::log(auth()->id(), 'PRODUCT_PRICE_CHANGED', $product, [
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'old_price' => $oldPrice,
+                'new_price' => $newPrice,
+            ]);
+        }
 
         return redirect()
             ->route('admin.products.index')

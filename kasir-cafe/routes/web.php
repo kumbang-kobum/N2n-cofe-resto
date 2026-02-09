@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\StockOpnameController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Product;
 
@@ -151,6 +152,7 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::get('/reports/sales', [\App\Http\Controllers\Admin\ReportController::class, 'sales'])
             ->name('reports.sales');
             Route::get('/reports/stock-opname-diff', [ReportController::class, 'stockOpnameDiff'])->name('reports.opname_variance');
+            Route::get('/reports/audit-logs', [AuditLogController::class, 'index'])->name('reports.audit_logs');
         });
 
     /*

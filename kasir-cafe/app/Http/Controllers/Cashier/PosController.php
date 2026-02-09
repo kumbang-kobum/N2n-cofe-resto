@@ -8,6 +8,7 @@ use App\Models\Sale;
 use App\Models\SaleLine;
 use App\Models\StockMove;
 use App\Models\ItemBatch;
+use App\Models\AuditLog;
 use App\Services\FefoAllocator;
 use App\Services\UnitConverter;
 use Illuminate\Http\Request;
@@ -253,7 +254,8 @@ class PosController extends Controller
                 }
             }
 
-            $cogs = 0;
+        $cogs = 0;
+        $consumedItems = [];
 
             // Alokasikan dari batch FEFO dan kurangi stok
             foreach ($needs as $itemId => $needBase) {
@@ -262,7 +264,7 @@ class PosController extends Controller
 
                 $takenTotal = 0;
 
-                foreach ($allocs as $alloc) {
+            foreach ($allocs as $alloc) {
                     /** @var \App\Models\ItemBatch $batch */
                     $batch = $alloc['batch'];
                     $take  = (float) $alloc['take'];
@@ -294,15 +296,20 @@ class PosController extends Controller
                         'note'       => 'POS #' . $sale->id,
                     ]);
 
-                    // Tambah COGS
-                    $cogs += $take * (float) $batch->unit_cost_base;
-                }
+                // Tambah COGS
+                $cogs += $take * (float) $batch->unit_cost_base;
+            }
 
                 // Safety check: pastikan stok yang diambil sama dengan kebutuhan
-                if (abs($takenTotal - $needBase) > 0.000001) {
-                    throw new \RuntimeException('Stok tidak cukup untuk item id: ' . $itemId);
-                }
+            if (abs($takenTotal - $needBase) > 0.000001) {
+                throw new \RuntimeException('Stok tidak cukup untuk item id: ' . $itemId);
             }
+
+            $consumedItems[] = [
+                'item_id' => $itemId,
+                'qty_base' => (float) $needBase,
+            ];
+        }
 
             // Update status & ringkasan keuangan sale
             $taxRate = (float) config('pos.tax_rate', 0.10);
@@ -326,9 +333,16 @@ class PosController extends Controller
             $sale->tax_rate       = $taxRate;
             $sale->tax_amount     = $taxAmount;
             $sale->grand_total    = $grandTotal;
-            $sale->profit_gross   = max(0, $taxBase) - $cogs;
-            $sale->save();
-        });
+        $sale->profit_gross   = max(0, $taxBase) - $cogs;
+        $sale->save();
+
+        if (! empty($consumedItems)) {
+            AuditLog::log(auth()->id(), 'STOCK_CONSUMED', $sale, [
+                'sale_id' => $sale->id,
+                'items' => $consumedItems,
+            ]);
+        }
+    });
 
         return redirect()
             ->route('cashier.pos.receipt', $sale->id)

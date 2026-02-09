@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ItemBatch;
 use App\Models\StockMove;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -63,6 +64,14 @@ class ExpiredController extends Controller
                 'ref_type' => 'expired_disposal',
                 'ref_id' => $batch->id,
                 'created_by' => auth()->id(),
+                'note' => $request->note,
+            ]);
+
+            AuditLog::log(auth()->id(), 'STOCK_EXPIRED_DISPOSAL', $batch, [
+                'item_id' => $batch->item_id,
+                'item_name' => $batch->item?->name,
+                'qty_base' => -$qtyToDispose,
+                'reason' => 'expired_disposal',
                 'note' => $request->note,
             ]);
 

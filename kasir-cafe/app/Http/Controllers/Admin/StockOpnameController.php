@@ -268,6 +268,16 @@ class StockOpnameController extends Controller
                     'created_by' => auth()->id(),
                     'note'       => $opname->code,
                 ]);
+
+                AuditLog::log(auth()->id(), 'STOCK_ADJUSTMENT', $batch, [
+                    'item_id' => $item->id,
+                    'item_name' => $item->name,
+                    'qty_base' => (float) $diff,
+                    'unit_cost_base' => (float) ($line->unit_cost_base ?? 0),
+                    'reason' => 'stock_opname_plus',
+                    'opname_id' => $opname->id,
+                    'opname_code' => $opname->code,
+                ]);
             }
 
             // ===== SELISIH MINUS -> FEFO KELUAR BATCH =====
@@ -308,6 +318,15 @@ class StockOpnameController extends Controller
                         'ref_id'     => $opname->id,
                         'created_by' => auth()->id(),
                         'note'       => $opname->code,
+                    ]);
+
+                    AuditLog::log(auth()->id(), 'STOCK_ADJUSTMENT', $batch, [
+                        'item_id' => $item->id,
+                        'item_name' => $item->name,
+                        'qty_base' => -$take,
+                        'reason' => 'stock_opname_minus',
+                        'opname_id' => $opname->id,
+                        'opname_code' => $opname->code,
                     ]);
                 }
             }
