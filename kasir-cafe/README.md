@@ -45,6 +45,19 @@ Jadi bukan mengikuti harga terbaru untuk semua stok. Yang terbaik adalah pisah p
 
 Kalau kamu hanya “mengganti harga” tanpa ada pembelian baru, itu akan mengubah cost untuk stok lama dan bikin COGS jadi tidak akurat. Lebih baik selalu lewat penerimaan barang.
 
+## FEFO vs FIFO (Pemakaian Stok)
+**FEFO (First Expired, First Out)**:
+Stok yang **paling cepat kadaluarsa** dipakai dulu. Cocok untuk bahan dengan expiry date (susu, daging, sayur).
+
+**FIFO (First In, First Out)**:
+Stok yang **paling lama masuk** dipakai dulu. Cocok bila tidak ada expiry atau semua batch punya umur simpan mirip.
+
+**Di sistem ini**:
+- Jika batch punya `expired_at`, maka dipakai **FEFO** (yang kadaluarsa paling cepat).
+- Jika `expired_at` kosong, maka dipakai **FIFO** (yang masuk lebih dulu).
+
+Dengan ini, COGS selalu mengikuti **biaya per batch yang benar**, bukan harga terbaru.
+
 ## Alur Kerja Sistem
 1. **Input Bahan & Stok Awal**
    - Admin input bahan (item), satuan, stok awal melalui receiving/stock opname.
@@ -57,33 +70,43 @@ Kalau kamu hanya “mengganti harga” tanpa ada pembelian baru, itu akan mengub
 5. **Inventaris Resto**
    - Catat aset, kondisi, lokasi/kategori, serta laporan kerusakan/pemusnahan.
 
-## Cara Install (Development)
-1. Copy `.env`:
+## Cara Install (Ambil dari GitHub)
+1. Clone project:
+   ```bash
+   git clone https://github.com/kumbang-kobum/N2n-cofe-resto.git
+   cd N2n-cofe-resto/kasir-cafe
+   ```
+2. Copy `.env`:
    ```bash
    cp .env.example .env
    ```
-2. Set database & key:
+3. Set database & key:
    ```bash
    php artisan key:generate
    ```
-3. Install dependency:
+
+## Cara Install (Development)
+1. Install dependency:
    ```bash
    composer install
    npm install && npm run build
    ```
-4. Migrasi & storage:
+2. Migrasi & seed:
    ```bash
-   php artisan migrate
+   php artisan migrate --seed
    php artisan storage:link
    ```
-   Jalankan migration tambahan untuk inventaris & refund (sudah termasuk pada migrate).
-5. Jalankan:
+3. Jalankan:
    ```bash
    php artisan serve
    ```
+4. (Opsional) Bersihkan cache bila perubahan tidak tampil:
+   ```bash
+   php artisan optimize:clear
+   ```
 
 ## Cara Install (Server / Production)
-1. Upload kode ke server (Nginx/Apache + PHP + MySQL).
+1. Upload kode ke server (Nginx/Apache + PHP + MySQL) atau `git clone` dari repo.
 2. Buat `.env` (copy dari `.env.example`) dan isi:
    - `APP_ENV=production`
    - `APP_DEBUG=false`
@@ -93,6 +116,7 @@ Kalau kamu hanya “mengganti harga” tanpa ada pembelian baru, itu akan mengub
 3. Install dependency:
    ```bash
    composer install --no-dev --optimize-autoloader
+   npm install && npm run build
    ```
 4. Migrasi & storage:
    ```bash
@@ -107,6 +131,7 @@ Kalau kamu hanya “mengganti harga” tanpa ada pembelian baru, itu akan mengub
    ```
 6. Pastikan permission:
    - `storage/` dan `bootstrap/cache/` writable.
+7. (Opsional) Jalankan `php artisan optimize:clear` jika perubahan belum terlihat.
 
 ## Deployment Otomatis (Server)
 1. Pastikan `.env` sudah benar (`APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, `DB_*`, `LICENSE_MASTER_KEY`).
@@ -154,37 +179,7 @@ Lihat panduan cron:
 `docs/cron_backup.md`
 
 ## About Laravel
-
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+Laravel adalah framework PHP untuk membangun aplikasi web. Dokumentasi: https://laravel.com/docs
 - **[Redberry](https://redberry.international/laravel-development)**
 - **[Active Logic](https://activelogic.com)**
 

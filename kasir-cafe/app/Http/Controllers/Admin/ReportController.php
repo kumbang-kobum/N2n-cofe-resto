@@ -7,6 +7,9 @@ use App\Models\Sale;
 use App\Models\StockOpnameLine;
 use App\Models\User;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ReportController extends Controller
 {
@@ -59,56 +62,69 @@ class ReportController extends Controller
         return [$sales, $summary, $from, $to];
     }
 
-    protected function exportSalesCsv($sales, string $from, string $to)
+    protected function exportSalesExcel($sales, string $from, string $to)
     {
-        $filename = 'laporan_penjualan_' . $from . '_to_' . $to . '.csv';
+        $filename = 'laporan_penjualan_' . $from . '_to_' . $to . '.xlsx';
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Laporan Penjualan');
 
         $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Tanggal',
+            'ID',
+            'No Nota',
+            'Kasir',
+            'Metode',
+            'Subtotal',
+            'Diskon',
+            'Pajak',
+            'Total',
+            'Refund',
+            'COGS',
+            'Laba',
         ];
 
-        $callback = function () use ($sales) {
-            $out = fopen('php://output', 'w');
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . '1', $header);
+            $col++;
+        }
 
-            fputcsv($out, [
-                'Tanggal',
-                'ID',
-                'No Nota',
-                'Kasir',
-                'Metode',
-                'Subtotal',
-                'Diskon',
-                'Pajak',
-                'Total',
-                'Refund',
-                'COGS',
-                'Laba',
-            ]);
+        $row = 2;
+        foreach ($sales as $s) {
+            $grand = $s->grand_total ?? ($s->total - ($s->discount_amount ?? 0) + ($s->tax_amount ?? 0));
 
-            foreach ($sales as $s) {
-                $grand = $s->grand_total ?? ($s->total - ($s->discount_amount ?? 0) + ($s->tax_amount ?? 0));
+            $sheet->setCellValue('A' . $row, optional($s->paid_at)->format('Y-m-d H:i:s'));
+            $sheet->setCellValue('B' . $row, $s->id);
+            $sheet->setCellValue('C' . $row, $s->receipt_no ?? '-');
+            $sheet->setCellValue('D' . $row, optional($s->cashier)->name ?? '-');
+            $sheet->setCellValue('E' . $row, strtoupper($s->payment_method ?? '-'));
+            $sheet->setCellValue('F' . $row, (float) $s->total);
+            $sheet->setCellValue('G' . $row, (float) ($s->discount_amount ?? 0));
+            $sheet->setCellValue('H' . $row, (float) ($s->tax_amount ?? 0));
+            $sheet->setCellValue('I' . $row, (float) $grand);
+            $sheet->setCellValue('J' . $row, (float) ($s->refund_total ?? 0));
+            $sheet->setCellValue('K' . $row, (float) ($s->cogs_total ?? 0));
+            $sheet->setCellValue('L' . $row, (float) ($s->profit_gross ?? 0));
+            $row++;
+        }
 
-                fputcsv($out, [
-                    optional($s->paid_at)->format('Y-m-d H:i:s'),
-                    $s->id,
-                    $s->receipt_no ?? '-',
-                    optional($s->cashier)->name ?? '-',
-                    strtoupper($s->payment_method ?? '-'),
-                    (float) $s->total,
-                    (float) ($s->discount_amount ?? 0),
-                    (float) ($s->tax_amount ?? 0),
-                    (float) $grand,
-                    (float) ($s->refund_total ?? 0),
-                    (float) ($s->cogs_total ?? 0),
-                    (float) ($s->profit_gross ?? 0),
-                ]);
-            }
+        $lastRow = max(2, $row - 1);
+        $sheet->getStyle('F2:L' . $lastRow)
+            ->getNumberFormat()
+            ->setFormatCode('#,##0');
 
-            fclose($out);
-        };
+        foreach (range('A', 'L') as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
 
-        return response()->stream($callback, 200, $headers);
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 
     /**
@@ -134,7 +150,7 @@ class ReportController extends Controller
 
         [$sales, $summary, $from, $to] = $this->buildSalesData($request, $cashierId);
 
-        return $this->exportSalesCsv($sales, $from, $to);
+        return $this->exportSalesExcel($sales, $from, $to);
     }
 
     /**
@@ -151,7 +167,7 @@ class ReportController extends Controller
     {
         [$sales, $summary, $from, $to] = $this->buildSalesData($request, auth()->id());
 
-        return $this->exportSalesCsv($sales, $from, $to);
+        return $this->exportSalesExcel($sales, $from, $to);
     }
 
     /**
