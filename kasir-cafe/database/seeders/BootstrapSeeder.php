@@ -27,8 +27,18 @@ class BootstrapSeeder extends Seeder
         );
 
         UnitConversion::firstOrCreate(
+            ['from_unit_id' => $g->id, 'to_unit_id' => $kg->id],
+            ['multiplier' => 0.001]
+        );
+
+        UnitConversion::firstOrCreate(
             ['from_unit_id' => $l->id, 'to_unit_id' => $ml->id],
             ['multiplier' => 1000]
+        );
+
+        UnitConversion::firstOrCreate(
+            ['from_unit_id' => $ml->id, 'to_unit_id' => $l->id],
+            ['multiplier' => 0.001]
         );
 
         // === Roles ===
@@ -48,5 +58,11 @@ class BootstrapSeeder extends Seeder
             ['name' => 'Kasir', 'password' => Hash::make('password')]
         );
         $cashier->syncRoles([$cashierRole]);
+
+        $manager = User::firstOrCreate(
+            ['email' => 'manager@demo.local'],
+            ['name' => 'Manager', 'password' => Hash::make('password')]
+        );
+        $manager->syncRoles([$managerRole]);
     }
 }

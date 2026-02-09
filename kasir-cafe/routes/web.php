@@ -135,8 +135,6 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::resource('asset-incidents', AssetIncidentController::class)->except(['show'])->names('asset_incidents');
             Route::resource('asset-categories', AssetCategoryController::class)->except(['show'])->names('asset_categories');
             Route::resource('asset-locations', AssetLocationController::class)->except(['show'])->names('asset_locations');
-            Route::resource('asset-categories', AssetCategoryController::class)->except(['show'])->names('asset_categories');
-            Route::resource('asset-locations', AssetLocationController::class)->except(['show'])->names('asset_locations');
 
             // Ringkasan stok
             Route::get('/stocks', [StockController::class, 'index'])->name('stock.index');
@@ -203,6 +201,8 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             // Inventaris
             Route::resource('assets', AssetController::class);
             Route::resource('asset-incidents', AssetIncidentController::class)->except(['show'])->names('asset_incidents');
+            Route::resource('asset-categories', AssetCategoryController::class)->except(['show'])->names('asset_categories');
+            Route::resource('asset-locations', AssetLocationController::class)->except(['show'])->names('asset_locations');
 
             // Laporan Penjualan & Selisih Opname
             Route::get('/reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
