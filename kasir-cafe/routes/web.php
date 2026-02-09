@@ -14,6 +14,8 @@ use App\Http\Controllers\Admin\ExpiredController;
 use App\Http\Controllers\Admin\StockOpnameController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\ProfileController;
 use App\Models\Product;
 
 /*
@@ -37,6 +39,9 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     /*
     |--------------------------------------------------------------------------
@@ -105,6 +110,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             // Pengguna
             Route::resource('users', UserController::class)->except(['show']);
+
+            // Pengaturan resto
+            Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
+            Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
 
             // Ringkasan stok
             Route::get('/stocks', [StockController::class, 'index'])->name('stock.index');

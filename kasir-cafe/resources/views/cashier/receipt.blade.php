@@ -17,9 +17,25 @@
 
 <div class="bg-white border rounded-lg p-4">
     <div id="receipt" class="receipt-80mm">
+        @php
+            $settings = \App\Models\Setting::first();
+        @endphp
         <div class="text-center">
-            <div class="font-semibold">N2N Cafe</div>
-            <div class="text-[11px] text-gray-600">Struk Pembayaran</div>
+            @if (!empty($settings?->logo_path))
+                <div class="flex justify-center mb-1">
+                    <img src="{{ asset('storage/' . $settings->logo_path) }}" alt="Logo" class="h-12 object-contain">
+                </div>
+            @endif
+            <div class="font-semibold">
+                {{ $settings->restaurant_name ?? 'N2N Cafe' }}
+            </div>
+            @if (!empty($settings?->restaurant_address))
+                <div class="text-[10px] text-gray-600">{{ $settings->restaurant_address }}</div>
+            @endif
+            @if (!empty($settings?->restaurant_phone))
+                <div class="text-[10px] text-gray-600">Telp: {{ $settings->restaurant_phone }}</div>
+            @endif
+            <div class="text-[11px] text-gray-600 mt-1">Struk Pembayaran</div>
         </div>
 
         <div class="mt-2 text-[11px]">
