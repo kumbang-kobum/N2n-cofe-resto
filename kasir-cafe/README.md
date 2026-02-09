@@ -16,8 +16,11 @@ Sistem kasir & stok bahan untuk cafe/resto dengan fitur:
 - Stok bahan dengan FEFO + batch expiry
 - Resep / BOM untuk pemotongan stok otomatis
 - Laporan penjualan, COGS, laba, pajak, diskon
+- Refund/void parsial + stok kembali otomatis
 - Multi user (admin/manager/kasir)
 - Lisensi aplikasi (trial 30 hari + license key tervalidasi)
+- Audit log perubahan harga & stok
+- Inventaris resto + laporan kerusakan/pemusnahan
 
 ## Alur Kerja Sistem
 1. **Input Bahan & Stok Awal**
@@ -28,6 +31,8 @@ Sistem kasir & stok bahan untuk cafe/resto dengan fitur:
    - Kasir input pesanan di POS → bayar → stok bahan otomatis berkurang berdasarkan resep.
 4. **Monitoring & Laporan**
    - Owner/admin cek stok, opname, penjualan, COGS, laba, pajak.
+5. **Inventaris Resto**
+   - Catat aset, kondisi, lokasi/kategori, serta laporan kerusakan/pemusnahan.
 
 ## Cara Install (Development)
 1. Copy `.env`:
@@ -48,6 +53,7 @@ Sistem kasir & stok bahan untuk cafe/resto dengan fitur:
    php artisan migrate
    php artisan storage:link
    ```
+   Jalankan migration tambahan untuk inventaris & refund (sudah termasuk pada migrate).
 5. Jalankan:
    ```bash
    php artisan serve
@@ -110,6 +116,15 @@ Restore:
 ```bash
 bash scripts/db_restore.sh backups/backup_YYYYMMDD_HHMMSS.sql
 ```
+
+## Inventaris & Kerusakan
+Menu:
+- **Inventaris**
+- **Master Kategori**
+- **Master Lokasi**
+- **Kerusakan/Pemusnahan**
+
+Isi master kategori & lokasi terlebih dahulu agar dropdown inventaris tersedia.
 
 ## Auto Backup 8 Jam
 Lihat panduan cron:

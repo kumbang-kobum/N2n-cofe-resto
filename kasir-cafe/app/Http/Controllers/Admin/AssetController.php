@@ -4,27 +4,33 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Asset;
+use App\Models\AssetCategory;
+use App\Models\AssetLocation;
 use Illuminate\Http\Request;
 
 class AssetController extends Controller
 {
     public function index()
     {
-        $assets = Asset::orderBy('name')->paginate(20);
+        $assets = Asset::with(['category', 'location'])
+            ->orderBy('name')
+            ->paginate(20);
         return view('admin.assets.index', compact('assets'));
     }
 
     public function create()
     {
-        return view('admin.assets.create');
+        $categories = AssetCategory::orderBy('name')->get();
+        $locations = AssetLocation::orderBy('name')->get();
+        return view('admin.assets.create', compact('categories', 'locations'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'category' => ['nullable', 'string', 'max:255'],
-            'location' => ['nullable', 'string', 'max:255'],
+            'category_id' => ['nullable', 'exists:asset_categories,id'],
+            'location_id' => ['nullable', 'exists:asset_locations,id'],
             'purchase_date' => ['nullable', 'date'],
             'purchase_cost' => ['nullable', 'numeric', 'min:0'],
             'condition' => ['required', 'in:GOOD,MINOR,DAMAGED,DISPOSED'],
@@ -41,15 +47,17 @@ class AssetController extends Controller
 
     public function edit(Asset $asset)
     {
-        return view('admin.assets.edit', compact('asset'));
+        $categories = AssetCategory::orderBy('name')->get();
+        $locations = AssetLocation::orderBy('name')->get();
+        return view('admin.assets.edit', compact('asset', 'categories', 'locations'));
     }
 
     public function update(Request $request, Asset $asset)
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'category' => ['nullable', 'string', 'max:255'],
-            'location' => ['nullable', 'string', 'max:255'],
+            'category_id' => ['nullable', 'exists:asset_categories,id'],
+            'location_id' => ['nullable', 'exists:asset_locations,id'],
             'purchase_date' => ['nullable', 'date'],
             'purchase_cost' => ['nullable', 'numeric', 'min:0'],
             'condition' => ['required', 'in:GOOD,MINOR,DAMAGED,DISPOSED'],

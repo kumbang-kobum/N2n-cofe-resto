@@ -18,6 +18,8 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\AssetController;
 use App\Http\Controllers\Admin\AssetIncidentController;
+use App\Http\Controllers\Admin\AssetCategoryController;
+use App\Http\Controllers\Admin\AssetLocationController;
 use App\Http\Controllers\SaleRefundController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Product;
@@ -131,6 +133,10 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             // Inventaris
             Route::resource('assets', AssetController::class);
             Route::resource('asset-incidents', AssetIncidentController::class)->except(['show'])->names('asset_incidents');
+            Route::resource('asset-categories', AssetCategoryController::class)->except(['show'])->names('asset_categories');
+            Route::resource('asset-locations', AssetLocationController::class)->except(['show'])->names('asset_locations');
+            Route::resource('asset-categories', AssetCategoryController::class)->except(['show'])->names('asset_categories');
+            Route::resource('asset-locations', AssetLocationController::class)->except(['show'])->names('asset_locations');
 
             // Ringkasan stok
             Route::get('/stocks', [StockController::class, 'index'])->name('stock.index');

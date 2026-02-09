@@ -34,8 +34,8 @@
       @forelse ($assets as $asset)
         <tr class="border-t">
           <td class="px-3 py-2">{{ $asset->name }}</td>
-          <td class="px-3 py-2">{{ $asset->category ?? '-' }}</td>
-          <td class="px-3 py-2">{{ $asset->location ?? '-' }}</td>
+          <td class="px-3 py-2">{{ $asset->category?->name ?? $asset->category ?? '-' }}</td>
+          <td class="px-3 py-2">{{ $asset->location?->name ?? $asset->location ?? '-' }}</td>
           <td class="px-3 py-2 text-right">{{ number_format($asset->purchase_cost, 0, ',', '.') }}</td>
           <td class="px-3 py-2 text-center">{{ $asset->condition }}</td>
           <td class="px-3 py-2 text-center">{{ $asset->is_active ? 'Ya' : 'Tidak' }}</td>

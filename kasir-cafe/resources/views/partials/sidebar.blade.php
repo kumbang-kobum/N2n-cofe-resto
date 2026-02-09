@@ -80,6 +80,18 @@
                     <span>Inventaris</span>
                 </a>
 
+                <a href="{{ route('admin.asset_categories.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('admin.asset_categories.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Master Kategori</span>
+                </a>
+
+                <a href="{{ route('admin.asset_locations.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('admin.asset_locations.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Master Lokasi</span>
+                </a>
+
                 <a href="{{ route('admin.asset_incidents.index') }}"
                    class="flex items-center gap-2 rounded-md px-3 py-2
                           {{ request()->routeIs('admin.asset_incidents.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
@@ -190,6 +202,18 @@
                    class="flex items-center gap-2 rounded-md px-3 py-2
                           {{ request()->routeIs('manager.assets.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
                     <span>Inventaris</span>
+                </a>
+
+                <a href="{{ route('manager.asset_categories.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('manager.asset_categories.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Master Kategori</span>
+                </a>
+
+                <a href="{{ route('manager.asset_locations.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('manager.asset_locations.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Master Lokasi</span>
                 </a>
 
                 <a href="{{ route('manager.asset_incidents.index') }}"

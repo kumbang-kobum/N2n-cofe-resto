@@ -16,14 +16,22 @@
 
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-      <input type="text" name="category" value="{{ old('category') }}"
-             class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+      <select name="category_id" class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+        <option value="">-</option>
+        @foreach($categories as $c)
+          <option value="{{ $c->id }}" @selected(old('category_id') == $c->id)>{{ $c->name }}</option>
+        @endforeach
+      </select>
     </div>
 
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi</label>
-      <input type="text" name="location" value="{{ old('location') }}"
-             class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+      <select name="location_id" class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+        <option value="">-</option>
+        @foreach($locations as $l)
+          <option value="{{ $l->id }}" @selected(old('location_id') == $l->id)>{{ $l->name }}</option>
+        @endforeach
+      </select>
     </div>
 
     <div>
