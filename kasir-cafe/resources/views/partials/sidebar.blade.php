@@ -58,6 +58,13 @@
                           {{ request()->routeIs('admin.units.*') ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-50' }}">
                     <span>Satuan</span>
                 </a>
+
+                {{-- Pengguna --}}
+                <a href="{{ route('admin.users.index') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('admin.users.*') ? 'bg-blue-50 text-blue-700 font-semibold' : 'hover:bg-gray-50' }}">
+                    <span>Pengguna</span>
+                </a>
             </div>
 
             {{-- Operasional --}}

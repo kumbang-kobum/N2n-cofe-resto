@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ExpiredController;
 use App\Http\Controllers\Admin\StockOpnameController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\UserController;
 use App\Models\Product;
 
 /*
@@ -101,6 +102,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Stok bahan (item) & satuan
             Route::resource('items', \App\Http\Controllers\Admin\ItemController::class);
             Route::resource('units', \App\Http\Controllers\Admin\UnitController::class);
+
+            // Pengguna
+            Route::resource('users', UserController::class)->except(['show']);
 
             // Ringkasan stok
             Route::get('/stocks', [StockController::class, 'index'])->name('stock.index');
