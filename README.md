@@ -9,7 +9,7 @@
 
 ## Kasir Cafe
 
-![alt text](<Screenshot 2026-02-09 at 12.40.18.png>)
+![/Users/chandrairawan/Documents/GitHub/kasir-cafe/N2n-cofe-resto/kasir-cafe/Screenshot 2026-02-09 at 12.40.18.png](kasir-cafe/n2Nlogo.png)
 
 Sistem kasir & stok bahan untuk cafe/resto dengan fitur:
 - POS kasir + struk thermal 80mm
