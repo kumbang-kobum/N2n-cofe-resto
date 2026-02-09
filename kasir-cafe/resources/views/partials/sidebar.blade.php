@@ -185,6 +185,12 @@
                     <span>Laporan Selisih Opname</span>
                 </a>
 
+                <a href="{{ route('manager.reports.audit_logs') }}"
+                   class="flex items-center gap-2 rounded-md px-3 py-2
+                          {{ request()->routeIs('manager.reports.audit_logs') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                    <span>Audit Log</span>
+                </a>
+
                 <a href="{{ route('profile.edit') }}"
                    class="flex items-center gap-2 rounded-md px-3 py-2
                           {{ request()->routeIs('profile.edit') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">

@@ -192,6 +192,7 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::get('/reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
             Route::get('/reports/sales/export', [ReportController::class, 'exportSales'])->name('reports.sales.export');
             Route::get('/reports/stock-opname-diff', [ReportController::class, 'stockOpnameDiff'])->name('reports.opname_variance');
+            Route::get('/reports/audit-logs', [AuditLogController::class, 'index'])->name('reports.audit_logs');
         });
 
     /*
