@@ -133,6 +133,52 @@ Dengan ini, COGS selalu mengikuti **biaya per batch yang benar**, bukan harga te
    - `storage/` dan `bootstrap/cache/` writable.
 7. (Opsional) Jalankan `php artisan optimize:clear` jika perubahan belum terlihat.
 
+## Contoh Konfigurasi Web Server
+**Nginx (ringkas)**
+```nginx
+server {
+    listen 80;
+    server_name domain-client.com;
+    root /var/www/kasir-cafe/public;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+```
+
+**Apache (ringkas)**
+```apache
+<VirtualHost *:80>
+    ServerName domain-client.com
+    DocumentRoot /var/www/kasir-cafe/public
+
+    <Directory /var/www/kasir-cafe/public>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/kasir-cafe_error.log
+    CustomLog ${APACHE_LOG_DIR}/kasir-cafe_access.log combined
+</VirtualHost>
+```
+
 ## Deployment Otomatis (Server)
 1. Pastikan `.env` sudah benar (`APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, `DB_*`, `LICENSE_MASTER_KEY`).
 2. Jalankan script:
