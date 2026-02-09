@@ -46,16 +46,16 @@
     </header>
 
     {{-- HERO SECTION --}}
-    <section class="bg-gradient-to-r from-blue-700 to-blue-500 text-white">
+    <section class="bg-gradient-to-r from-blue-800 to-blue-500 text-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 lg:py-16 grid gap-8 lg:grid-cols-2 items-center">
         <div>
           <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4">
-            Dashboard Kasir, Stok Bahan, dan Resep<br class="hidden sm:block">
-            dalam satu aplikasi.
+            POS, Stok Bahan, dan Resep<br class="hidden sm:block">
+            dalam satu alur kerja.
           </h1>
           <p class="text-sm sm:text-base text-blue-100 mb-6 max-w-xl">
-            Pantau penjualan makanan & minuman, kontrol stok bahan dapur (BHP),
-            atur resep, dan jalankan kasir dengan lebih rapi. Cocok untuk cafe dan resto skala kecil sampai menengah.
+            Masukkan bahan, atur resep per porsi, lalu transaksi kasir otomatis mengurangi stok.
+            Cocok untuk cafe dan resto skala kecil sampai menengah.
           </p>
 
           <div class="flex flex-wrap items-center gap-3">
@@ -66,6 +66,10 @@
             <a href="#katalog"
                class="px-4 py-2.5 rounded border border-blue-100 text-sm text-blue-50 hover:bg-blue-600/40">
               Lihat katalog menu
+            </a>
+            <a href="#alur"
+               class="px-4 py-2.5 rounded border border-blue-100 text-sm text-blue-50 hover:bg-blue-600/40">
+              Lihat alur kerja
             </a>
           </div>
         </div>
@@ -160,12 +164,18 @@
       </div>
     </section>
 
-    {{-- FITUR SISTEM --}}
-    <section class="pb-10 sm:pb-12">
+    {{-- ALUR KERJA --}}
+    <section id="alur" class="pb-10 sm:pb-12">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-lg sm:text-xl font-semibold text-slate-900 mb-4">
-          Alur Kerja Sistem
-        </h2>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg sm:text-xl font-semibold text-slate-900">
+            Alur Kerja Sistem
+          </h2>
+          <a href="{{ route('login') }}"
+             class="hidden sm:inline-flex items-center px-3 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700">
+            Masuk ke Dashboard
+          </a>
+        </div>
 
         <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4 text-sm">
           <div class="bg-white border rounded-xl p-4 flex flex-col">
@@ -179,8 +189,8 @@
           <div class="bg-white border rounded-xl p-4 flex flex-col">
             <div class="text-blue-600 font-semibold mb-1">2. Input Menu & Resep</div>
             <div class="text-slate-600">
-              Buat <b>Produk/Menu</b> (misal Nasi Ayam, Kopi Susu), lalu set
-              <b>resep</b> per porsi (berapa gram ayam, berapa ml susu, dsb).
+              Buat <b>Produk/Menu</b>, lalu set <b>resep per porsi</b>
+              (gram/ml/pcs). Resep ini jadi dasar pemotongan stok.
             </div>
           </div>
 
@@ -195,24 +205,29 @@
           <div class="bg-white border rounded-xl p-4 flex flex-col">
             <div class="text-blue-600 font-semibold mb-1">4. Monitoring & Laporan</div>
             <div class="text-slate-600">
-              Owner bisa cek <b>stok bahan, stok opname, penjualan, dan COGS</b>
-              untuk memastikan tidak ada kecurangan dan pemborosan.
+              Owner cek <b>stok, opname, penjualan, COGS, audit log, refund</b>
+              agar operasional lebih terkontrol.
             </div>
           </div>
         </div>
 
-        <div class="mt-6">
-          <a href="{{ route('login') }}"
-             class="inline-flex items-center px-4 py-2.5 rounded bg-blue-600 text-white text-sm hover:bg-blue-700">
-            Masuk ke Dashboard Admin
-          </a>
+        <div class="mt-6 grid gap-3 sm:grid-cols-3 text-xs text-slate-600">
+          <div class="bg-white border rounded-lg p-3">
+            <b>Tip:</b> Isi <b>unit conversion</b> (kg↔g, L↔ml) agar resep berjalan.
+          </div>
+          <div class="bg-white border rounded-lg p-3">
+            <b>Tip:</b> Atur <b>min_stock</b> untuk peringatan stok menipis.
+          </div>
+          <div class="bg-white border rounded-lg p-3">
+            <b>Tip:</b> Gunakan <b>refund</b> parsial bila ada komplain.
+          </div>
         </div>
       </div>
     </section>
 
     <footer class="mt-auto border-t bg-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
-        <div>&copy; {{ date('Y') }} {{ config('app.name','n2N Kasir Cafe') }}</div>
+        <div>&copy; {{ date('Y') }} n2N</div>
         <div>n2N Sistem kasir & stok untuk cafe & resto</div>
       </div>
     </footer>
