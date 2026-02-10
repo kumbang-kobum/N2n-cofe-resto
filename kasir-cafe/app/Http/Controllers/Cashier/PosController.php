@@ -69,9 +69,12 @@ class PosController extends Controller
 
         $openQuery = trim((string) $request->get('open_q', ''));
 
-        $openSalesQuery = Sale::with('lines.product')
-            ->where('cashier_id', auth()->id())
+        $openSalesQuery = Sale::with(['lines.product', 'cashier'])
             ->where('status', 'OPEN');
+
+        if (! auth()->user()?->hasRole('admin')) {
+            $openSalesQuery->where('cashier_id', auth()->id());
+        }
 
         if ($openQuery !== '') {
             $openSalesQuery->where(function ($q) use ($openQuery) {
