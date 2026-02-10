@@ -8,7 +8,9 @@ use App\Models\Sale;
 use App\Models\SaleLine;
 use App\Models\StockMove;
 use App\Models\ItemBatch;
+use App\Models\Item;
 use App\Models\AuditLog;
+use App\Exceptions\InsufficientStockException;
 use App\Services\FefoAllocator;
 use App\Services\UnitConverter;
 use Illuminate\Http\Request;
@@ -332,7 +334,8 @@ class PosController extends Controller
 
         abort_if(! in_array($sale->status, ['DRAFT', 'OPEN'], true), 400, 'Transaksi sudah dibayar.');
 
-        DB::transaction(function () use ($request, $sale, $allocator, $converter) {
+        try {
+            DB::transaction(function () use ($request, $sale, $allocator, $converter) {
 
             // Kumpulkan kebutuhan bahan (dalam base unit) dari semua recipe
             $needs = [];
@@ -436,8 +439,8 @@ class PosController extends Controller
             }
 
             $taxBase = max(0, (float) $sale->total - $discount);
-            $taxAmount = round($taxBase * $taxRate, 2);
-            $grandTotal = $taxBase + $taxAmount;
+            $taxAmount = round($taxBase * $taxRate, 0);
+            $grandTotal = round($taxBase + $taxAmount, 0);
 
             $paidAmount = (float) $request->input('paid_amount', 0);
             if ($paidAmount < $grandTotal) {
@@ -468,7 +471,17 @@ class PosController extends Controller
                 'items' => $consumedItems,
             ]);
         }
-    });
+            });
+        } catch (InsufficientStockException $e) {
+            $item = Item::with('baseUnit')->find($e->itemId);
+            $unitName = $item?->baseUnit?->name ?? 'unit';
+            $itemName = $item?->name ?? ('Item #' . $e->itemId);
+            $shortage = number_format((float) $e->shortageBase, 2, ',', '.');
+
+            throw ValidationException::withMessages([
+                'stock' => "Stok {$itemName} tidak cukup. Kurang {$shortage} {$unitName}.",
+            ]);
+        }
 
         return redirect()
             ->route('cashier.pos.receipt', $sale->id)

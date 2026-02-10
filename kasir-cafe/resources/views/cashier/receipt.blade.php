@@ -23,7 +23,7 @@
         <div class="text-center">
             @if (!empty($settings?->logo_path))
                 <div class="flex justify-center mb-1">
-                    <img src="{{ asset('storage/' . $settings->logo_path) }}" alt="Logo" class="h-12 object-contain">
+                    <img src="{{ asset('storage/' . $settings->logo_path) }}" alt="Logo" class="h-10 object-contain">
                 </div>
             @endif
             <div class="font-semibold">
@@ -38,7 +38,7 @@
             <div class="text-[11px] text-gray-600 mt-1">Struk Pembayaran</div>
         </div>
 
-        <div class="mt-2 text-[11px]">
+        <div class="mt-1 text-[11px] leading-tight">
             <div>No. Nota: {{ $sale->receipt_no ?? ('#' . $sale->id) }}</div>
             <div>Tanggal: {{ optional($sale->paid_at)->format('d/m/Y H:i') }}</div>
             @if($sale->table_no || $sale->customer_name)
@@ -48,9 +48,9 @@
             <div>Metode: {{ strtoupper($sale->payment_method ?? '-') }}</div>
         </div>
 
-        <div class="my-2 border-t border-dashed"></div>
+        <div class="my-1 border-t border-dashed"></div>
 
-        <table class="w-full text-[11px]">
+        <table class="w-full text-[11px] leading-tight">
             <thead>
                 <tr>
                     <th class="text-left">Item</th>
@@ -71,7 +71,7 @@
             </tbody>
         </table>
 
-        <div class="my-2 border-t border-dashed"></div>
+        <div class="my-1 border-t border-dashed"></div>
 
 @php
             $taxRate = (float) ($sale->tax_rate ?? config('pos.tax_rate', 0.10));
@@ -81,7 +81,7 @@
             $grand = (float) ($sale->grand_total ?? ($taxBase + $taxAmount));
         @endphp
 
-        <div class="text-[11px] space-y-1">
+        <div class="text-[11px] space-y-0.5 leading-tight">
             <div class="flex justify-between">
                 <span>Subtotal</span>
                 <span>{{ number_format($sale->total, 0, ',', '.') }}</span>
@@ -108,7 +108,7 @@
             </div>
         </div>
 
-        <div class="my-2 border-t border-dashed"></div>
+        <div class="my-1 border-t border-dashed"></div>
         <div class="text-center text-[11px] text-gray-600">
             Terima kasih
         </div>
@@ -125,7 +125,10 @@
 
     .receipt-80mm {
         width: 80mm;
-        font-family: "Courier New", Courier, monospace;
+        font-family: "Arial Narrow", Arial, sans-serif;
+        font-size: 11px;
+        line-height: 1.15;
+        letter-spacing: 0.2px;
     }
     .receipt-80mm table {
         width: 100%;
@@ -133,7 +136,7 @@
     }
     .receipt-80mm th,
     .receipt-80mm td {
-        padding: 2px 0;
+        padding: 1px 0;
     }
 </style>
 @endpush

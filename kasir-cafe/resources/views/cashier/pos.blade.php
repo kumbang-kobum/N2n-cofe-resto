@@ -22,6 +22,16 @@
     </div>
 @endif
 
+@if ($errors->any())
+    <div class="mb-4 rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        <ul class="list-disc ml-4">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 @if (!empty($openSales) && $openSales->count() > 0)
     <div class="mb-4 bg-white border rounded-lg p-4">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">

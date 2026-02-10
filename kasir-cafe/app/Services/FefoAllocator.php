@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
+use App\Exceptions\InsufficientStockException;
 use App\Models\ItemBatch;
 use Illuminate\Support\Carbon;
-use RuntimeException;
 
 class FefoAllocator
 {
@@ -39,7 +39,7 @@ class FefoAllocator
         }
 
         if ($need > 0.000001) {
-            throw new RuntimeException("Stok tidak cukup untuk item_id={$itemId} (kurang {$need}).");
+            throw new InsufficientStockException($itemId, $need);
         }
 
         return $alloc;
