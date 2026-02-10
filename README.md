@@ -9,7 +9,7 @@
 
 ## Kasir Cafe
 
-![/Users/chandrairawan/Documents/GitHub/kasir-cafe/N2n-cofe-resto/kasir-cafe/Screenshot 2026-02-09 at 12.40.18.png](kasir-cafe/n2Nlogo.png)
+<img src="kasir-cafe/Screenshot%202026-02-09%20at%2012.40.18.png" width="140" alt="n2N" />
 
 ## Screenshot Aplikasi
 <table>
