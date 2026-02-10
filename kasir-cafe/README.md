@@ -11,6 +11,34 @@
 
 ![alt text](<Screenshot 2026-02-09 at 12.40.18.png>)
 
+## Screenshot Aplikasi
+<table>
+  <tr>
+    <td><img src="../screenshot/Screenshot%202026-02-10%20at%2011.51.05.png" width="180" /></td>
+    <td><img src="../screenshot/Screenshot%202026-02-10%20at%2011.51.21.png" width="180" /></td>
+    <td><img src="../screenshot/Screenshot%202026-02-10%20at%2011.51.33.png" width="180" /></td>
+    <td><img src="../screenshot/Screenshot%202026-02-10%20at%2011.51.42.png" width="180" /></td>
+  </tr>
+  <tr>
+    <td><img src="../screenshot/Screenshot%202026-02-10%20at%2011.51.50.png" width="180" /></td>
+    <td><img src="../screenshot/Screenshot%202026-02-10%20at%2011.52.01.png" width="180" /></td>
+    <td><img src="../screenshot/Screenshot%202026-02-10%20at%2011.52.07.png" width="180" /></td>
+    <td><img src="../screenshot/Screenshot%202026-02-10%20at%2011.52.13.png" width="180" /></td>
+  </tr>
+  <tr>
+    <td><img src="../screenshot/Screenshot%202026-02-10%20at%2011.52.19.png" width="180" /></td>
+    <td><img src="../screenshot/Screenshot%202026-02-10%20at%2011.52.25.png" width="180" /></td>
+    <td><img src="../screenshot/Screenshot%202026-02-10%20at%2011.52.31.png" width="180" /></td>
+    <td><img src="../screenshot/Screenshot%202026-02-10%20at%2011.52.37.png" width="180" /></td>
+  </tr>
+  <tr>
+    <td><img src="../screenshot/Screenshot%202026-02-10%20at%2011.52.47.png" width="180" /></td>
+    <td><img src="../screenshot/Screenshot%202026-02-10%20at%2011.52.55.png" width="180" /></td>
+    <td><img src="../screenshot/Screenshot%202026-02-10%20at%2011.53.00.png" width="180" /></td>
+    <td><img src="../screenshot/Screenshot%202026-02-10%20at%2011.53.05.png" width="180" /></td>
+  </tr>
+</table>
+
 Sistem kasir & stok bahan untuk cafe/resto dengan fitur:
 - POS kasir + struk thermal 80mm
 - Stok bahan dengan FEFO + batch expiry
