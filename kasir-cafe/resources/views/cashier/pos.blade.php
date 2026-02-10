@@ -154,6 +154,9 @@
                                 <tr>
                                     <th class="text-left p-2">Nama/Meja</th>
                                     <th class="text-left p-2">ID</th>
+                                    @if(auth()->user()?->hasRole('admin'))
+                                        <th class="text-left p-2">Kasir</th>
+                                    @endif
                                     <th class="text-right p-2">Subtotal</th>
                                     <th class="text-left p-2">Update</th>
                                     <th class="text-right p-2">Aksi</th>
@@ -172,6 +175,11 @@
                                             </span>
                                             <div class="text-xs text-gray-600">#{{ $os->id }}</div>
                                         </td>
+                                        @if(auth()->user()?->hasRole('admin'))
+                                            <td class="p-2 text-gray-600">
+                                                {{ optional($os->cashier)->name ?? '-' }}
+                                            </td>
+                                        @endif
                                         <td class="p-2 text-right">
                                             Rp {{ number_format($os->total, 0, ',', '.') }}
                                         </td>
@@ -197,7 +205,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="p-3 text-center text-xs text-gray-500">
+                                        <td colspan="{{ auth()->user()?->hasRole('admin') ? 6 : 5 }}" class="p-3 text-center text-xs text-gray-500">
                                             Tidak ada transaksi open.
                                         </td>
                                     </tr>
