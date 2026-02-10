@@ -24,9 +24,18 @@
 
 @if (!empty($openSales) && $openSales->count() > 0)
     <div class="mb-4 bg-white border rounded-lg p-4">
-        <div class="flex items-center justify-between mb-3">
-            <div class="font-semibold">Open Bills</div>
-            <div class="text-xs text-gray-500">Transaksi belum dibayar</div>
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div>
+                <div class="font-semibold">Open Bills</div>
+                <div class="text-xs text-gray-500">Transaksi belum dibayar</div>
+            </div>
+            <form method="GET" action="{{ route('cashier.pos') }}" class="w-full sm:w-64">
+                <input type="text"
+                       name="open_q"
+                       value="{{ $openQuery ?? '' }}"
+                       placeholder="Cari nama tamu / meja / ID"
+                       class="w-full rounded-md border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+            </form>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             @foreach ($openSales as $os)

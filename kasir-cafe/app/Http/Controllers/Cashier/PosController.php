@@ -65,9 +65,21 @@ class PosController extends Controller
                 ->first();
         }
 
-        $openSales = Sale::with('lines.product')
+        $openQuery = trim((string) $request->get('open_q', ''));
+
+        $openSalesQuery = Sale::with('lines.product')
             ->where('cashier_id', auth()->id())
-            ->whereIn('status', ['DRAFT', 'OPEN'])
+            ->whereIn('status', ['DRAFT', 'OPEN']);
+
+        if ($openQuery !== '') {
+            $openSalesQuery->where(function ($q) use ($openQuery) {
+                $q->where('customer_name', 'like', '%' . $openQuery . '%')
+                    ->orWhere('table_no', 'like', '%' . $openQuery . '%')
+                    ->orWhere('id', $openQuery);
+            });
+        }
+
+        $openSales = $openSalesQuery
             ->orderByDesc('updated_at')
             ->get();
 
@@ -143,6 +155,7 @@ class PosController extends Controller
             'products' => $products,
             'search'   => $search,
             'openSales' => $openSales,
+            'openQuery' => $openQuery,
         ]);
     }
 
