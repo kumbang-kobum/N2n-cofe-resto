@@ -214,6 +214,27 @@ server {
    bash scripts/deploy.sh
    ```
 
+## Checklist Go-Live (Produksi)
+1. **Env & keamanan**
+   - `APP_ENV=production`, `APP_DEBUG=false`
+   - `.env` tidak ikut git
+   - `APP_KEY` unik per client
+2. **Database**
+   - Backup cron aktif (8 jam sekali, simpan 20 file)
+   - Migrasi sudah dijalankan di server
+3. **Cache**
+   - `php artisan config:cache`
+   - `php artisan route:cache`
+   - `php artisan view:cache`
+4. **Operasional POS**
+   - Uji alur POS end-to-end (input bahan → resep → jual → laporan)
+   - Uji printer thermal 80mm di lapangan
+5. **Monitoring**
+   - Log error aktif (`LOG_CHANNEL=stack`/`daily`)
+   - Cek disk usage secara berkala
+6. **Lisensi**
+   - Aktivasi license key untuk client sudah dilakukan
+
 ## Lisensi
 1. Set `LICENSE_MASTER_KEY` di `.env`.
 2. Login admin → **Pengaturan Resto** → copy **Installation Code**.

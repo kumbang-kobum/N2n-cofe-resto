@@ -71,7 +71,7 @@ class PosController extends Controller
 
         $openSalesQuery = Sale::with('lines.product')
             ->where('cashier_id', auth()->id())
-            ->whereIn('status', ['DRAFT', 'OPEN']);
+            ->where('status', 'OPEN');
 
         if ($openQuery !== '') {
             $openSalesQuery->where(function ($q) use ($openQuery) {
@@ -166,6 +166,17 @@ class PosController extends Controller
      */
     public function newSale()
     {
+        DB::transaction(function () {
+            $drafts = Sale::where('cashier_id', auth()->id())
+                ->where('status', 'DRAFT')
+                ->pluck('id');
+
+            if ($drafts->isNotEmpty()) {
+                SaleLine::whereIn('sale_id', $drafts)->delete();
+                Sale::whereIn('id', $drafts)->delete();
+            }
+        });
+
         $sale = Sale::create([
             'receipt_no' => $this->generateReceiptNo(),
             'status' => 'DRAFT',
@@ -187,6 +198,8 @@ class PosController extends Controller
             'sale_id'    => ['required', 'exists:sales,id'],
             'product_id' => ['required', 'exists:products,id'],
             'qty'        => ['required', 'numeric', 'gt:0'],
+            'table_no' => ['nullable', 'string', 'max:50'],
+            'customer_name' => ['nullable', 'string', 'max:100'],
         ]);
 
         /** @var Sale $sale */
@@ -201,6 +214,15 @@ class PosController extends Controller
 
         $product = Product::where('is_active', true)
             ->findOrFail($request->product_id);
+
+        // Simpan info meja/nama (jika ada)
+        $tableNo = trim((string) $request->input('table_no'));
+        $customerName = trim((string) $request->input('customer_name'));
+        if ($tableNo !== '' || $customerName !== '') {
+            $sale->table_no = $tableNo !== '' ? $tableNo : $sale->table_no;
+            $sale->customer_name = $customerName !== '' ? $customerName : $sale->customer_name;
+            $sale->save();
+        }
 
         // Tambah line
         SaleLine::create([

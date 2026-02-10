@@ -1,19 +1,20 @@
 @extends('layouts.dashboard')
 
 @section('content')
-<div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
     <div>
         <h1 class="text-xl font-semibold">Kasir (POS)</h1>
-        <div class="text-xs text-gray-500">Kelola transaksi dine-in / takeaway</div>
+        <div class="text-xs text-gray-500">Dine-in / takeaway • cepat & rapi</div>
     </div>
-
-    <form method="POST" action="{{ route('cashier.pos.new') }}">
-        @csrf
-        <button type="submit"
-            class="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
-            + Transaksi Baru
-        </button>
-    </form>
+    <div class="flex items-center gap-2">
+        <form method="POST" action="{{ route('cashier.pos.new') }}">
+            @csrf
+            <button type="submit"
+                class="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">
+                + Transaksi Baru
+            </button>
+        </form>
+    </div>
 </div>
 
 @if (session('status'))
@@ -32,59 +33,6 @@
     </div>
 @endif
 
-@if (!empty($openSales) && $openSales->count() > 0)
-    <div class="mb-4 bg-white border rounded-lg p-4">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-            <div>
-                <div class="font-semibold">Open Bills</div>
-                <div class="text-xs text-gray-500">Transaksi belum dibayar</div>
-            </div>
-            <form method="GET" action="{{ route('cashier.pos') }}" class="w-full sm:w-64">
-                <input type="text"
-                       name="open_q"
-                       value="{{ $openQuery ?? '' }}"
-                       placeholder="Cari nama tamu / meja / ID"
-                       class="w-full rounded-md border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
-            </form>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            @foreach ($openSales as $os)
-                <div class="rounded-lg border px-3 py-2 text-sm hover:border-blue-400 hover:bg-blue-50/40 transition">
-                    <div class="flex items-center justify-between">
-                        <div class="font-semibold">#{{ $os->id }}</div>
-                        <span class="text-[11px] px-2 py-0.5 rounded-full {{ $os->status === 'OPEN' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' }}">
-                            {{ $os->status }}
-                        </span>
-                    </div>
-                    <div class="mt-1 text-xs text-gray-600">
-                        Meja: {{ $os->table_no ?? '-' }} | Tamu: {{ $os->customer_name ?? '-' }}
-                    </div>
-                    <div class="mt-1 text-xs text-gray-600">
-                        Subtotal: Rp {{ number_format($os->total, 0, ',', '.') }}
-                    </div>
-                    <div class="mt-1 text-[11px] text-gray-400">
-                        Update: {{ optional($os->updated_at)->format('d/m/Y H:i') }}
-                    </div>
-                    <div class="mt-2 flex items-center justify-between gap-2">
-                        <a href="{{ route('cashier.pos', ['sale_id' => $os->id]) }}"
-                           class="text-[11px] px-2 py-1 rounded bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100">
-                            Buka
-                        </a>
-                        <form method="POST" action="{{ route('cashier.pos.cancel') }}" onsubmit="return confirm('Batalkan transaksi ini?');">
-                            @csrf
-                            <input type="hidden" name="sale_id" value="{{ $os->id }}">
-                            <button type="submit"
-                                    class="text-[11px] px-2 py-1 rounded bg-red-50 text-red-600 border border-red-200 hover:bg-red-100">
-                                Batalkan
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    </div>
-@endif
-
 @if (!$sale)
     <div class="bg-white border rounded-lg p-6 text-gray-700">
         Belum ada transaksi aktif. Klik
@@ -92,94 +40,177 @@
         untuk mulai.
     </div>
 @else
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    @php
+        $oldSaleId = old('sale_id');
+        $useOld = $oldSaleId && (int) $oldSaleId === (int) $sale->id;
+    @endphp
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-        {{-- KATALOG MENU --}}
-        <div class="bg-white border rounded-lg p-4">
-            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-                <div>
-                    <div class="font-semibold">Katalog Menu</div>
-                    <div class="text-xs text-gray-500">
-                        Klik kartu menu untuk menambah ke keranjang.
+        <div class="lg:col-span-2 space-y-4">
+            {{-- KATALOG MENU --}}
+            <div class="bg-white border rounded-lg p-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <div>
+                        <div class="font-semibold">Katalog Menu</div>
+                        <div class="text-xs text-gray-500">
+                            Klik kartu menu untuk menambah ke keranjang.
+                        </div>
+                    </div>
+
+                    <div class="w-full sm:w-72">
+                        <input type="text"
+                            id="product-search"
+                            placeholder="Cari menu..."
+                            class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
 
-                <div class="w-full sm:w-56">
-                    <input type="text"
-                        id="product-search"
-                        placeholder="Cari menu..."
-                        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
-                </div>
-            </div>
-
-            @if ($products->isEmpty())
-                <div class="text-sm text-gray-500">
-                    Menu tidak ditemukan.
-                </div>
-            @else
-                <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-                    @foreach ($products as $p)
-                        <form method="POST"
-                              action="{{ route('cashier.pos.add') }}"
-                              class="product-card group bg-gray-50 rounded-lg border hover:border-blue-400 hover:bg-blue-50/40 transition cursor-pointer flex flex-col"
-                              data-name="{{ Str::lower($p->name) }}"
+                @if ($products->isEmpty())
+                    <div class="text-sm text-gray-500">
+                        Menu tidak ditemukan.
+                    </div>
+                @else
+                    <div class="max-h-[520px] overflow-y-auto pr-1">
+                        <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                        @foreach ($products as $p)
+                            <form method="POST"
+                                  action="{{ route('cashier.pos.add') }}"
+                                  class="product-card group bg-white rounded-xl border hover:border-blue-400 hover:shadow-md transition cursor-pointer flex flex-col overflow-hidden"
+                                  data-name="{{ Str::lower($p->name) }}"
                               data-warning="{{ $p->stock_warning ?? '' }}">
                             @csrf
                             <input type="hidden" name="sale_id" value="{{ $sale->id }}">
                             <input type="hidden" name="product_id" value="{{ $p->id }}">
+                            <input type="hidden" name="table_no" value="">
+                            <input type="hidden" name="customer_name" value="">
 
-                            {{-- GAMBAR PRODUK --}}
-                            <div class="w-full h-24 rounded-t-lg overflow-hidden bg-gray-100 flex items-center justify-center">
-                                @if ($p->image_path)
-                                    <img src="{{ asset('storage/' . $p->image_path) }}"
-                                         alt="{{ $p->name }}"
-                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-150">
-                                @else
-                                    <span class="text-[11px] text-gray-500">
-                                        Tidak ada gambar
-                                    </span>
-                                @endif
-                            </div>
-
-                            {{-- INFO + QTY --}}
-                            <div class="flex-1 flex flex-col p-2.5">
-                                <div class="text-sm font-semibold leading-tight line-clamp-2">
-                                    {{ $p->name }}
+                                {{-- GAMBAR PRODUK --}}
+                                <div class="w-full h-28 overflow-hidden bg-gray-100 flex items-center justify-center">
+                                    @if ($p->image_path)
+                                        <img src="{{ asset('storage/' . $p->image_path) }}"
+                                             alt="{{ $p->name }}"
+                                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-150">
+                                    @else
+                                        <span class="text-[11px] text-gray-500">
+                                            Tidak ada gambar
+                                        </span>
+                                    @endif
                                 </div>
-                                @if (!empty($p->stock_warning))
-                                    <div class="mt-1 text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
-                                        {{ $p->stock_warning }}
+
+                                {{-- INFO + QTY --}}
+                                <div class="flex-1 flex flex-col p-3">
+                                    <div class="text-sm font-semibold leading-tight line-clamp-2">
+                                        {{ $p->name }}
                                     </div>
-                                @endif
-                                <div class="text-xs text-gray-500">
-                                    Rp {{ number_format($p->price_default, 0, ',', '.') }}
-                                </div>
+                                    @if (!empty($p->stock_warning))
+                                        <div class="mt-1 text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+                                            {{ $p->stock_warning }}
+                                        </div>
+                                    @endif
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        Rp {{ number_format($p->price_default, 0, ',', '.') }}
+                                    </div>
 
-                                <div class="mt-2 flex items-center justify-between gap-1">
-                                    <label class="text-[11px] text-gray-500">
-                                        Qty
-                                    </label>
+                                    <div class="mt-3 flex items-center justify-between gap-2">
                                     <input type="number"
                                            name="qty"
                                            value="1"
                                            min="1"
                                            step="1"
-                                           class="w-16 rounded border border-gray-300 px-1.5 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                           class="w-12 rounded border border-gray-300 px-1 py-0.5 text-[10px] text-right focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                    <button type="submit"
+                                            class="flex-1 px-1.5 py-0.5 rounded-md bg-blue-600 text-white text-[10px] font-semibold hover:bg-blue-700">
+                                        Tambah
+                                    </button>
+                                    </div>
                                 </div>
+                            </form>
+                        @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
 
-                                <button type="submit"
-                                        class="mt-2 w-full text-[11px] font-medium text-blue-600 group-hover:text-blue-700">
-                                    Tambah ke keranjang
-                                </button>
-                            </div>
+            {{-- OPEN BILLS DI BAWAH KATALOG --}}
+            @if (!empty($openSales) && $openSales->count() > 0)
+                <div class="bg-white border rounded-lg p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <div>
+                            <div class="font-semibold">Open Bills</div>
+                            <div class="text-xs text-gray-500">Transaksi belum dibayar • {{ $openSales->count() }} item</div>
+                        </div>
+                        <form method="GET" action="{{ route('cashier.pos') }}" class="w-full sm:w-64">
+                            <input type="text"
+                                   name="open_q"
+                                   value="{{ $openQuery ?? '' }}"
+                                   placeholder="Cari nama tamu / meja / ID"
+                                   class="w-full rounded-md border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                         </form>
-                    @endforeach
+                    </div>
+
+                    <div class="max-h-56 overflow-y-auto border rounded-md">
+                        <table class="w-full text-xs md:text-sm">
+                            <thead class="bg-gray-50 sticky top-0">
+                                <tr>
+                                    <th class="text-left p-2">Nama/Meja</th>
+                                    <th class="text-left p-2">ID</th>
+                                    <th class="text-right p-2">Subtotal</th>
+                                    <th class="text-left p-2">Update</th>
+                                    <th class="text-right p-2">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($openSales as $os)
+                                    <tr class="border-t hover:bg-blue-50/30">
+                                        <td class="p-2">
+                                            <div class="font-medium">{{ $os->customer_name ?? '-' }}</div>
+                                            <div class="text-[11px] text-gray-500">Meja: {{ $os->table_no ?? '-' }}</div>
+                                        </td>
+                                        <td class="p-2">
+                                            <span class="text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                                                OPEN
+                                            </span>
+                                            <div class="text-xs text-gray-600">#{{ $os->id }}</div>
+                                        </td>
+                                        <td class="p-2 text-right">
+                                            Rp {{ number_format($os->total, 0, ',', '.') }}
+                                        </td>
+                                        <td class="p-2 text-gray-500">
+                                            {{ optional($os->updated_at)->format('d/m/Y H:i') }}
+                                        </td>
+                                        <td class="p-2 text-right">
+                                            <div class="flex items-center justify-end gap-2">
+                                                <a href="{{ route('cashier.pos', ['sale_id' => $os->id]) }}"
+                                                   class="text-[11px] px-2 py-1 rounded bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100">
+                                                    Buka
+                                                </a>
+                                                <form method="POST" action="{{ route('cashier.pos.cancel') }}" onsubmit="return confirm('Batalkan transaksi ini?');">
+                                                    @csrf
+                                                    <input type="hidden" name="sale_id" value="{{ $os->id }}">
+                                                    <button type="submit"
+                                                            class="text-[11px] px-2 py-1 rounded bg-red-50 text-red-600 border border-red-200 hover:bg-red-100">
+                                                        Batalkan
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="p-3 text-center text-xs text-gray-500">
+                                            Tidak ada transaksi open.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             @endif
         </div>
 
         {{-- KERANJANG --}}
-        <div class="bg-white border rounded-lg p-4">
+        <div class="bg-white border rounded-lg p-4 lg:sticky lg:top-4 h-fit">
             <div class="flex items-center justify-between mb-3">
                 <div>
                     <div class="font-semibold">Keranjang</div>
@@ -213,7 +244,7 @@
                     <input type="text"
                            name="table_no"
                            form="pos-payment-form"
-                           value="{{ old('table_no', $sale->table_no) }}"
+                           value="{{ $useOld ? old('table_no') : ($sale->table_no ?? '') }}"
                            class="w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
@@ -221,7 +252,7 @@
                     <input type="text"
                            name="customer_name"
                            form="pos-payment-form"
-                           value="{{ old('customer_name', $sale->customer_name) }}"
+                           value="{{ $useOld ? old('customer_name') : ($sale->customer_name ?? '') }}"
                            class="w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div class="sm:col-span-2 flex items-center justify-between">
@@ -336,7 +367,7 @@
                     <label class="block text-xs font-medium text-gray-600 mb-1">Diskon (Rp)</label>
                     <input type="number"
                            name="discount_amount"
-                           value="{{ old('discount_amount', 0) }}"
+                           value="{{ $useOld ? old('discount_amount', 0) : 0 }}"
                            min="0"
                            step="100"
                            class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
@@ -346,7 +377,7 @@
                     <label class="block text-xs font-medium text-gray-600 mb-1">Uang Dibayar (Rp)</label>
                     <input type="number"
                            name="paid_amount"
-                           value="{{ old('paid_amount', 0) }}"
+                           value="{{ $useOld ? old('paid_amount', 0) : 0 }}"
                            min="0"
                            step="1000"
                            class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
@@ -409,6 +440,22 @@
                 const ok = window.confirm('Perhatian: ' + warning + '.\nTetap tambahkan ke keranjang?');
                 if (!ok) {
                     e.preventDefault();
+                }
+            });
+        });
+
+        forms.forEach(form => {
+            form.addEventListener('submit', function () {
+                const tableInput = document.querySelector('input[name="table_no"][form="pos-payment-form"]');
+                const nameInput = document.querySelector('input[name="customer_name"][form="pos-payment-form"]');
+                const tableHidden = form.querySelector('input[name="table_no"]');
+                const nameHidden = form.querySelector('input[name="customer_name"]');
+
+                if (tableHidden && tableInput) {
+                    tableHidden.value = tableInput.value || '';
+                }
+                if (nameHidden && nameInput) {
+                    nameHidden.value = nameInput.value || '';
                 }
             });
         });
