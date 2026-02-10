@@ -233,6 +233,7 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::get('/pos', [PosController::class, 'index'])->name('pos');
             Route::post('/pos/new', [PosController::class, 'newSale'])->name('pos.new');
             Route::post('/pos/add', [PosController::class, 'addLine'])->name('pos.add');
+            Route::post('/pos/hold', [PosController::class, 'hold'])->name('pos.hold');
             Route::post('/pos/pay', [PosController::class, 'pay'])->name('pos.pay');
             Route::get('/pos/receipt/{sale}', [PosController::class, 'receipt'])->name('pos.receipt');
             // >>> Laporan penjualan kasir (transaksi milik kasir login) <<<

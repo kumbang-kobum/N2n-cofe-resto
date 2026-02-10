@@ -41,6 +41,9 @@
         <div class="mt-2 text-[11px]">
             <div>No. Nota: {{ $sale->receipt_no ?? ('#' . $sale->id) }}</div>
             <div>Tanggal: {{ optional($sale->paid_at)->format('d/m/Y H:i') }}</div>
+            @if($sale->table_no || $sale->customer_name)
+                <div>Meja: {{ $sale->table_no ?? '-' }} | Tamu: {{ $sale->customer_name ?? '-' }}</div>
+            @endif
             <div>Kasir: {{ optional($sale->cashier)->name ?? '-' }}</div>
             <div>Metode: {{ strtoupper($sale->payment_method ?? '-') }}</div>
         </div>

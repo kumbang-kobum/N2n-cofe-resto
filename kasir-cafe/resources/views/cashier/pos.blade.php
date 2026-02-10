@@ -19,10 +19,40 @@
     </div>
 @endif
 
+@if (!empty($openSales) && $openSales->count() > 0)
+    <div class="mb-4 bg-white border rounded-lg p-4">
+        <div class="flex items-center justify-between mb-3">
+            <div class="font-semibold">Open Bills</div>
+            <div class="text-xs text-gray-500">Transaksi belum dibayar</div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            @foreach ($openSales as $os)
+                <a href="{{ route('cashier.pos', ['sale_id' => $os->id]) }}"
+                   class="rounded-lg border px-3 py-2 text-sm hover:border-blue-400 hover:bg-blue-50/40 transition">
+                    <div class="flex items-center justify-between">
+                        <div class="font-semibold">#{{ $os->id }}</div>
+                        <span class="text-[11px] px-2 py-0.5 rounded-full {{ $os->status === 'OPEN' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' }}">
+                            {{ $os->status }}
+                        </span>
+                    </div>
+                    <div class="mt-1 text-xs text-gray-600">
+                        Meja: {{ $os->table_no ?? '-' }} | Tamu: {{ $os->customer_name ?? '-' }}
+                    </div>
+                    <div class="mt-1 text-xs text-gray-600">
+                        Subtotal: Rp {{ number_format($os->total, 0, ',', '.') }}
+                    </div>
+                    <div class="mt-1 text-[11px] text-gray-400">
+                        Update: {{ optional($os->updated_at)->format('d/m/Y H:i') }}
+                    </div>
+                </a>
+            @endforeach
+        </div>
+    </div>
+@endif
+
 @if (!$sale)
-    {{-- Jika belum ada transaksi --}}
     <div class="bg-white border rounded-lg p-6 text-gray-700">
-        Belum ada transaksi. Klik
+        Belum ada transaksi aktif. Klik
         <span class="font-semibold">+ Transaksi Baru</span>
         untuk mulai.
     </div>
@@ -122,6 +152,28 @@
                 </div>
             </div>
 
+            <div class="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">No. Meja</label>
+                    <input type="text"
+                           name="table_no"
+                           form="pos-payment-form"
+                           value="{{ old('table_no', $sale->table_no) }}"
+                           class="w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Nama Tamu</label>
+                    <input type="text"
+                           name="customer_name"
+                           form="pos-payment-form"
+                           value="{{ old('customer_name', $sale->customer_name) }}"
+                           class="w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="sm:col-span-2 flex items-center justify-between">
+                    <div class="text-[11px] text-gray-500">Isi meja/tamu agar mudah dicari saat bayar di akhir.</div>
+                </div>
+            </div>
+
             <div class="overflow-x-auto">
                 <table class="w-full text-xs md:text-sm">
                     <thead class="bg-gray-50">
@@ -193,7 +245,7 @@
                 </div>
             </div>
 
-            <form method="POST" action="{{ route('cashier.pos.pay') }}" class="mt-4 space-y-2">
+            <form id="pos-payment-form" method="POST" action="{{ route('cashier.pos.pay') }}" class="mt-4 space-y-2">
                 @csrf
                 <input type="hidden" name="sale_id" value="{{ $sale->id }}">
 
@@ -232,6 +284,13 @@
                 <button type="submit"
                         class="w-full px-3 py-2 rounded-md bg-green-600 hover:bg-green-700 text-white text-sm font-semibold">
                     Bayar
+                </button>
+
+                <button type="submit"
+                        formnovalidate
+                        formaction="{{ route('cashier.pos.hold') }}"
+                        class="w-full px-3 py-2 rounded-md bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold">
+                    Simpan & Tahan (Bayar Belakangan)
                 </button>
             </form>
         </div>

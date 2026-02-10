@@ -60,10 +60,16 @@ class PosController extends Controller
         if (!$sale) {
             $sale = Sale::with('lines.product')
                 ->where('cashier_id', auth()->id())
-                ->where('status', 'DRAFT')
+                ->whereIn('status', ['DRAFT', 'OPEN'])
                 ->orderByDesc('id')
                 ->first();
         }
+
+        $openSales = Sale::with('lines.product')
+            ->where('cashier_id', auth()->id())
+            ->whereIn('status', ['DRAFT', 'OPEN'])
+            ->orderByDesc('updated_at')
+            ->get();
 
         // Pencarian katalog
         $search = trim((string) $request->get('q', ''));
@@ -136,6 +142,7 @@ class PosController extends Controller
             'sale'     => $sale,
             'products' => $products,
             'search'   => $search,
+            'openSales' => $openSales,
         ]);
     }
 
@@ -172,9 +179,9 @@ class PosController extends Controller
             ->where('cashier_id', auth()->id())
             ->findOrFail($request->sale_id);
 
-        // Hanya boleh edit DRAFT
-        if ($sale->status !== 'DRAFT') {
-            abort(400, 'Hanya transaksi DRAFT yang bisa diubah.');
+        // Hanya boleh edit DRAFT/OPEN
+        if (! in_array($sale->status, ['DRAFT', 'OPEN'], true)) {
+            abort(400, 'Hanya transaksi DRAFT/OPEN yang bisa diubah.');
         }
 
         $product = Product::where('is_active', true)
@@ -211,13 +218,15 @@ class PosController extends Controller
             'payment_method' => ['required', 'in:CASH,QRIS,DEBIT'],
             'discount_amount' => ['nullable', 'numeric', 'min:0'],
             'paid_amount' => ['nullable', 'numeric', 'min:0'],
+            'table_no' => ['nullable', 'string', 'max:50'],
+            'customer_name' => ['nullable', 'string', 'max:100'],
         ]);
 
         $sale = Sale::with([
             'lines.product.recipe.lines.item',
         ])->findOrFail($request->sale_id);
 
-        abort_if($sale->status !== 'DRAFT', 400, 'Transaksi sudah dibayar.');
+        abort_if(! in_array($sale->status, ['DRAFT', 'OPEN'], true), 400, 'Transaksi sudah dibayar.');
 
         DB::transaction(function () use ($request, $sale, $allocator, $converter) {
 
@@ -334,6 +343,8 @@ class PosController extends Controller
             }
             $changeAmount = $paidAmount - $grandTotal;
 
+            $sale->table_no = trim((string) $request->input('table_no')) ?: $sale->table_no;
+            $sale->customer_name = trim((string) $request->input('customer_name')) ?: $sale->customer_name;
             $sale->status         = 'PAID';
             $sale->payment_method = $request->payment_method;
             $sale->paid_at        = now();
@@ -358,6 +369,33 @@ class PosController extends Controller
         return redirect()
             ->route('cashier.pos.receipt', $sale->id)
             ->with('status', 'Pembayaran berhasil.');
+    }
+
+    /**
+     * Tahan transaksi (Open Bill) untuk dibayar nanti.
+     */
+    public function hold(Request $request)
+    {
+        $data = $request->validate([
+            'sale_id' => ['required', 'exists:sales,id'],
+            'table_no' => ['nullable', 'string', 'max:50'],
+            'customer_name' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        $sale = Sale::where('cashier_id', auth()->id())->findOrFail($data['sale_id']);
+
+        if (! in_array($sale->status, ['DRAFT', 'OPEN'], true)) {
+            abort(400, 'Hanya transaksi DRAFT/OPEN yang bisa ditahan.');
+        }
+
+        $sale->table_no = trim((string) ($data['table_no'] ?? '')) ?: null;
+        $sale->customer_name = trim((string) ($data['customer_name'] ?? '')) ?: null;
+        $sale->status = 'OPEN';
+        $sale->save();
+
+        return redirect()
+            ->route('cashier.pos')
+            ->with('status', 'Transaksi ditahan (Open Bill).');
     }
 
     /**
