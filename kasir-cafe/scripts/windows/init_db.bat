@@ -1,0 +1,26 @@
+@echo off
+setlocal
+
+REM === Konfigurasi path XAMPP ===
+set "XAMPP_DIR=C:\xampp"
+
+if not exist "%XAMPP_DIR%\php\php.exe" (
+  echo PHP XAMPP tidak ditemukan di %XAMPP_DIR%
+  echo Silakan instal XAMPP atau ubah XAMPP_DIR di file ini.
+  pause
+  exit /b 1
+)
+
+REM === Masuk ke root project ===
+cd /d "%~dp0..\.."
+
+if not exist .env (
+  copy .env.example .env >nul
+)
+
+"%XAMPP_DIR%\php\php.exe" artisan key:generate
+"%XAMPP_DIR%\php\php.exe" artisan migrate --seed
+"%XAMPP_DIR%\php\php.exe" artisan storage:link
+
+echo Database dan storage selesai disiapkan.
+pause

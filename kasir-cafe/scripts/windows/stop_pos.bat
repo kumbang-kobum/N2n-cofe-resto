@@ -1,0 +1,21 @@
+@echo off
+setlocal
+
+REM === Konfigurasi path XAMPP ===
+set "XAMPP_DIR=C:\xampp"
+
+if not exist "%XAMPP_DIR%\apache\bin\httpd.exe" (
+  echo XAMPP tidak ditemukan di %XAMPP_DIR%
+  echo Silakan instal XAMPP atau ubah XAMPP_DIR di file ini.
+  pause
+  exit /b 1
+)
+
+echo Mematikan Apache...
+"%XAMPP_DIR%\apache\bin\httpd.exe" -k stop
+
+echo Mematikan MySQL...
+"%XAMPP_DIR%\mysql\bin\mysqladmin.exe" -u root shutdown >nul 2>&1
+
+echo OK.
+pause

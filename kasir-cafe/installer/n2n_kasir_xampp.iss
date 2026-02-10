@@ -1,0 +1,59 @@
+; Inno Setup Script - N2N Kasir + XAMPP 1-Click
+; Requires Inno Setup installed on build machine.
+
+#define AppName "N2N Kasir"
+#define AppVersion "1.0.0"
+#define AppPublisher "n2N"
+#define AppExe "start_pos.bat"
+
+[Setup]
+AppId={{D1C58E36-9F57-46D5-9F7C-7E6C9D0C8E90}
+AppName={#AppName}
+AppVersion={#AppVersion}
+AppPublisher={#AppPublisher}
+DefaultDirName=C:\n2n-kasir
+DefaultGroupName={#AppName}
+DisableProgramGroupPage=yes
+OutputDir=.
+OutputBaseFilename=n2n-kasir-setup
+Compression=lzma
+SolidCompression=yes
+WizardStyle=modern
+PrivilegesRequired=admin
+
+[Languages]
+Name: "indonesian"; MessagesFile: "compiler:Languages\Indonesian.isl"
+
+[Tasks]
+Name: "desktopicon"; Description: "Buat shortcut di Desktop"; GroupDescription: "Shortcut:"; Flags: unchecked
+
+[Files]
+; Copy aplikasi (kecuali folder berat)
+Source: "..\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs; Excludes: "node_modules;vendor;storage;*.log;*.sqlite;*.sql;installer;backups;public\storage"
+
+; Copy scripts windows
+Source: "..\scripts\windows\start_pos.bat"; DestDir: "{app}\scripts\windows"; Flags: ignoreversion
+Source: "..\scripts\windows\init_db.bat"; DestDir: "{app}\scripts\windows"; Flags: ignoreversion
+Source: "..\scripts\windows\stop_pos.bat"; DestDir: "{app}\scripts\windows"; Flags: ignoreversion
+
+; (Opsional) include XAMPP installer jika tersedia
+; Letakkan XAMPP installer di folder installer\extras\xampp-installer.exe
+Source: "extras\xampp-installer.exe"; DestDir: "{tmp}"; Flags: ignoreversion; Check: FileExists(ExpandConstant('{src}\extras\xampp-installer.exe'))
+
+[Icons]
+Name: "{group}\{#AppName}"; Filename: "{app}\scripts\windows\{#AppExe}"
+Name: "{commondesktop}\{#AppName}"; Filename: "{app}\scripts\windows\{#AppExe}"; Tasks: desktopicon
+
+[Run]
+; Install XAMPP if bundled
+Filename: "{tmp}\xampp-installer.exe"; Parameters: "/S"; Flags: waituntilterminated; Check: FileExists(ExpandConstant('{tmp}\xampp-installer.exe'))
+
+; Init database and storage (uses XAMPP PHP)
+Filename: "{app}\scripts\windows\init_db.bat"; Flags: waituntilterminated
+
+; Start app
+Filename: "{app}\scripts\windows\start_pos.bat"; Flags: nowait postinstall skipifsilent
+
+[UninstallRun]
+Filename: "{app}\scripts\windows\stop_pos.bat"; Flags: runhidden
+

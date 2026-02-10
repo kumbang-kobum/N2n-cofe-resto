@@ -168,6 +168,34 @@ Dengan ini, COGS selalu mengikuti **biaya per batch yang benar**, bukan harga te
    bash scripts/deploy.sh
    ```
 
+## Instalasi Windows (XAMPP, 1 Klik)
+1. Install XAMPP di `C:\xampp`.
+2. Letakkan project di `C:\n2n-kasir` (atau folder lain).
+3. Jalankan setup database:
+   ```bat
+   kasir-cafe\scripts\windows\init_db.bat
+   ```
+4. Jalankan aplikasi:
+   ```bat
+   kasir-cafe\scripts\windows\start_pos.bat
+   ```
+   Aplikasi akan terbuka di `http://localhost/`.
+
+Stop server:
+```bat
+kasir-cafe\scripts\windows\stop_pos.bat
+```
+
+## Installer Windows (.exe, Inno Setup)
+1. Install Inno Setup di PC build.
+2. Buka file:
+   `kasir-cafe\installer\n2n_kasir_xampp.iss`
+3. Jika ingin bundling XAMPP installer:
+   - Simpan file installer XAMPP di:
+     `kasir-cafe\installer\extras\xampp-installer.exe`
+4. Klik **Compile** → hasilnya `n2n-kasir-setup.exe`.
+5. Jalankan installer di PC client.
+
 ## Checklist Go-Live (Produksi)
 1. **Env & keamanan**
    - `APP_ENV=production`, `APP_DEBUG=false`

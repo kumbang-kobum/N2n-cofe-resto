@@ -1,0 +1,27 @@
+@echo off
+setlocal
+
+REM === Konfigurasi path XAMPP ===
+set "XAMPP_DIR=C:\xampp"
+
+REM === Path aplikasi ===
+set "APP_PUBLIC=%~dp0..\..\public"
+
+if not exist "%XAMPP_DIR%\apache\bin\httpd.exe" (
+  echo XAMPP tidak ditemukan di %XAMPP_DIR%
+  echo Silakan instal XAMPP atau ubah XAMPP_DIR di file ini.
+  pause
+  exit /b 1
+)
+
+echo Menyalakan Apache...
+"%XAMPP_DIR%\apache\bin\httpd.exe" -k start
+
+echo Menyalakan MySQL...
+"%XAMPP_DIR%\mysql\bin\mysqld.exe" --standalone --console >nul 2>&1
+
+echo Membuka aplikasi...
+start http://localhost/
+
+echo OK. Jika tidak terbuka, akses manual: http://localhost/
+pause
