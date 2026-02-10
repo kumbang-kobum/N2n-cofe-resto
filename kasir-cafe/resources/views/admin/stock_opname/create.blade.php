@@ -43,10 +43,22 @@
     </div>
 
     <div class="bg-white border rounded-lg overflow-hidden">
-        <div class="p-3 border-b flex items-center justify-between">
-            <div class="font-semibold text-sm">Detail Opname</div>
-            <div class="text-xs text-gray-500">
-                Stok sistem diambil dari batch aktif (base unit).
+        <div class="p-3 border-b flex flex-wrap items-center justify-between gap-2">
+            <div>
+                <div class="font-semibold text-sm">Detail Opname</div>
+                <div class="text-xs text-gray-500">
+                    Stok sistem diambil dari batch aktif (base unit).
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="text"
+                       id="opname-search"
+                       placeholder="Cari item..."
+                       class="border rounded px-2 py-1 text-xs w-48">
+                <label class="text-xs text-gray-600 flex items-center gap-1">
+                    <input type="checkbox" id="opname-check-all" class="rounded border-gray-300">
+                    Pilih semua
+                </label>
             </div>
         </div>
 
@@ -54,6 +66,7 @@
             <table class="w-full text-sm">
                 <thead class="bg-gray-50">
                     <tr>
+                        <th class="text-left p-2">Pilih</th>
                         <th class="text-left p-2">Bahan</th>
                         <th class="text-right p-2">Stok Sistem (base)</th>
                         <th class="text-right p-2">Qty Fisik</th>
@@ -77,7 +90,13 @@
 
                             $oldLine = $oldLines[$idx] ?? [];
                         @endphp
-                        <tr class="border-t">
+                        <tr class="border-t opname-row" data-name="{{ \Illuminate\Support\Str::lower($item->name) }}">
+                            <td class="p-2 align-top">
+                                <input type="checkbox"
+                                       name="lines[{{ $idx }}][include]"
+                                       value="1"
+                                       @checked(isset($oldLine['include']) && $oldLine['include'])>
+                            </td>
                             <td class="p-2 align-top">
                                 <div class="font-medium">{{ $item->name }}</div>
                                 <div class="text-xs text-gray-500">
@@ -130,7 +149,7 @@
                         </tr>
                     @empty
                         <tr class="border-t">
-                            <td colspan="6" class="p-3 text-center text-gray-600">
+                            <td colspan="7" class="p-3 text-center text-gray-600">
                                 Belum ada item bahan baku.
                             </td>
                         </tr>
@@ -147,4 +166,35 @@
         </button>
     </div>
 </form>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const search = document.getElementById('opname-search');
+        const rows = Array.from(document.querySelectorAll('.opname-row'));
+        const checkAll = document.getElementById('opname-check-all');
+
+        if (search) {
+            search.addEventListener('input', function () {
+                const q = this.value.toLowerCase();
+                rows.forEach(row => {
+                    const name = row.dataset.name || '';
+                    row.style.display = name.includes(q) ? '' : 'none';
+                });
+            });
+        }
+
+        if (checkAll) {
+            checkAll.addEventListener('change', function () {
+                const checked = this.checked;
+                rows.forEach(row => {
+                    if (row.style.display === 'none') return;
+                    const cb = row.querySelector('input[type="checkbox"]');
+                    if (cb) cb.checked = checked;
+                });
+            });
+        }
+    });
+</script>
+@endpush
 @endsection

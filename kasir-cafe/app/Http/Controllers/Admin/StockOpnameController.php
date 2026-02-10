@@ -40,18 +40,34 @@ class StockOpnameController extends Controller
         $request->validate([
             'counted_at' => ['required', 'date'],
             'note'       => ['nullable', 'string'],
-
-            'lines'                => ['required', 'array', 'min:1'],
-            'lines.*.item_id'      => ['required', 'exists:items,id'],
-            'lines.*.unit_id'      => ['required', 'exists:units,id'],
-            'lines.*.physical_qty' => ['required', 'numeric', 'min:0'],
-            'lines.*.expired_at'   => ['nullable', 'date'],
-            'lines.*.unit_cost'    => ['nullable', 'numeric', 'min:0'],
-        ], [
-            'lines.required'                => 'Minimal 1 baris opname.',
-            'lines.*.item_id.required'      => 'Item wajib dipilih.',
-            'lines.*.physical_qty.required' => 'Qty fisik wajib diisi.',
+            'lines'      => ['required', 'array'],
         ]);
+
+        $rawLines = $request->input('lines', []);
+        $selectedLines = array_values(array_filter($rawLines, function ($line) {
+            return ! empty($line['include']);
+        }));
+
+        if (count($selectedLines) === 0) {
+            return back()->withErrors(['Pilih minimal 1 item untuk opname.'])->withInput();
+        }
+
+        foreach ($selectedLines as $line) {
+            $validator = validator($line, [
+                'item_id'      => ['required', 'exists:items,id'],
+                'unit_id'      => ['required', 'exists:units,id'],
+                'physical_qty' => ['required', 'numeric', 'min:0'],
+                'expired_at'   => ['nullable', 'date'],
+                'unit_cost'    => ['nullable', 'numeric', 'min:0'],
+            ], [
+                'item_id.required'      => 'Item wajib dipilih.',
+                'physical_qty.required' => 'Qty fisik wajib diisi.',
+            ]);
+
+            if ($validator->fails()) {
+                return back()->withErrors($validator)->withInput();
+            }
+        }
 
         $opname = DB::transaction(function () use ($request) {
 
@@ -66,7 +82,12 @@ class StockOpnameController extends Controller
 
             $linesToInsert = [];
 
-            foreach ($request->lines as $line) {
+            $rawLines = $request->input('lines', []);
+            $selectedLines = array_values(array_filter($rawLines, function ($line) {
+                return ! empty($line['include']);
+            }));
+
+            foreach ($selectedLines as $line) {
                 // item & unit input
                 $item = Item::with('baseUnit')->findOrFail($line['item_id']);
                 $unit = Unit::findOrFail($line['unit_id']);
