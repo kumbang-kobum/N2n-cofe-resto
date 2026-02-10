@@ -9,7 +9,7 @@
 
 ## Kasir Cafe
 
-![alt text](<Screenshot 2026-02-09 at 12.40.18.png>)
+<img src="Screenshot%202026-02-09%20at%2012.40.18.png" width="140" alt="n2N" />
 
 ## Screenshot Aplikasi
 <table>
