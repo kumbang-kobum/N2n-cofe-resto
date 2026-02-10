@@ -9,7 +9,7 @@
 
 ## Kasir Cafe
 
-<img src="/kasir-cafe/N2n-cofe-resto/kasir-cafe/n2Nlogo.png" width="140" alt="n2N" />
+<img src="N2n-cofe-resto/n2Nlogo.png" width="140" alt="n2N" />
 
 ## Screenshot Aplikasi
 <table>
