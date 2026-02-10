@@ -4,6 +4,13 @@ setlocal
 REM === Konfigurasi path XAMPP ===
 set "XAMPP_DIR=C:\xampp"
 
+REM === Konfigurasi database ===
+set "DB_NAME=kasir_cafe"
+set "DB_USER=n2n_user"
+set "DB_PASS="
+set "MYSQL_ROOT_USER=root"
+set "MYSQL_ROOT_PASSWORD="
+
 if not exist "%XAMPP_DIR%\php\php.exe" (
   echo PHP XAMPP tidak ditemukan di %XAMPP_DIR%
   echo Silakan instal XAMPP atau ubah XAMPP_DIR di file ini.
@@ -17,6 +24,44 @@ cd /d "%~dp0..\.."
 if not exist .env (
   copy .env.example .env >nul
 )
+
+REM === Generate password jika kosong ===
+if "%DB_PASS%"=="" (
+  for /f "usebackq delims=" %%p in (`powershell -NoProfile -Command "[guid]::NewGuid().ToString('N').Substring(0,12)"`) do set "DB_PASS=%%p"
+)
+
+REM === Ambil IP lokal untuk APP_URL (fallback localhost) ===
+for /f "usebackq delims=" %%i in (`powershell -NoProfile -Command "$ip = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -match '^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)' } | Select-Object -First 1 -ExpandProperty IPAddress); if (-not $ip) { $ip = '127.0.0.1' }; $ip"`) do set "LOCAL_IP=%%i"
+set "APP_URL=http://%LOCAL_IP%"
+
+REM === Update .env (APP_URL, DB_*) ===
+powershell -NoProfile -Command ^
+  "$envFile = '.env';" ^
+  "$content = Get-Content $envFile -ErrorAction SilentlyContinue;" ^
+  "if (-not $content) { $content = @() };" ^
+  "function Set-Env($key,$value) { if ($content -match ('^'+$key+'=')) { $content = $content -replace ('^'+$key+'=.*$'), ($key+'='+$value); } else { $content += ($key+'='+$value); } }" ^
+  "Set-Env 'APP_URL' '%APP_URL%';" ^
+  "Set-Env 'DB_DATABASE' '%DB_NAME%';" ^
+  "Set-Env 'DB_USERNAME' '%DB_USER%';" ^
+  "Set-Env 'DB_PASSWORD' '%DB_PASS%';" ^
+  "Set-Content -Path $envFile -Value $content;"
+
+REM === Buat database & user MySQL ===
+set "MYSQL_EXE=%XAMPP_DIR%\mysql\bin\mysql.exe"
+if not exist "%MYSQL_EXE%" (
+  echo MySQL XAMPP tidak ditemukan di %MYSQL_EXE%
+  pause
+  exit /b 1
+)
+
+if "%MYSQL_ROOT_PASSWORD%"=="" (
+  "%MYSQL_EXE%" -u %MYSQL_ROOT_USER% -e "CREATE DATABASE IF NOT EXISTS %DB_NAME% CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE USER IF NOT EXISTS '%DB_USER%'@'localhost' IDENTIFIED BY '%DB_PASS%'; GRANT ALL PRIVILEGES ON %DB_NAME%.* TO '%DB_USER%'@'localhost'; FLUSH PRIVILEGES;"
+) else (
+  "%MYSQL_EXE%" -u %MYSQL_ROOT_USER% -p%MYSQL_ROOT_PASSWORD% -e "CREATE DATABASE IF NOT EXISTS %DB_NAME% CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; CREATE USER IF NOT EXISTS '%DB_USER%'@'localhost' IDENTIFIED BY '%DB_PASS%'; GRANT ALL PRIVILEGES ON %DB_NAME%.* TO '%DB_USER%'@'localhost'; FLUSH PRIVILEGES;"
+)
+
+echo APP_URL diset ke %APP_URL%
+echo DB user: %DB_USER%
 
 "%XAMPP_DIR%\php\php.exe" artisan key:generate
 "%XAMPP_DIR%\php\php.exe" artisan migrate --seed

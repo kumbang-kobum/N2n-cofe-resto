@@ -226,6 +226,13 @@ server {
    scripts\windows\start_pos.bat
    ```
    Aplikasi akan terbuka di `http://localhost/`.
+   - APP_URL otomatis diset ke IP lokal.
+   - Database & user MySQL dibuat otomatis (tanpa config manual).
+
+   Catatan:
+
+Script membuat user n2n_user dengan password random.
+Default MySQL root password kosong. Jika root punya password, isi MYSQL_ROOT_PASSWORD di init_db.bat.
 
 Stop server:
 ```bat

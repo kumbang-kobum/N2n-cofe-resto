@@ -180,6 +180,8 @@ Dengan ini, COGS selalu mengikuti **biaya per batch yang benar**, bukan harga te
    kasir-cafe\scripts\windows\start_pos.bat
    ```
    Aplikasi akan terbuka di `http://localhost/`.
+   - APP_URL otomatis diset ke IP lokal.
+   - Database & user MySQL dibuat otomatis (tanpa config manual).
 
 Stop server:
 ```bat
