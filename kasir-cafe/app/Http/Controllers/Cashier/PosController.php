@@ -271,6 +271,31 @@ class PosController extends Controller
     }
 
     /**
+     * Batalkan transaksi DRAFT/OPEN.
+     */
+    public function cancel(Request $request)
+    {
+        $request->validate([
+            'sale_id' => ['required', 'exists:sales,id'],
+        ]);
+
+        $sale = Sale::where('cashier_id', auth()->id())
+            ->whereIn('status', ['DRAFT', 'OPEN'])
+            ->findOrFail($request->sale_id);
+
+        $sale->status = 'CANCELLED';
+        $sale->save();
+
+        AuditLog::log(auth()->id(), 'SALE_CANCELLED', $sale, [
+            'sale_id' => $sale->id,
+        ]);
+
+        return redirect()
+            ->route('cashier.pos')
+            ->with('status', 'Transaksi dibatalkan.');
+    }
+
+    /**
      * Bayar transaksi + FEFO konsumsi bahan resep.
      */
     public function pay(Request $request, FefoAllocator $allocator, UnitConverter $converter)

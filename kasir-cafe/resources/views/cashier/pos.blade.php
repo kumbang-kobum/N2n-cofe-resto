@@ -2,7 +2,10 @@
 
 @section('content')
 <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-    <h1 class="text-xl font-semibold">Kasir (POS)</h1>
+    <div>
+        <h1 class="text-xl font-semibold">Kasir (POS)</h1>
+        <div class="text-xs text-gray-500">Kelola transaksi dine-in / takeaway</div>
+    </div>
 
     <form method="POST" action="{{ route('cashier.pos.new') }}">
         @csrf
@@ -27,8 +30,7 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             @foreach ($openSales as $os)
-                <a href="{{ route('cashier.pos', ['sale_id' => $os->id]) }}"
-                   class="rounded-lg border px-3 py-2 text-sm hover:border-blue-400 hover:bg-blue-50/40 transition">
+                <div class="rounded-lg border px-3 py-2 text-sm hover:border-blue-400 hover:bg-blue-50/40 transition">
                     <div class="flex items-center justify-between">
                         <div class="font-semibold">#{{ $os->id }}</div>
                         <span class="text-[11px] px-2 py-0.5 rounded-full {{ $os->status === 'OPEN' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700' }}">
@@ -44,7 +46,21 @@
                     <div class="mt-1 text-[11px] text-gray-400">
                         Update: {{ optional($os->updated_at)->format('d/m/Y H:i') }}
                     </div>
-                </a>
+                    <div class="mt-2 flex items-center justify-between gap-2">
+                        <a href="{{ route('cashier.pos', ['sale_id' => $os->id]) }}"
+                           class="text-[11px] px-2 py-1 rounded bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100">
+                            Buka
+                        </a>
+                        <form method="POST" action="{{ route('cashier.pos.cancel') }}" onsubmit="return confirm('Batalkan transaksi ini?');">
+                            @csrf
+                            <input type="hidden" name="sale_id" value="{{ $os->id }}">
+                            <button type="submit"
+                                    class="text-[11px] px-2 py-1 rounded bg-red-50 text-red-600 border border-red-200 hover:bg-red-100">
+                                Batalkan
+                            </button>
+                        </form>
+                    </div>
+                </div>
             @endforeach
         </div>
     </div>
@@ -146,11 +162,11 @@
         {{-- KERANJANG --}}
         <div class="bg-white border rounded-lg p-4">
             <div class="flex items-center justify-between mb-3">
-                <div class="font-semibold">Keranjang</div>
+                <div>
+                    <div class="font-semibold">Keranjang</div>
+                    <div class="text-xs text-gray-500">Transaksi #{{ $sale->id }} • Status {{ $sale->status }}</div>
+                </div>
                 <div class="flex items-center gap-2">
-                    <div class="text-xs text-gray-500">
-                        Transaksi #{{ $sale->id }}
-                    </div>
                     @if ($sale->lines->count() > 0)
                         <form method="POST" action="{{ route('cashier.pos.clear') }}" onsubmit="return confirm('Kosongkan semua item di keranjang?');">
                             @csrf
@@ -161,6 +177,14 @@
                             </button>
                         </form>
                     @endif
+                    <form method="POST" action="{{ route('cashier.pos.cancel') }}" onsubmit="return confirm('Batalkan transaksi ini?');">
+                        @csrf
+                        <input type="hidden" name="sale_id" value="{{ $sale->id }}">
+                        <button type="submit"
+                                class="text-[11px] px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700">
+                            Batalkan
+                        </button>
+                    </form>
                 </div>
             </div>
 

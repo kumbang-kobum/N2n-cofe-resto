@@ -236,6 +236,7 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::post('/pos/line/{line}/update', [PosController::class, 'updateLine'])->name('pos.line.update');
             Route::post('/pos/line/{line}/delete', [PosController::class, 'deleteLine'])->name('pos.line.delete');
             Route::post('/pos/clear', [PosController::class, 'clearCart'])->name('pos.clear');
+            Route::post('/pos/cancel', [PosController::class, 'cancel'])->name('pos.cancel');
             Route::post('/pos/hold', [PosController::class, 'hold'])->name('pos.hold');
             Route::post('/pos/pay', [PosController::class, 'pay'])->name('pos.pay');
             Route::get('/pos/receipt/{sale}', [PosController::class, 'receipt'])->name('pos.receipt');
