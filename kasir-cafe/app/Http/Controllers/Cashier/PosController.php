@@ -205,6 +205,72 @@ class PosController extends Controller
     }
 
     /**
+     * Update qty item di keranjang.
+     */
+    public function updateLine(Request $request, SaleLine $line)
+    {
+        $request->validate([
+            'qty' => ['required', 'numeric', 'gt:0'],
+        ]);
+
+        $sale = Sale::where('cashier_id', auth()->id())
+            ->whereIn('status', ['DRAFT', 'OPEN'])
+            ->findOrFail($line->sale_id);
+
+        $line->qty = (float) $request->qty;
+        $line->save();
+
+        $sale->update([
+            'total' => SaleLine::where('sale_id', $sale->id)
+                ->sum(DB::raw('qty * price')),
+        ]);
+
+        return redirect()->route('cashier.pos', ['sale_id' => $sale->id]);
+    }
+
+    /**
+     * Hapus item dari keranjang.
+     */
+    public function deleteLine(SaleLine $line)
+    {
+        $sale = Sale::where('cashier_id', auth()->id())
+            ->whereIn('status', ['DRAFT', 'OPEN'])
+            ->findOrFail($line->sale_id);
+
+        $line->delete();
+
+        $sale->update([
+            'total' => SaleLine::where('sale_id', $sale->id)
+                ->sum(DB::raw('qty * price')),
+        ]);
+
+        return redirect()->route('cashier.pos', ['sale_id' => $sale->id]);
+    }
+
+    /**
+     * Kosongkan keranjang.
+     */
+    public function clearCart(Request $request)
+    {
+        $request->validate([
+            'sale_id' => ['required', 'exists:sales,id'],
+        ]);
+
+        $sale = Sale::where('cashier_id', auth()->id())
+            ->whereIn('status', ['DRAFT', 'OPEN'])
+            ->findOrFail($request->sale_id);
+
+        SaleLine::where('sale_id', $sale->id)->delete();
+
+        $sale->update([
+            'total' => 0,
+        ]);
+
+        return redirect()->route('cashier.pos', ['sale_id' => $sale->id])
+            ->with('status', 'Keranjang dikosongkan.');
+    }
+
+    /**
      * Bayar transaksi + FEFO konsumsi bahan resep.
      */
     public function pay(Request $request, FefoAllocator $allocator, UnitConverter $converter)

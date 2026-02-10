@@ -147,8 +147,20 @@
         <div class="bg-white border rounded-lg p-4">
             <div class="flex items-center justify-between mb-3">
                 <div class="font-semibold">Keranjang</div>
-                <div class="text-xs text-gray-500">
-                    Transaksi #{{ $sale->id }}
+                <div class="flex items-center gap-2">
+                    <div class="text-xs text-gray-500">
+                        Transaksi #{{ $sale->id }}
+                    </div>
+                    @if ($sale->lines->count() > 0)
+                        <form method="POST" action="{{ route('cashier.pos.clear') }}" onsubmit="return confirm('Kosongkan semua item di keranjang?');">
+                            @csrf
+                            <input type="hidden" name="sale_id" value="{{ $sale->id }}">
+                            <button type="submit"
+                                    class="text-[11px] px-2 py-1 rounded bg-red-50 text-red-600 border border-red-200 hover:bg-red-100">
+                                Kosongkan
+                            </button>
+                        </form>
+                    @endif
                 </div>
             </div>
 
@@ -182,23 +194,51 @@
                             <th class="text-right p-2">Qty</th>
                             <th class="text-right p-2">Harga</th>
                             <th class="text-right p-2">Subtotal</th>
+                            <th class="text-right p-2">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($sale->lines as $l)
                             <tr class="border-t">
                                 <td class="p-2">{{ $l->product->name }}</td>
-                                <td class="p-2 text-right">{{ $l->qty }}</td>
+                                <td class="p-2 text-right">
+                                    <form method="POST"
+                                          action="{{ route('cashier.pos.line.update', $l) }}"
+                                          class="flex items-center justify-end gap-2">
+                                        @csrf
+                                        <input type="number"
+                                               name="qty"
+                                               value="{{ $l->qty }}"
+                                               min="1"
+                                               step="1"
+                                               class="w-16 rounded border border-gray-300 px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                        <button type="submit"
+                                                class="text-[11px] px-2 py-1 rounded bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100">
+                                            Update
+                                        </button>
+                                    </form>
+                                </td>
                                 <td class="p-2 text-right">
                                     {{ number_format($l->price, 0, ',', '.') }}
                                 </td>
                                 <td class="p-2 text-right">
                                     {{ number_format($l->qty * $l->price, 0, ',', '.') }}
                                 </td>
+                                <td class="p-2 text-right">
+                                    <form method="POST"
+                                          action="{{ route('cashier.pos.line.delete', $l) }}"
+                                          onsubmit="return confirm('Hapus item ini?');">
+                                        @csrf
+                                        <button type="submit"
+                                                class="text-[11px] px-2 py-1 rounded bg-red-50 text-red-600 border border-red-200 hover:bg-red-100">
+                                            Hapus
+                                        </button>
+                                    </form>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="p-3 text-center text-xs text-gray-500">
+                                <td colspan="5" class="p-3 text-center text-xs text-gray-500">
                                     Belum ada item di keranjang.
                                 </td>
                             </tr>
