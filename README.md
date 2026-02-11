@@ -11,6 +11,8 @@
 
 <img src="kasir-cafe/n2Nlogo.png" width="140" alt="n2N" />
 
+## Traktir Kopi Chandra Irawan BCA 8110400102
+
 ## Screenshot Aplikasi
 <table>
   <tr>
