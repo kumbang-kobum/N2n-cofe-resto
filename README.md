@@ -134,7 +134,11 @@ Dengan ini, COGS selalu mengikuti **biaya per batch yang benar**, bukan harga te
    ```bash
    php artisan optimize:clear
    ```
-
+5. permison upload :
+   ```bash
+   chown -R www:www storage bootstrap/cache
+   chmod -R 775 storage bootstrap/cache
+   ```
 ## Cara Install (Server / Production)
 1. Upload kode ke server (Nginx/Apache + PHP + MySQL) atau `git clone` dari repo.
 2. Buat `.env` (copy dari `.env.example`) dan isi:
