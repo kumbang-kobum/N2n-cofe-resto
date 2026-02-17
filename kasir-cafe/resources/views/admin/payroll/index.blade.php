@@ -34,10 +34,10 @@
                 </div>
                 <div>
                     <label class="block text-xs text-gray-600 mb-1">Petugas</label>
-                    <select name="employee_id" class="w-full border rounded px-3 py-2 text-sm" required>
+                    <select name="employee_master_id" class="w-full border rounded px-3 py-2 text-sm" required>
                         <option value="">Pilih petugas</option>
                         @foreach($employees as $employee)
-                            <option value="{{ $employee->id }}" @selected(old('employee_id') == $employee->id)>{{ $employee->name }}</option>
+                            <option value="{{ $employee->id }}" @selected(old('employee_master_id') == $employee->id)>{{ $employee->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -75,10 +75,10 @@
                 </div>
                 <div>
                     <label class="block text-xs text-gray-600 mb-1">Petugas</label>
-                    <select name="employee_id" class="w-full border rounded px-3 py-2 text-sm">
+                    <select name="employee_master_id" class="w-full border rounded px-3 py-2 text-sm">
                         <option value="">Semua petugas</option>
                         @foreach($employees as $employee)
-                            <option value="{{ $employee->id }}" @selected($employeeId === $employee->id)>{{ $employee->name }}</option>
+                            <option value="{{ $employee->id }}" @selected($employeeMasterId === $employee->id)>{{ $employee->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -114,7 +114,7 @@
                         @forelse($payrolls as $payroll)
                             <tr class="border-b">
                                 <td class="p-2">{{ optional($payroll->period_month)->format('m/Y') }}</td>
-                                <td class="p-2">{{ optional($payroll->employee)->name ?? '-' }}</td>
+                                <td class="p-2">{{ $payroll->employee_display_name }}</td>
                                 <td class="p-2 text-right">Rp {{ number_format($payroll->base_salary, 0, ',', '.') }}</td>
                                 <td class="p-2 text-right">Rp {{ number_format($payroll->overtime_amount + $payroll->bonus_amount, 0, ',', '.') }}</td>
                                 <td class="p-2 text-right">Rp {{ number_format($payroll->deduction_amount, 0, ',', '.') }}</td>

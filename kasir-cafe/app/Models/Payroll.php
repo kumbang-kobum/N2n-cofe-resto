@@ -12,6 +12,7 @@ class Payroll extends Model
     protected $fillable = [
         'period_month',
         'employee_id',
+        'employee_master_id',
         'base_salary',
         'overtime_amount',
         'bonus_amount',
@@ -43,6 +44,11 @@ class Payroll extends Model
         return $this->belongsTo(User::class, 'employee_id');
     }
 
+    public function employeeMaster()
+    {
+        return $this->belongsTo(Employee::class, 'employee_master_id');
+    }
+
     public function approver()
     {
         return $this->belongsTo(User::class, 'approved_by');
@@ -51,5 +57,10 @@ class Payroll extends Model
     public function payer()
     {
         return $this->belongsTo(User::class, 'paid_by');
+    }
+
+    public function getEmployeeDisplayNameAttribute(): string
+    {
+        return (string) ($this->employeeMaster->name ?? $this->employee->name ?? '-');
     }
 }

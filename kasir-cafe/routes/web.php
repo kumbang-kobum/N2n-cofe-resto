@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\CashExpenseController;
 use App\Http\Controllers\Admin\FinanceReportController;
 use App\Http\Controllers\Admin\PayrollController;
+use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\AssetController;
 use App\Http\Controllers\Admin\AssetIncidentController;
 use App\Http\Controllers\Admin\AssetCategoryController;
@@ -128,6 +129,7 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
 
             // Pengguna
             Route::resource('users', UserController::class)->except(['show']);
+            Route::resource('employees', EmployeeController::class)->except(['show']);
 
             // Pengaturan resto
             Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
@@ -208,6 +210,7 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
 
             // Produk / Menu
             Route::resource('products', ProductController::class);
+            Route::resource('employees', EmployeeController::class)->except(['show']);
 
             // Resep / BOM
             Route::resource('recipes', RecipeController::class);

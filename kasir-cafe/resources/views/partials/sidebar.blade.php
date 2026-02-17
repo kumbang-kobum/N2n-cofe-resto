@@ -68,6 +68,11 @@
                               {{ request()->routeIs('admin.users.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
                         <span>Pengguna</span>
                     </a>
+                    <a href="{{ route('admin.employees.index') }}"
+                       class="flex items-center gap-2 rounded-md px-3 py-2
+                              {{ request()->routeIs('admin.employees.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                        <span>Master Karyawan</span>
+                    </a>
                     <a href="{{ route('admin.settings.edit') }}"
                        class="flex items-center gap-2 rounded-md px-3 py-2
                               {{ request()->routeIs('admin.settings.edit') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
@@ -208,6 +213,11 @@
                        class="flex items-center gap-2 rounded-md px-3 py-2
                               {{ request()->routeIs('manager.settings.edit') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
                         <span>Pengaturan Resto</span>
+                    </a>
+                    <a href="{{ route('manager.employees.index') }}"
+                       class="flex items-center gap-2 rounded-md px-3 py-2
+                              {{ request()->routeIs('manager.employees.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                        <span>Master Karyawan</span>
                     </a>
                     <a href="{{ route('manager.assets.index') }}"
                        class="flex items-center gap-2 rounded-md px-3 py-2

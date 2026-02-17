@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\Employee;
 use App\Models\Payroll;
-use App\Models\User;
 use Illuminate\Http\Request;
 
 class PayrollController extends Controller
@@ -14,16 +14,16 @@ class PayrollController extends Controller
     {
         $period = $request->query('period', now()->format('Y-m'));
         $status = trim((string) $request->query('status', ''));
-        $employeeId = $request->query('employee_id');
-        $employeeId = $employeeId !== null && $employeeId !== '' ? (int) $employeeId : null;
+        $employeeMasterId = $request->query('employee_master_id');
+        $employeeMasterId = $employeeMasterId !== null && $employeeMasterId !== '' ? (int) $employeeMasterId : null;
 
         $query = Payroll::query()
-            ->with(['employee', 'approver', 'payer'])
+            ->with(['employee', 'employeeMaster', 'approver', 'payer'])
             ->whereDate('period_month', '>=', $period . '-01')
             ->whereDate('period_month', '<=', $period . '-31');
 
-        if ($employeeId) {
-            $query->where('employee_id', $employeeId);
+        if ($employeeMasterId) {
+            $query->where('employee_master_id', $employeeMasterId);
         }
         if (in_array($status, ['DRAFT', 'APPROVED', 'PAID'], true)) {
             $query->where('status', $status);
@@ -37,16 +37,16 @@ class PayrollController extends Controller
             'paid' => (float) (clone $query)->where('status', 'PAID')->sum('net_amount'),
         ];
 
-        $employees = User::query()->orderBy('name')->get(['id', 'name']);
+        $employees = Employee::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']);
 
-        return view('admin.payroll.index', compact('payrolls', 'summary', 'period', 'status', 'employees', 'employeeId'));
+        return view('admin.payroll.index', compact('payrolls', 'summary', 'period', 'status', 'employees', 'employeeMasterId'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'period_month' => ['required', 'date_format:Y-m'],
-            'employee_id' => ['required', 'exists:users,id'],
+            'employee_master_id' => ['required', 'exists:employees,id'],
             'base_salary' => ['required', 'numeric', 'min:0'],
             'overtime_amount' => ['nullable', 'numeric', 'min:0'],
             'bonus_amount' => ['nullable', 'numeric', 'min:0'],
@@ -57,12 +57,12 @@ class PayrollController extends Controller
         $periodMonth = $validated['period_month'] . '-01';
 
         $exists = Payroll::whereDate('period_month', $periodMonth)
-            ->where('employee_id', $validated['employee_id'])
+            ->where('employee_master_id', $validated['employee_master_id'])
             ->exists();
 
         if ($exists) {
             return back()->withErrors([
-                'employee_id' => 'Payroll pegawai untuk bulan ini sudah ada.',
+                'employee_master_id' => 'Payroll pegawai untuk bulan ini sudah ada.',
             ])->withInput();
         }
 
@@ -71,10 +71,12 @@ class PayrollController extends Controller
         $bonus = (float) ($validated['bonus_amount'] ?? 0);
         $deduction = (float) ($validated['deduction_amount'] ?? 0);
         $net = $base + $overtime + $bonus - $deduction;
+        $employee = Employee::findOrFail((int) $validated['employee_master_id']);
 
         $payroll = Payroll::create([
             'period_month' => $periodMonth,
-            'employee_id' => (int) $validated['employee_id'],
+            'employee_master_id' => (int) $validated['employee_master_id'],
+            'employee_id' => $employee->user_id,
             'base_salary' => $base,
             'overtime_amount' => $overtime,
             'bonus_amount' => $bonus,
@@ -87,7 +89,7 @@ class PayrollController extends Controller
 
         AuditLog::log(auth()->id(), 'PAYROLL_CREATED', $payroll, [
             'period_month' => $payroll->period_month?->format('Y-m'),
-            'employee_id' => $payroll->employee_id,
+            'employee_master_id' => $payroll->employee_master_id,
             'net_amount' => $payroll->net_amount,
             'status' => $payroll->status,
         ]);
@@ -153,7 +155,7 @@ class PayrollController extends Controller
 
         AuditLog::log(auth()->id(), 'PAYROLL_DELETED', $payroll, [
             'period_month' => $payroll->period_month?->format('Y-m'),
-            'employee_id' => $payroll->employee_id,
+            'employee_master_id' => $payroll->employee_master_id,
             'net_amount' => $payroll->net_amount,
             'status' => $payroll->status,
         ]);

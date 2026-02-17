@@ -42,14 +42,17 @@ class FinanceReportController extends Controller
         }
 
         $payrollQuery = Payroll::query()
-            ->with(['employee', 'approver', 'payer'])
+            ->with(['employeeMaster', 'employee', 'approver', 'payer'])
             ->where('status', 'PAID')
             ->whereNotNull('paid_at')
             ->whereDate('paid_at', '>=', $from)
             ->whereDate('paid_at', '<=', $to);
 
         if ($cashierId) {
-            $payrollQuery->where('employee_id', $cashierId);
+            $payrollQuery->where(function ($q) use ($cashierId) {
+                $q->where('employee_id', $cashierId)
+                    ->orWhereHas('employeeMaster', fn ($qq) => $qq->where('user_id', $cashierId));
+            });
         }
 
         $sales = $salesQuery->get();
@@ -482,7 +485,7 @@ class FinanceReportController extends Controller
         foreach ($data['payrollRows'] as $r) {
             $payrollSheet->fromArray([[
                 optional($r->period_month)->format('Y-m'),
-                optional($r->employee)->name,
+                $r->employee_display_name,
                 (float) $r->base_salary,
                 (float) $r->overtime_amount,
                 (float) $r->bonus_amount,
