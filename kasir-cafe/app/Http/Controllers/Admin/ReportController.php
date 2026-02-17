@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sale;
+use App\Models\SaleLine;
 use App\Models\StockOpnameLine;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -255,5 +257,31 @@ class ReportController extends Controller
         ];
 
         return view('admin.reports.opname_variance', compact('rows', 'filters', 'summary'));
+    }
+
+    public function topProducts(Request $request)
+    {
+        $from = $request->query('from', now()->startOfMonth()->toDateString());
+        $to = $request->query('to', now()->toDateString());
+
+        $rows = SaleLine::query()
+            ->select([
+                'products.id as product_id',
+                'products.name as product_name',
+                DB::raw('SUM(sale_lines.qty) as qty_total'),
+                DB::raw('SUM(sale_lines.qty * sale_lines.price) as omzet_total'),
+                DB::raw('COUNT(DISTINCT sale_lines.sale_id) as trx_total'),
+            ])
+            ->join('sales', 'sales.id', '=', 'sale_lines.sale_id')
+            ->join('products', 'products.id', '=', 'sale_lines.product_id')
+            ->where('sales.status', 'PAID')
+            ->whereDate('sales.paid_at', '>=', $from)
+            ->whereDate('sales.paid_at', '<=', $to)
+            ->groupBy('products.id', 'products.name')
+            ->orderByDesc('qty_total')
+            ->limit(10)
+            ->get();
+
+        return view('admin.reports.top_products', compact('rows', 'from', 'to'));
     }
 }

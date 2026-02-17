@@ -23,6 +23,44 @@
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+  <div class="bg-white border rounded-lg overflow-hidden lg:col-span-2">
+    <div class="p-4 border-b">
+      <div class="font-semibold">Top 10 Menu Terlaris (Qty)</div>
+      <div class="text-xs text-gray-500">Periode {{ $from }} s/d {{ $to }}</div>
+    </div>
+    <div class="p-4">
+      <canvas id="topProductBarChart" height="110"></canvas>
+    </div>
+  </div>
+
+  <div class="bg-white border rounded-lg overflow-hidden">
+    <div class="p-4 font-semibold">Top 10 Menu Terlaris</div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="text-left p-2">Menu</th>
+            <th class="text-right p-2">Qty</th>
+            <th class="text-right p-2">Omzet</th>
+            <th class="text-right p-2">Trx</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($topProducts as $row)
+            <tr class="border-t">
+              <td class="p-2">{{ $row->product_name }}</td>
+              <td class="p-2 text-right">{{ number_format((float) $row->qty_total, 0, ',', '.') }}</td>
+              <td class="p-2 text-right">Rp {{ number_format((float) $row->omzet_total, 0, ',', '.') }}</td>
+              <td class="p-2 text-right">{{ number_format((float) $row->trx_total, 0, ',', '.') }}</td>
+            </tr>
+          @empty
+            <tr class="border-t"><td class="p-2 text-gray-600" colspan="4">Belum ada data penjualan.</td></tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="bg-white border rounded-lg overflow-hidden">
     <div class="p-4 font-semibold">Stok Menipis</div>
     <div class="overflow-x-auto">
@@ -76,3 +114,41 @@
   </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const topLabels = @json($topProductChart['labels'] ?? []);
+  const topQty = @json($topProductChart['qty'] ?? []);
+  const chartEl = document.getElementById('topProductBarChart');
+
+  if (chartEl && topLabels.length > 0) {
+    new Chart(chartEl, {
+      type: 'bar',
+      data: {
+        labels: topLabels,
+        datasets: [{
+          label: 'Qty Terjual',
+          data: topQty,
+          borderWidth: 1,
+          borderRadius: 6,
+          backgroundColor: '#2563eb'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { precision: 0 }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  }
+</script>
+@endpush

@@ -175,6 +175,8 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
                 ->name('reports.sales');
             Route::get('/reports/sales/export', [\App\Http\Controllers\Admin\ReportController::class, 'exportSales'])
                 ->name('reports.sales.export');
+            Route::get('/reports/top-products', [\App\Http\Controllers\Admin\ReportController::class, 'topProducts'])
+                ->name('reports.top_products');
             Route::get('/sales/{sale}/receipt', [PosController::class, 'receipt'])->name('sales.receipt');
             Route::get('/reports/stock-opname-diff', [ReportController::class, 'stockOpnameDiff'])->name('reports.opname_variance');
             Route::get('/reports/audit-logs', [AuditLogController::class, 'index'])->name('reports.audit_logs');

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\ItemBatch;
 use App\Models\Sale;
+use App\Models\SaleLine;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -26,6 +27,29 @@ class DashboardController extends Controller
             'cogs'   => (float) $sales->sum('cogs_total'),
             'profit' => (float) $sales->sum('profit_gross'),
             'trx'    => (int) $sales->count(),
+        ];
+
+        $topProducts = SaleLine::query()
+            ->select([
+                'products.id as product_id',
+                'products.name as product_name',
+                DB::raw('SUM(sale_lines.qty) as qty_total'),
+                DB::raw('SUM(sale_lines.qty * sale_lines.price) as omzet_total'),
+                DB::raw('COUNT(DISTINCT sale_lines.sale_id) as trx_total'),
+            ])
+            ->join('sales', 'sales.id', '=', 'sale_lines.sale_id')
+            ->join('products', 'products.id', '=', 'sale_lines.product_id')
+            ->where('sales.status', 'PAID')
+            ->whereDate('sales.paid_at', '>=', $from)
+            ->whereDate('sales.paid_at', '<=', $to)
+            ->groupBy('products.id', 'products.name')
+            ->orderByDesc('qty_total')
+            ->limit(10)
+            ->get();
+
+        $topProductChart = [
+            'labels' => $topProducts->pluck('product_name')->values(),
+            'qty' => $topProducts->pluck('qty_total')->map(fn ($v) => (float) $v)->values(),
         ];
 
         // stok menipis (MVP): min_stock dibanding total stok base
@@ -54,6 +78,14 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
 
-        return view('admin.dashboard.index', compact('summary', 'from', 'to', 'lowStock', 'expSoon'));
+        return view('admin.dashboard.index', compact(
+            'summary',
+            'from',
+            'to',
+            'lowStock',
+            'expSoon',
+            'topProducts',
+            'topProductChart',
+        ));
     }
 }

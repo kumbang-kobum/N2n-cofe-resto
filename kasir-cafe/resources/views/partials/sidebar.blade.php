@@ -145,6 +145,11 @@
                               {{ request()->routeIs('admin.reports.sales') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
                         <span>Laporan Penjualan</span>
                     </a>
+                    <a href="{{ route('admin.reports.top_products') }}"
+                       class="flex items-center gap-2 rounded-md px-3 py-2
+                              {{ request()->routeIs('admin.reports.top_products') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                        <span>Top 10 Penjualan</span>
+                    </a>
                     <a href="{{ route('admin.reports.finance') }}"
                        class="flex items-center gap-2 rounded-md px-3 py-2
                               {{ request()->routeIs('admin.reports.finance') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
