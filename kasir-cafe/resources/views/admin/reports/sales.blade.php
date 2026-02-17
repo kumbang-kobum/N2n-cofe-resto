@@ -188,7 +188,14 @@
                                 #{{ $s->id }}
                             </td>
                             <td class="p-2 align-top">
-                                {{ $s->receipt_no ?? '-' }}
+                                @php
+                                    $receiptRoute = request()->routeIs('cashier.*')
+                                        ? 'cashier.pos.receipt'
+                                        : (request()->routeIs('manager.*') ? 'manager.sales.receipt' : 'admin.sales.receipt');
+                                @endphp
+                                <a href="{{ route($receiptRoute, $s->id) }}" class="text-blue-600 hover:underline">
+                                    {{ $s->receipt_no ?? '-' }}
+                                </a>
                             </td>
                             <td class="p-2 align-top">
                                 {{ optional($s->cashier)->name ?? '-' }}

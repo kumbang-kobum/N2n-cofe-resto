@@ -560,7 +560,10 @@ class PosController extends Controller
     {
         $sale = Sale::with(['lines.product', 'cashier'])->findOrFail($saleId);
 
-        if ($sale->cashier_id !== auth()->id() && ! auth()->user()?->hasRole('admin')) {
+        if (
+            $sale->cashier_id !== auth()->id()
+            && ! auth()->user()?->hasAnyRole(['admin', 'manager'])
+        ) {
             abort(403);
         }
 
