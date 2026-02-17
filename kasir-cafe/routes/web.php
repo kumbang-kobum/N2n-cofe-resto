@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\CashExpenseController;
 use App\Http\Controllers\Admin\FinanceReportController;
+use App\Http\Controllers\Admin\PayrollController;
 use App\Http\Controllers\Admin\AssetController;
 use App\Http\Controllers\Admin\AssetIncidentController;
 use App\Http\Controllers\Admin\AssetCategoryController;
@@ -187,6 +188,11 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::delete('/expenses/{cashExpense}', [CashExpenseController::class, 'destroy'])->name('expenses.destroy');
             Route::post('/expenses/{cashExpense}/approve', [CashExpenseController::class, 'approve'])->name('expenses.approve');
             Route::post('/expenses/{cashExpense}/reject', [CashExpenseController::class, 'reject'])->name('expenses.reject');
+            Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
+            Route::post('/payroll', [PayrollController::class, 'store'])->name('payroll.store');
+            Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve'])->name('payroll.approve');
+            Route::post('/payroll/{payroll}/mark-paid', [PayrollController::class, 'markPaid'])->name('payroll.mark_paid');
+            Route::delete('/payroll/{payroll}', [PayrollController::class, 'destroy'])->name('payroll.destroy');
         });
 
     /*
@@ -229,6 +235,11 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::delete('/expenses/{cashExpense}', [CashExpenseController::class, 'destroy'])->name('expenses.destroy');
             Route::post('/expenses/{cashExpense}/approve', [CashExpenseController::class, 'approve'])->name('expenses.approve');
             Route::post('/expenses/{cashExpense}/reject', [CashExpenseController::class, 'reject'])->name('expenses.reject');
+            Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
+            Route::post('/payroll', [PayrollController::class, 'store'])->name('payroll.store');
+            Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve'])->name('payroll.approve');
+            Route::post('/payroll/{payroll}/mark-paid', [PayrollController::class, 'markPaid'])->name('payroll.mark_paid');
+            Route::delete('/payroll/{payroll}', [PayrollController::class, 'destroy'])->name('payroll.destroy');
         });
 
     /*

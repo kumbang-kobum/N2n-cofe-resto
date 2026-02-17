@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CashExpense;
+use App\Models\Payroll;
 use App\Models\Sale;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -40,9 +41,21 @@ class FinanceReportController extends Controller
             $expenseQuery->where('cashier_id', $cashierId);
         }
 
+        $payrollQuery = Payroll::query()
+            ->with(['employee', 'approver', 'payer'])
+            ->where('status', 'PAID')
+            ->whereNotNull('paid_at')
+            ->whereDate('paid_at', '>=', $from)
+            ->whereDate('paid_at', '<=', $to);
+
+        if ($cashierId) {
+            $payrollQuery->where('employee_id', $cashierId);
+        }
+
         $sales = $salesQuery->get();
         $allExpenses = $expenseQuery->get();
         $approvedExpenses = $allExpenses->where('status', 'APPROVED')->values();
+        $payrolls = $payrollQuery->get();
 
         $summary = [
             'subtotal' => (float) $sales->sum('total'),
@@ -55,6 +68,7 @@ class FinanceReportController extends Controller
             'expense_total' => (float) $approvedExpenses->sum('amount'),
             'expense_pending' => (float) $allExpenses->where('status', 'PENDING')->sum('amount'),
             'expense_rejected' => (float) $allExpenses->where('status', 'REJECTED')->sum('amount'),
+            'payroll_total' => (float) $payrolls->sum('net_amount'),
             'cash_sales_total' => (float) $sales
                 ->filter(fn ($sale) => strtoupper((string) $sale->payment_method) === 'CASH')
                 ->sum('grand_total'),
@@ -64,7 +78,9 @@ class FinanceReportController extends Controller
         $summary['omzet_bruto'] = $summary['subtotal'] + $summary['tax'];
         $summary['omzet_netto'] = $summary['omzet'] - $summary['refund'];
         $summary['net_profit'] = $summary['gross_profit'] - $summary['expense_total'];
+        $summary['net_profit_after_payroll'] = $summary['net_profit'] - $summary['payroll_total'];
         $summary['cash_balance'] = $summary['cash_sales_total'] - $summary['expense_total'];
+        $summary['cash_balance_after_payroll'] = $summary['cash_balance'] - $summary['payroll_total'];
         $summary['per_payment'] = [];
 
         foreach ($sales as $sale) {
@@ -148,6 +164,7 @@ class FinanceReportController extends Controller
                 'cogs' => 0,
                 'gross_profit' => 0,
                 'expense_total' => 0,
+                'payroll_total' => 0,
             ];
             $daily[$key]['omzet'] += (float) ($sale->grand_total ?? 0);
             $daily[$key]['refund'] += (float) ($sale->refund_total ?? 0);
@@ -167,13 +184,32 @@ class FinanceReportController extends Controller
                 'cogs' => 0,
                 'gross_profit' => 0,
                 'expense_total' => 0,
+                'payroll_total' => 0,
             ];
             $daily[$key]['expense_total'] += (float) ($expense->amount ?? 0);
+        }
+
+        foreach ($payrolls as $payroll) {
+            $key = optional($payroll->paid_at)->format('Y-m-d');
+            if (! $key) {
+                continue;
+            }
+            $daily[$key] ??= [
+                'date' => $key,
+                'omzet' => 0,
+                'refund' => 0,
+                'cogs' => 0,
+                'gross_profit' => 0,
+                'expense_total' => 0,
+                'payroll_total' => 0,
+            ];
+            $daily[$key]['payroll_total'] += (float) ($payroll->net_amount ?? 0);
         }
 
         $dailyRows = collect($daily)
             ->map(function ($row) {
                 $row['net_profit'] = $row['gross_profit'] - $row['expense_total'];
+                $row['net_after_payroll'] = $row['net_profit'] - $row['payroll_total'];
                 return $row;
             })
             ->sortByDesc('date')
@@ -190,6 +226,8 @@ class FinanceReportController extends Controller
                 'gross_profit' => 0,
                 'expense_total' => 0,
                 'net_profit' => 0,
+                'payroll_total' => 0,
+                'net_after_payroll' => 0,
             ];
             $monthly[$month]['omzet'] += $row['omzet'];
             $monthly[$month]['refund'] += $row['refund'];
@@ -197,6 +235,8 @@ class FinanceReportController extends Controller
             $monthly[$month]['gross_profit'] += $row['gross_profit'];
             $monthly[$month]['expense_total'] += $row['expense_total'];
             $monthly[$month]['net_profit'] += $row['net_profit'];
+            $monthly[$month]['payroll_total'] += $row['payroll_total'];
+            $monthly[$month]['net_after_payroll'] += $row['net_after_payroll'];
         }
 
         $monthlyRows = collect($monthly)->sortByDesc('month')->values();
@@ -215,6 +255,7 @@ class FinanceReportController extends Controller
             'itemRows' => $itemRows->sortByDesc('paid_at')->values(),
             'menuAnalysisRows' => $menuAnalysisRows,
             'expenseRows' => $allExpenses->sortByDesc('expense_at')->values(),
+            'payrollRows' => $payrolls->sortByDesc('paid_at')->values(),
         ];
     }
 
@@ -249,13 +290,16 @@ class FinanceReportController extends Controller
             ['Pengeluaran Approved', $data['summary']['expense_total']],
             ['Pengeluaran Pending', $data['summary']['expense_pending']],
             ['Pengeluaran Rejected', $data['summary']['expense_rejected']],
-            ['Laba Bersih', $data['summary']['net_profit']],
+            ['Laba Bersih (tanpa payroll)', $data['summary']['net_profit']],
+            ['Payroll Terbayar', $data['summary']['payroll_total']],
+            ['Laba Bersih Setelah Payroll', $data['summary']['net_profit_after_payroll']],
             ['Saldo Kas (CASH - Pengeluaran)', $data['summary']['cash_balance']],
+            ['Saldo Kas Setelah Payroll', $data['summary']['cash_balance_after_payroll']],
         ], null, 'A1');
 
-        $summarySheet->fromArray([['']], null, 'A17');
-        $summarySheet->fromArray([['Metode Bayar', 'Nominal']], null, 'A18');
-        $summaryRow = 19;
+        $summarySheet->fromArray([['']], null, 'A20');
+        $summarySheet->fromArray([['Metode Bayar', 'Nominal']], null, 'A21');
+        $summaryRow = 22;
         foreach ($data['summary']['per_payment'] as $method => $amount) {
             $summarySheet->fromArray([[$method, (float) $amount]], null, 'A' . $summaryRow);
             $summaryRow++;
@@ -369,7 +413,7 @@ class FinanceReportController extends Controller
         $periodSheet = $spreadsheet->createSheet();
         $periodSheet->setTitle('Rekap Harian Bulanan');
         $periodSheet->fromArray(
-            [['Tipe', 'Periode', 'Omzet', 'Refund', 'COGS', 'Laba Kotor', 'Pengeluaran', 'Laba Bersih']],
+            [['Tipe', 'Periode', 'Omzet', 'Refund', 'COGS', 'Laba Kotor', 'Pengeluaran', 'Laba Bersih', 'Payroll', 'Laba Setelah Payroll']],
             null,
             'A1'
         );
@@ -385,6 +429,8 @@ class FinanceReportController extends Controller
                 $r['gross_profit'],
                 $r['expense_total'],
                 $r['net_profit'],
+                $r['payroll_total'],
+                $r['net_after_payroll'],
             ]], null, 'A' . $row);
             $row++;
         }
@@ -399,6 +445,8 @@ class FinanceReportController extends Controller
                 $r['gross_profit'],
                 $r['expense_total'],
                 $r['net_profit'],
+                $r['payroll_total'],
+                $r['net_after_payroll'],
             ]], null, 'A' . $row);
             $row++;
         }
@@ -423,23 +471,50 @@ class FinanceReportController extends Controller
             $row++;
         }
 
-        foreach ([$summarySheet, $trxSheet, $itemSheet, $expenseSheet, $periodSheet, $menuSheet] as $sheet) {
+        $payrollSheet = $spreadsheet->createSheet();
+        $payrollSheet->setTitle('Payroll');
+        $payrollSheet->fromArray(
+            [['Periode', 'Petugas', 'Gaji Pokok', 'Lembur', 'Bonus', 'Potongan', 'Net', 'Status', 'Approver', 'Payer', 'Paid At']],
+            null,
+            'A1'
+        );
+        $row = 2;
+        foreach ($data['payrollRows'] as $r) {
+            $payrollSheet->fromArray([[
+                optional($r->period_month)->format('Y-m'),
+                optional($r->employee)->name,
+                (float) $r->base_salary,
+                (float) $r->overtime_amount,
+                (float) $r->bonus_amount,
+                (float) $r->deduction_amount,
+                (float) $r->net_amount,
+                $r->status,
+                optional($r->approver)->name,
+                optional($r->payer)->name,
+                optional($r->paid_at)->format('Y-m-d H:i:s'),
+            ]], null, 'A' . $row);
+            $row++;
+        }
+
+        foreach ([$summarySheet, $trxSheet, $itemSheet, $expenseSheet, $periodSheet, $menuSheet, $payrollSheet] as $sheet) {
             foreach (range('A', 'L') as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
         }
 
-        $this->applyHeaderStyle($summarySheet, 'A1:B18');
+        $this->applyHeaderStyle($summarySheet, 'A1:B21');
         $this->applyHeaderStyle($trxSheet, 'A1:L1');
         $this->applyHeaderStyle($itemSheet, 'A1:I1');
         $this->applyHeaderStyle($expenseSheet, 'A1:I1');
-        $this->applyHeaderStyle($periodSheet, 'A1:H1');
+        $this->applyHeaderStyle($periodSheet, 'A1:J1');
         $this->applyHeaderStyle($menuSheet, 'A1:F1');
+        $this->applyHeaderStyle($payrollSheet, 'A1:K1');
 
-        $this->applyProfitColorBySign($summarySheet, 'B15'); // Laba Bersih
+        $this->applyProfitColorBySign($summarySheet, 'B17'); // Laba Bersih Setelah Payroll
         $this->applyProfitColorBySign($trxSheet, 'K2:K9999'); // Laba Kotor transaksi
         $this->applyProfitColorBySign($itemSheet, 'I2:I9999'); // Profit estimasi item
-        $this->applyProfitColorBySign($periodSheet, 'H2:H9999'); // Laba bersih harian/bulanan
+        $this->applyProfitColorBySign($periodSheet, 'H2:H9999'); // Laba bersih sebelum payroll
+        $this->applyProfitColorBySign($periodSheet, 'J2:J9999'); // Laba bersih setelah payroll
         $this->applyProfitColorBySign($menuSheet, 'E2:E9999'); // Profit estimasi menu
 
         return response()->streamDownload(function () use ($spreadsheet) {

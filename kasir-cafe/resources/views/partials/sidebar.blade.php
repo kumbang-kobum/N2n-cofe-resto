@@ -124,6 +124,11 @@
                               {{ request()->routeIs('admin.stock_opname.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
                         <span>Stock Opname</span>
                     </a>
+                    <a href="{{ route('admin.payroll.index') }}"
+                       class="flex items-center gap-2 rounded-md px-3 py-2
+                              {{ request()->routeIs('admin.payroll.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                        <span>Penggajian Petugas</span>
+                    </a>
                     <a href="{{ route('cashier.pos') }}"
                        class="flex items-center gap-2 rounded-md px-3 py-2
                               {{ request()->routeIs('cashier.pos') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
@@ -223,6 +228,11 @@
                        class="flex items-center gap-2 rounded-md px-3 py-2
                               {{ request()->routeIs('manager.asset_incidents.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
                         <span>Kerusakan/Pemusnahan</span>
+                    </a>
+                    <a href="{{ route('manager.payroll.index') }}"
+                       class="flex items-center gap-2 rounded-md px-3 py-2
+                              {{ request()->routeIs('manager.payroll.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                        <span>Penggajian Petugas</span>
                     </a>
                 </div>
 
