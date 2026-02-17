@@ -34,6 +34,18 @@
       @error('restaurant_phone')<div class="text-xs text-red-600 mt-1">{{ $message }}</div>@enderror
     </div>
 
+    <div class="rounded border border-gray-200 p-3">
+      <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+        <input type="checkbox" name="tax_enabled" value="1"
+               @checked(old('tax_enabled', $setting->tax_enabled ?? true))
+               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+        Aktifkan PPN 10%
+      </label>
+      <div class="text-xs text-gray-500 mt-1">
+        Jika nonaktif, pajak tidak dihitung pada transaksi dan tidak tampil pada nota.
+      </div>
+    </div>
+
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Logo (PNG/JPG/WebP)</label>
       <input type="file" name="logo" accept=".png,.jpg,.jpeg,.webp"

@@ -22,6 +22,7 @@ class SettingController extends Controller
             'restaurant_name' => ['nullable', 'string', 'max:255'],
             'restaurant_address' => ['nullable', 'string', 'max:255'],
             'restaurant_phone' => ['nullable', 'string', 'max:255'],
+            'tax_enabled' => ['nullable', 'boolean'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
             'license_key' => ['nullable', 'string', 'max:255'],
         ]);
@@ -31,6 +32,7 @@ class SettingController extends Controller
         $setting->restaurant_name = $data['restaurant_name'] ?? null;
         $setting->restaurant_address = $data['restaurant_address'] ?? null;
         $setting->restaurant_phone = $data['restaurant_phone'] ?? null;
+        $setting->tax_enabled = $request->boolean('tax_enabled');
         $setting->license_key = $data['license_key'] ?? null;
 
         if ($request->hasFile('logo')) {

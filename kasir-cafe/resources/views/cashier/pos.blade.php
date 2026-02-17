@@ -330,7 +330,7 @@
             </div>
 
             @php
-                $taxRate = (float) config('pos.tax_rate', 0.10);
+                $taxRate = (float) ($taxRate ?? config('pos.tax_rate', 0.10));
                 $discountAmount = (float) ($sale->discount_amount ?? 0);
                 $taxBase = max(0, (float) $sale->total - $discountAmount);
                 $taxAmount = round($taxBase * $taxRate, 2);
@@ -353,12 +353,14 @@
                         Rp {{ number_format($discountAmount, 0, ',', '.') }}
                     </span>
                 </div>
-                <div class="flex items-center justify-between">
-                    <span>Pajak ({{ (int) ($taxRate * 100) }}%)</span>
-                    <span class="font-semibold text-gray-800" data-tax>
-                        Rp {{ number_format($taxAmount, 0, ',', '.') }}
-                    </span>
-                </div>
+                @if ($taxRate > 0)
+                    <div class="flex items-center justify-between" data-tax-row>
+                        <span>Pajak ({{ (int) ($taxRate * 100) }}%)</span>
+                        <span class="font-semibold text-gray-800" data-tax>
+                            Rp {{ number_format($taxAmount, 0, ',', '.') }}
+                        </span>
+                    </div>
+                @endif
                 <div class="flex items-center justify-between text-base">
                     <span>Total</span>
                     <span class="font-semibold" data-total>

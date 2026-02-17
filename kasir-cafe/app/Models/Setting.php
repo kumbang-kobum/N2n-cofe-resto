@@ -10,9 +10,14 @@ class Setting extends Model
         'restaurant_name',
         'restaurant_address',
         'restaurant_phone',
+        'tax_enabled',
         'logo_path',
         'license_key',
         'installed_at',
         'installation_code',
+    ];
+
+    protected $casts = [
+        'tax_enabled' => 'boolean',
     ];
 }

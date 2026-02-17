@@ -90,10 +90,12 @@
                 <span>Diskon</span>
                 <span>{{ number_format($discount, 0, ',', '.') }}</span>
             </div>
-            <div class="flex justify-between">
-                <span>Pajak ({{ (int) ($taxRate * 100) }}%)</span>
-                <span>{{ number_format($taxAmount, 0, ',', '.') }}</span>
-            </div>
+            @if ($taxRate > 0)
+                <div class="flex justify-between">
+                    <span>Pajak ({{ (int) ($taxRate * 100) }}%)</span>
+                    <span>{{ number_format($taxAmount, 0, ',', '.') }}</span>
+                </div>
+            @endif
             <div class="flex justify-between font-semibold">
                 <span>Total</span>
                 <span>{{ number_format($grand, 0, ',', '.') }}</span>

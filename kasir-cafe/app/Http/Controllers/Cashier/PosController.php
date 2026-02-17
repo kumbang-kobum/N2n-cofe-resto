@@ -9,6 +9,7 @@ use App\Models\SaleLine;
 use App\Models\StockMove;
 use App\Models\ItemBatch;
 use App\Models\Item;
+use App\Models\Setting;
 use App\Models\AuditLog;
 use App\Exceptions\InsufficientStockException;
 use App\Services\FefoAllocator;
@@ -20,6 +21,17 @@ use Carbon\Carbon;
 
 class PosController extends Controller
 {
+    protected function resolveTaxRate(): float
+    {
+        $setting = Setting::first();
+
+        if ($setting && $setting->tax_enabled === false) {
+            return 0.0;
+        }
+
+        return (float) config('pos.tax_rate', 0.10);
+    }
+
     /**
      * Halaman utama POS kasir.
      */
@@ -161,6 +173,7 @@ class PosController extends Controller
             'search'   => $search,
             'openSales' => $openSales,
             'openQuery' => $openQuery,
+            'taxRate' => $this->resolveTaxRate(),
         ]);
     }
 
@@ -454,7 +467,7 @@ class PosController extends Controller
         }
 
             // Update status & ringkasan keuangan sale
-            $taxRate = (float) config('pos.tax_rate', 0.10);
+            $taxRate = $this->resolveTaxRate();
             $discount = (float) $request->input('discount_amount', 0);
             if ($discount < 0) {
                 $discount = 0;
