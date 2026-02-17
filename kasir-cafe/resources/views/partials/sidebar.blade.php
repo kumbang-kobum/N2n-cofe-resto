@@ -145,6 +145,16 @@
                               {{ request()->routeIs('admin.reports.sales') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
                         <span>Laporan Penjualan</span>
                     </a>
+                    <a href="{{ route('admin.reports.finance') }}"
+                       class="flex items-center gap-2 rounded-md px-3 py-2
+                              {{ request()->routeIs('admin.reports.finance') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                        <span>Laporan Keuangan</span>
+                    </a>
+                    <a href="{{ route('admin.expenses.index') }}"
+                       class="flex items-center gap-2 rounded-md px-3 py-2
+                              {{ request()->routeIs('admin.expenses.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                        <span>Pengeluaran Harian</span>
+                    </a>
                     <a href="{{ route('admin.reports.opname_variance') }}"
                        class="flex items-center gap-2 rounded-md px-3 py-2
                               {{ request()->routeIs('admin.reports.opname_variance') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
@@ -223,6 +233,16 @@
                               {{ request()->routeIs('manager.reports.sales') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
                         <span>Laporan Penjualan</span>
                     </a>
+                    <a href="{{ route('manager.reports.finance') }}"
+                       class="flex items-center gap-2 rounded-md px-3 py-2
+                              {{ request()->routeIs('manager.reports.finance') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                        <span>Laporan Keuangan</span>
+                    </a>
+                    <a href="{{ route('manager.expenses.index') }}"
+                       class="flex items-center gap-2 rounded-md px-3 py-2
+                              {{ request()->routeIs('manager.expenses.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                        <span>Pengeluaran Harian</span>
+                    </a>
                     <a href="{{ route('manager.reports.opname_variance') }}"
                        class="flex items-center gap-2 rounded-md px-3 py-2
                               {{ request()->routeIs('manager.reports.opname_variance') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
@@ -267,6 +287,16 @@
                        class="block px-3 py-2 rounded-md text-sm
                               {{ request()->routeIs('cashier.reports.sales') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
                         Laporan Penjualan
+                    </a>
+                    <a href="{{ route('cashier.reports.finance') }}"
+                       class="block px-3 py-2 rounded-md text-sm
+                              {{ request()->routeIs('cashier.reports.finance') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                        Laporan Keuangan
+                    </a>
+                    <a href="{{ route('cashier.expenses.index') }}"
+                       class="block px-3 py-2 rounded-md text-sm
+                              {{ request()->routeIs('cashier.expenses.*') ? 'bg-blue-700 text-white font-semibold' : 'hover:bg-blue-700/70' }}">
+                        Pengeluaran Harian
                     </a>
                 </div>
 

@@ -16,6 +16,8 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\CashExpenseController;
+use App\Http\Controllers\Admin\FinanceReportController;
 use App\Http\Controllers\Admin\AssetController;
 use App\Http\Controllers\Admin\AssetIncidentController;
 use App\Http\Controllers\Admin\AssetCategoryController;
@@ -176,6 +178,10 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::get('/sales/{sale}/receipt', [PosController::class, 'receipt'])->name('sales.receipt');
             Route::get('/reports/stock-opname-diff', [ReportController::class, 'stockOpnameDiff'])->name('reports.opname_variance');
             Route::get('/reports/audit-logs', [AuditLogController::class, 'index'])->name('reports.audit_logs');
+            Route::get('/reports/finance', [FinanceReportController::class, 'index'])->name('reports.finance');
+            Route::get('/expenses', [CashExpenseController::class, 'index'])->name('expenses.index');
+            Route::post('/expenses', [CashExpenseController::class, 'store'])->name('expenses.store');
+            Route::delete('/expenses/{cashExpense}', [CashExpenseController::class, 'destroy'])->name('expenses.destroy');
         });
 
     /*
@@ -211,6 +217,10 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::get('/sales/{sale}/receipt', [PosController::class, 'receipt'])->name('sales.receipt');
             Route::get('/reports/stock-opname-diff', [ReportController::class, 'stockOpnameDiff'])->name('reports.opname_variance');
             Route::get('/reports/audit-logs', [AuditLogController::class, 'index'])->name('reports.audit_logs');
+            Route::get('/reports/finance', [FinanceReportController::class, 'index'])->name('reports.finance');
+            Route::get('/expenses', [CashExpenseController::class, 'index'])->name('expenses.index');
+            Route::post('/expenses', [CashExpenseController::class, 'store'])->name('expenses.store');
+            Route::delete('/expenses/{cashExpense}', [CashExpenseController::class, 'destroy'])->name('expenses.destroy');
         });
 
     /*
@@ -247,6 +257,10 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
                 ->name('reports.sales');
             Route::get('/reports/sales/export', [\App\Http\Controllers\Admin\ReportController::class, 'exportSalesForCashier'])
                 ->name('reports.sales.export');
+            Route::get('/reports/finance', [FinanceReportController::class, 'index'])->name('reports.finance');
+            Route::get('/expenses', [CashExpenseController::class, 'index'])->name('expenses.index');
+            Route::post('/expenses', [CashExpenseController::class, 'store'])->name('expenses.store');
+            Route::delete('/expenses/{cashExpense}', [CashExpenseController::class, 'destroy'])->name('expenses.destroy');
         });
 });
 
