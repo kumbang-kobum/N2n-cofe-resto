@@ -179,9 +179,12 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::get('/reports/stock-opname-diff', [ReportController::class, 'stockOpnameDiff'])->name('reports.opname_variance');
             Route::get('/reports/audit-logs', [AuditLogController::class, 'index'])->name('reports.audit_logs');
             Route::get('/reports/finance', [FinanceReportController::class, 'index'])->name('reports.finance');
+            Route::get('/reports/finance/export', [FinanceReportController::class, 'export'])->name('reports.finance.export');
             Route::get('/expenses', [CashExpenseController::class, 'index'])->name('expenses.index');
             Route::post('/expenses', [CashExpenseController::class, 'store'])->name('expenses.store');
             Route::delete('/expenses/{cashExpense}', [CashExpenseController::class, 'destroy'])->name('expenses.destroy');
+            Route::post('/expenses/{cashExpense}/approve', [CashExpenseController::class, 'approve'])->name('expenses.approve');
+            Route::post('/expenses/{cashExpense}/reject', [CashExpenseController::class, 'reject'])->name('expenses.reject');
         });
 
     /*
@@ -218,9 +221,12 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::get('/reports/stock-opname-diff', [ReportController::class, 'stockOpnameDiff'])->name('reports.opname_variance');
             Route::get('/reports/audit-logs', [AuditLogController::class, 'index'])->name('reports.audit_logs');
             Route::get('/reports/finance', [FinanceReportController::class, 'index'])->name('reports.finance');
+            Route::get('/reports/finance/export', [FinanceReportController::class, 'export'])->name('reports.finance.export');
             Route::get('/expenses', [CashExpenseController::class, 'index'])->name('expenses.index');
             Route::post('/expenses', [CashExpenseController::class, 'store'])->name('expenses.store');
             Route::delete('/expenses/{cashExpense}', [CashExpenseController::class, 'destroy'])->name('expenses.destroy');
+            Route::post('/expenses/{cashExpense}/approve', [CashExpenseController::class, 'approve'])->name('expenses.approve');
+            Route::post('/expenses/{cashExpense}/reject', [CashExpenseController::class, 'reject'])->name('expenses.reject');
         });
 
     /*
@@ -258,9 +264,9 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::get('/reports/sales/export', [\App\Http\Controllers\Admin\ReportController::class, 'exportSalesForCashier'])
                 ->name('reports.sales.export');
             Route::get('/reports/finance', [FinanceReportController::class, 'index'])->name('reports.finance');
+            Route::get('/reports/finance/export', [FinanceReportController::class, 'export'])->name('reports.finance.export');
             Route::get('/expenses', [CashExpenseController::class, 'index'])->name('expenses.index');
             Route::post('/expenses', [CashExpenseController::class, 'store'])->name('expenses.store');
-            Route::delete('/expenses/{cashExpense}', [CashExpenseController::class, 'destroy'])->name('expenses.destroy');
         });
 });
 

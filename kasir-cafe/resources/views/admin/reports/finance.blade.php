@@ -1,9 +1,15 @@
 @extends('layouts.dashboard')
 
 @section('content')
-    <div class="mb-4">
-        <h1 class="text-xl font-semibold">Laporan Keuangan</h1>
-        <p class="text-sm text-gray-600">Rekap harian dan bulanan: omzet, HPP, pengeluaran kasir, dan laba.</p>
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div>
+            <h1 class="text-xl font-semibold">Laporan Keuangan</h1>
+            <p class="text-sm text-gray-600">Rekap harian dan bulanan: omzet, HPP, pengeluaran kasir, dan laba.</p>
+        </div>
+        <a href="{{ route(request()->routeIs('cashier.*') ? 'cashier.reports.finance.export' : (request()->routeIs('manager.*') ? 'manager.reports.finance.export' : 'admin.reports.finance.export'), request()->query()) }}"
+           class="px-3 py-2 rounded bg-green-600 text-white text-sm font-medium hover:bg-green-700">
+            Export Excel
+        </a>
     </div>
 
     <div class="bg-white border rounded-lg p-4 mb-4">

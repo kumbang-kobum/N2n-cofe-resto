@@ -17,13 +17,14 @@ class CashExpenseController extends Controller
         $search = trim((string) $request->query('q', ''));
         $cashierId = $request->query('cashier_id');
         $cashierId = $cashierId !== null && $cashierId !== '' ? (int) $cashierId : null;
+        $status = trim((string) $request->query('status', ''));
 
         if (auth()->user()->hasRole('cashier')) {
             $cashierId = auth()->id();
         }
 
         $query = CashExpense::query()
-            ->with('cashier')
+            ->with(['cashier', 'approver'])
             ->whereDate('expense_at', '>=', $from)
             ->whereDate('expense_at', '<=', $to);
 
@@ -36,6 +37,10 @@ class CashExpenseController extends Controller
                 $q->where('category', 'like', '%' . $search . '%')
                     ->orWhere('note', 'like', '%' . $search . '%');
             });
+        }
+
+        if (in_array($status, ['PENDING', 'APPROVED', 'REJECTED'], true)) {
+            $query->where('status', $status);
         }
 
         $expenses = (clone $query)
@@ -55,6 +60,7 @@ class CashExpenseController extends Controller
             'search',
             'cashiers',
             'cashierId',
+            'status',
         ));
     }
 
@@ -78,6 +84,7 @@ class CashExpenseController extends Controller
             'amount' => $validated['amount'],
             'note' => $validated['note'] ?? null,
             'cashier_id' => $cashierId,
+            'status' => 'PENDING',
         ]);
 
         AuditLog::log(auth()->id(), 'CASH_EXPENSE_CREATED', $expense, [
@@ -90,11 +97,57 @@ class CashExpenseController extends Controller
         return back()->with('status', 'Pengeluaran kas berhasil ditambahkan.');
     }
 
+    public function approve(Request $request, CashExpense $cashExpense)
+    {
+        abort_unless(auth()->user()->hasAnyRole(['admin', 'manager']), 403);
+
+        $validated = $request->validate([
+            'approval_note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $cashExpense->update([
+            'status' => 'APPROVED',
+            'approved_by' => auth()->id(),
+            'approved_at' => now(),
+            'approval_note' => $validated['approval_note'] ?? null,
+        ]);
+
+        AuditLog::log(auth()->id(), 'CASH_EXPENSE_APPROVED', $cashExpense, [
+            'status' => 'APPROVED',
+            'amount' => $cashExpense->amount,
+            'cashier_id' => $cashExpense->cashier_id,
+        ]);
+
+        return back()->with('status', 'Pengeluaran berhasil di-approve.');
+    }
+
+    public function reject(Request $request, CashExpense $cashExpense)
+    {
+        abort_unless(auth()->user()->hasAnyRole(['admin', 'manager']), 403);
+
+        $validated = $request->validate([
+            'approval_note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $cashExpense->update([
+            'status' => 'REJECTED',
+            'approved_by' => auth()->id(),
+            'approved_at' => now(),
+            'approval_note' => $validated['approval_note'] ?? null,
+        ]);
+
+        AuditLog::log(auth()->id(), 'CASH_EXPENSE_REJECTED', $cashExpense, [
+            'status' => 'REJECTED',
+            'amount' => $cashExpense->amount,
+            'cashier_id' => $cashExpense->cashier_id,
+        ]);
+
+        return back()->with('status', 'Pengeluaran ditolak.');
+    }
+
     public function destroy(CashExpense $cashExpense)
     {
-        if (auth()->user()->hasRole('cashier') && $cashExpense->cashier_id !== auth()->id()) {
-            abort(403);
-        }
+        abort_unless(auth()->user()->hasAnyRole(['admin', 'manager']), 403);
 
         AuditLog::log(auth()->id(), 'CASH_EXPENSE_DELETED', $cashExpense, [
             'expense_at' => $cashExpense->expense_at?->format('Y-m-d H:i:s'),

@@ -7,10 +7,12 @@ use App\Models\CashExpense;
 use App\Models\Sale;
 use App\Models\User;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class FinanceReportController extends Controller
 {
-    public function index(Request $request)
+    protected function buildData(Request $request): array
     {
         $from = $request->query('from', now()->startOfMonth()->toDateString());
         $to = $request->query('to', now()->toDateString());
@@ -30,7 +32,8 @@ class FinanceReportController extends Controller
         $expenseQuery = CashExpense::query()
             ->with('cashier')
             ->whereDate('expense_at', '>=', $from)
-            ->whereDate('expense_at', '<=', $to);
+            ->whereDate('expense_at', '<=', $to)
+            ->where('status', 'APPROVED');
 
         if ($cashierId) {
             $salesQuery->where('cashier_id', $cashierId);
@@ -125,14 +128,99 @@ class FinanceReportController extends Controller
 
         $cashiers = User::role('cashier')->orderBy('name')->get();
 
-        return view('admin.reports.finance', compact(
-            'from',
-            'to',
-            'cashierId',
-            'cashiers',
-            'summary',
-            'dailyRows',
-            'monthlyRows',
-        ));
+        return [
+            'from' => $from,
+            'to' => $to,
+            'cashierId' => $cashierId,
+            'cashiers' => $cashiers,
+            'summary' => $summary,
+            'dailyRows' => $dailyRows,
+            'monthlyRows' => $monthlyRows,
+        ];
+    }
+
+    public function index(Request $request)
+    {
+        $data = $this->buildData($request);
+
+        return view('admin.reports.finance', $data);
+    }
+
+    public function export(Request $request)
+    {
+        $data = $this->buildData($request);
+
+        $filename = 'laporan_keuangan_' . $data['from'] . '_to_' . $data['to'] . '.xlsx';
+        $spreadsheet = new Spreadsheet();
+
+        $summarySheet = $spreadsheet->getActiveSheet();
+        $summarySheet->setTitle('Ringkasan');
+        $summarySheet->fromArray([
+            ['Periode', $data['from'] . ' s/d ' . $data['to']],
+            ['Subtotal', $data['summary']['subtotal']],
+            ['Diskon', $data['summary']['discount']],
+            ['Pajak', $data['summary']['tax']],
+            ['Omzet', $data['summary']['omzet']],
+            ['Refund', $data['summary']['refund']],
+            ['COGS (HPP)', $data['summary']['cogs']],
+            ['Laba Kotor', $data['summary']['gross_profit']],
+            ['Pengeluaran Kas (Approved)', $data['summary']['expense_total']],
+            ['Laba Bersih', $data['summary']['net_profit']],
+            ['Saldo Kas (CASH - Pengeluaran)', $data['summary']['cash_balance']],
+        ], null, 'A1');
+
+        $dailySheet = $spreadsheet->createSheet();
+        $dailySheet->setTitle('Harian');
+        $dailySheet->fromArray(
+            [['Tanggal', 'Omzet', 'Refund', 'COGS', 'Laba Kotor', 'Pengeluaran', 'Laba Bersih']],
+            null,
+            'A1'
+        );
+        $row = 2;
+        foreach ($data['dailyRows'] as $r) {
+            $dailySheet->fromArray([[
+                $r['date'],
+                $r['omzet'],
+                $r['refund'],
+                $r['cogs'],
+                $r['gross_profit'],
+                $r['expense_total'],
+                $r['net_profit'],
+            ]], null, 'A' . $row);
+            $row++;
+        }
+
+        $monthlySheet = $spreadsheet->createSheet();
+        $monthlySheet->setTitle('Bulanan');
+        $monthlySheet->fromArray(
+            [['Bulan', 'Omzet', 'Refund', 'COGS', 'Laba Kotor', 'Pengeluaran', 'Laba Bersih']],
+            null,
+            'A1'
+        );
+        $row = 2;
+        foreach ($data['monthlyRows'] as $r) {
+            $monthlySheet->fromArray([[
+                $r['month'],
+                $r['omzet'],
+                $r['refund'],
+                $r['cogs'],
+                $r['gross_profit'],
+                $r['expense_total'],
+                $r['net_profit'],
+            ]], null, 'A' . $row);
+            $row++;
+        }
+
+        foreach ([$summarySheet, $dailySheet, $monthlySheet] as $sheet) {
+            foreach (range('A', 'H') as $column) {
+                $sheet->getColumnDimension($column)->setAutoSize(true);
+            }
+        }
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            (new Xlsx($spreadsheet))->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 }

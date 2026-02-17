@@ -69,6 +69,15 @@
                         </select>
                     </div>
                 @endif
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1">Status</label>
+                    <select name="status" class="w-full border rounded px-3 py-2 text-sm">
+                        <option value="">Semua</option>
+                        <option value="PENDING" @selected(($status ?? '') === 'PENDING')>PENDING</option>
+                        <option value="APPROVED" @selected(($status ?? '') === 'APPROVED')>APPROVED</option>
+                        <option value="REJECTED" @selected(($status ?? '') === 'REJECTED')>REJECTED</option>
+                    </select>
+                </div>
                 <div class="{{ auth()->user()->hasRole('cashier') ? 'md:col-span-2' : '' }}">
                     <label class="block text-xs text-gray-600 mb-1">Cari</label>
                     <input type="text" name="q" value="{{ $search }}" class="w-full border rounded px-3 py-2 text-sm" placeholder="Kategori / catatan">
@@ -85,6 +94,8 @@
                             <th class="text-left p-2 border-b">Waktu</th>
                             <th class="text-left p-2 border-b">Kategori</th>
                             <th class="text-left p-2 border-b">Kasir</th>
+                            <th class="text-left p-2 border-b">Status</th>
+                            <th class="text-left p-2 border-b">Approval</th>
                             <th class="text-left p-2 border-b">Catatan</th>
                             <th class="text-right p-2 border-b">Nominal</th>
                             <th class="text-center p-2 border-b">Aksi</th>
@@ -96,19 +107,50 @@
                                 <td class="p-2">{{ optional($expense->expense_at)->format('d/m/Y H:i') }}</td>
                                 <td class="p-2">{{ $expense->category }}</td>
                                 <td class="p-2">{{ optional($expense->cashier)->name ?? '-' }}</td>
+                                <td class="p-2">
+                                    <span class="text-xs px-2 py-1 rounded {{ $expense->status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' : ($expense->status === 'REJECTED' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700') }}">
+                                        {{ $expense->status }}
+                                    </span>
+                                </td>
+                                <td class="p-2 text-xs text-gray-600">
+                                    @if($expense->approved_by)
+                                        {{ optional($expense->approver)->name ?? '-' }}<br>
+                                        {{ optional($expense->approved_at)->format('d/m/Y H:i') }}
+                                    @else
+                                        -
+                                    @endif
+                                </td>
                                 <td class="p-2">{{ $expense->note ?: '-' }}</td>
                                 <td class="p-2 text-right font-medium">Rp {{ number_format($expense->amount, 0, ',', '.') }}</td>
                                 <td class="p-2 text-center">
-                                    <form method="POST" action="{{ route(request()->routeIs('cashier.*') ? 'cashier.expenses.destroy' : (request()->routeIs('manager.*') ? 'manager.expenses.destroy' : 'admin.expenses.destroy'), $expense) }}" onsubmit="return confirm('Hapus pengeluaran ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="text-xs text-red-600 hover:underline">Hapus</button>
-                                    </form>
+                                    @if(auth()->user()->hasAnyRole(['admin','manager']))
+                                        <div class="flex items-center justify-center gap-2">
+                                            @if($expense->status !== 'APPROVED')
+                                                <form method="POST" action="{{ route(request()->routeIs('manager.*') ? 'manager.expenses.approve' : 'admin.expenses.approve', $expense) }}">
+                                                    @csrf
+                                                    <button class="text-xs text-emerald-600 hover:underline">Approve</button>
+                                                </form>
+                                            @endif
+                                            @if($expense->status !== 'REJECTED')
+                                                <form method="POST" action="{{ route(request()->routeIs('manager.*') ? 'manager.expenses.reject' : 'admin.expenses.reject', $expense) }}">
+                                                    @csrf
+                                                    <button class="text-xs text-amber-600 hover:underline">Reject</button>
+                                                </form>
+                                            @endif
+                                            <form method="POST" action="{{ route(request()->routeIs('manager.*') ? 'manager.expenses.destroy' : 'admin.expenses.destroy', $expense) }}" onsubmit="return confirm('Hapus pengeluaran ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="text-xs text-red-600 hover:underline">Hapus</button>
+                                            </form>
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-gray-400">-</span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-gray-500 p-4">Belum ada data pengeluaran.</td>
+                                <td colspan="8" class="text-center text-gray-500 p-4">Belum ada data pengeluaran.</td>
                             </tr>
                         @endforelse
                     </tbody>
