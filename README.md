@@ -57,10 +57,13 @@ Cara membaca ringkasan di atas:
 Subtotal = total sebelum diskon & pajak
 Diskon = potongan uang
 Pajak = 10% dari (Subtotal − Diskon)
+Pajak bisa di aktifkan dan di nonaktifkan
 Omzet = (Subtotal − Diskon) + Pajak
 Refund = total refund pada periode
 COGS (HPP) = harga pokok bahan
 Laba Kotor = (Subtotal − Diskon) − COGS
+menu payroll petugas
+pengeluaran harian
 → Jadi bisa negatif kalau COGS lebih besar dari penjualan
 
 Cara yang benar untuk kenaikan harga bahan baku:
