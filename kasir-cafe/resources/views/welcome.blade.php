@@ -179,41 +179,57 @@
           </a>
         </div>
 
-        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4 text-sm">
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 text-sm">
           <div class="bg-white border rounded-xl p-4 flex flex-col">
-            <div class="text-blue-600 font-semibold mb-1">1. Input Bahan Makanan</div>
+            <div class="text-blue-600 font-semibold mb-1">1. Setup Master Data</div>
             <div class="text-slate-600">
-              Admin input <b>Item/BHP</b>, satuan (kg, gram, pcs), dan stok awal
-              melalui penerimaan barang & stok opname.
+              Admin siapkan <b>satuan, konversi unit, item bahan, produk/menu, resep BOM</b>,
+              dan master karyawan.
             </div>
           </div>
 
           <div class="bg-white border rounded-xl p-4 flex flex-col">
-            <div class="text-blue-600 font-semibold mb-1">2. Input Menu & Resep</div>
+            <div class="text-blue-600 font-semibold mb-1">2. Isi Stok Awal & Receiving</div>
             <div class="text-slate-600">
-              Buat <b>Produk/Menu</b>, lalu set <b>resep per porsi</b>
-              (gram/ml/pcs). Resep ini jadi dasar pemotongan stok.
+              Stok bahan masuk lewat <b>receiving batch</b> (mendukung FEFO),
+              lalu koreksi jika perlu melalui stock opname.
             </div>
           </div>
 
           <div class="bg-white border rounded-xl p-4 flex flex-col">
-            <div class="text-blue-600 font-semibold mb-1">3. Kasir Melayani Pesanan</div>
+            <div class="text-blue-600 font-semibold mb-1">3. Operasional POS</div>
             <div class="text-slate-600">
-              Kasir gunakan <b>POS</b> untuk input pesanan. Setelah pembayaran,
-              stok bahan di dapur otomatis berkurang berdasarkan resep.
+              Kasir buat transaksi dine-in/takeaway, simpan bill open bila belum bayar,
+              lalu finalisasi pembayaran cash/qris/debit.
             </div>
           </div>
 
           <div class="bg-white border rounded-xl p-4 flex flex-col">
-            <div class="text-blue-600 font-semibold mb-1">4. Monitoring & Laporan</div>
+            <div class="text-blue-600 font-semibold mb-1">4. Stok Otomatis Berkurang</div>
             <div class="text-slate-600">
-              Owner cek <b>stok, opname, penjualan, COGS, audit log, refund</b>
-              agar operasional lebih terkontrol.
+              Saat transaksi dibayar, sistem mengurangi bahan sesuai resep & konversi unit,
+              termasuk pencatatan COGS/profit.
+            </div>
+          </div>
+
+          <div class="bg-white border rounded-xl p-4 flex flex-col">
+            <div class="text-blue-600 font-semibold mb-1">5. Kontrol Biaya Operasional</div>
+            <div class="text-slate-600">
+              Catat <b>pengeluaran harian</b> dari kas, lakukan approval manager/admin,
+              dan kelola payroll petugas sampai status paid.
+            </div>
+          </div>
+
+          <div class="bg-white border rounded-xl p-4 flex flex-col">
+            <div class="text-blue-600 font-semibold mb-1">6. Monitoring Transparan</div>
+            <div class="text-slate-600">
+              Owner pantau <b>penjualan, top menu, stok, audit log, refund,
+              laporan keuangan harian-bulanan, dan export Excel detail</b>.
             </div>
           </div>
         </div>
 
-        <div class="mt-6 grid gap-3 sm:grid-cols-3 text-xs text-slate-600">
+        <div class="mt-6 grid gap-3 sm:grid-cols-4 text-xs text-slate-600">
           <div class="bg-white border rounded-lg p-3">
             <b>Tip:</b> Isi <b>unit conversion</b> (kg↔g, L↔ml) agar resep berjalan.
           </div>
@@ -221,7 +237,10 @@
             <b>Tip:</b> Atur <b>min_stock</b> untuk peringatan stok menipis.
           </div>
           <div class="bg-white border rounded-lg p-3">
-            <b>Tip:</b> Gunakan <b>refund</b> parsial bila ada komplain.
+            <b>Tip:</b> Gunakan <b>open bill</b> untuk tamu bayar di akhir.
+          </div>
+          <div class="bg-white border rounded-lg p-3">
+            <b>Tip:</b> Pakai <b>approve pengeluaran + payroll paid</b> agar laporan laba bersih akurat.
           </div>
         </div>
       </div>
