@@ -318,6 +318,67 @@ Isi master kategori & lokasi terlebih dahulu agar dropdown inventaris tersedia.
 Lihat panduan cron:
 `docs/cron_backup.md`
 
+## cara update mengikuti repo
+1. Masuk folder web root
+   ```bash
+   cd /www/wwwroot/caferesto/N2n-cofe-resto
+   ```
+   sesuaikan dengan folder kamu
+2. Ambil update dari GitHub dan samakan persis (recommended untuk production server)
+   ```bash
+   git fetch origin
+   git reset --hard origin/main
+   ```
+3. Tangani file .user.ini (aaPanel sering bikin ini)
+Kalau muncul seperti kemarin (untracked / permission), abaikan secara lokal server:
+   ```bash
+   echo "kasir-cafe/public/.user.ini" >> .git/info/exclude
+   ```
+Cek status harus bersih:
+   ```bash
+   git status
+   ```
+4. Step Laravel setelah update code (WAJIB)
+masuk ke folder kasir-cafe
+   ```bash
+   cd kasir-cafe
+   ```
+5. Install dependency (production)
+   ```bash
+   composer install --no-dev --optimize-autoloader
+   ```
+6. Migration aman (tidak hapus data)
+   ```bash
+   php artisan migrate --force
+   ```
+7. Cache (opsional tapi bagus untuk production)
+   ```bash
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache
+   ``` 
+8. Jika pakai queue (opsional)
+   ```bash
+   php artisan queue:restart
+   ```
+9. Permission kalau ada error storage/cache
+   ```bash
+   chmod -R 775 storage bootstrap/cache
+   ```
+10. Kalau setelah deploy perubahan tidak terlihat
+bersihkan cache sekali saja untuk testing
+   ```bash
+   php artisan optimize:clear
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache  
+   ```
+   Restart PHP dari aaPanel:
+   	•	aaPanel → App Store → PHP → pilih versi yang dipakai → Restart
+11. Catatan paling penting (biar data aman)
+✅ Gunakan:
+	•	php artisan migrate --force   
+                          
 ## About Laravel
 Laravel adalah framework PHP untuk membangun aplikasi web. Dokumentasi: https://laravel.com/docs
 - **[Redberry](https://redberry.international/laravel-development)**
