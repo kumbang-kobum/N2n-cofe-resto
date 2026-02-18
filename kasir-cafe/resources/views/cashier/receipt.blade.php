@@ -50,7 +50,13 @@
 
         <div class="my-1 border-t border-dashed"></div>
 
-        <table class="w-full text-[11px] leading-tight">
+        <table class="w-full text-[11px] leading-tight receipt-table">
+            <colgroup>
+                <col style="width: 44%">
+                <col style="width: 14%">
+                <col style="width: 20%">
+                <col style="width: 22%">
+            </colgroup>
             <thead>
                 <tr>
                     <th class="text-left">Item</th>
@@ -62,8 +68,8 @@
             <tbody>
                 @foreach($sale->lines as $l)
                     <tr>
-                        <td class="pr-1">{{ $l->product->name }}</td>
-                        <td class="text-right">{{ $l->qty }}</td>
+                        <td class="pr-1 break-words">{{ $l->product->name }}</td>
+                        <td class="text-right">{{ rtrim(rtrim(number_format((float) $l->qty, 3, '.', ''), '0'), '.') }}</td>
                         <td class="text-right">{{ number_format($l->price, 0, ',', '.') }}</td>
                         <td class="text-right">{{ number_format($l->qty * $l->price, 0, ',', '.') }}</td>
                     </tr>
@@ -119,26 +125,62 @@
 
 @push('styles')
 <style>
+    @page {
+        size: 80mm auto;
+        margin: 0;
+    }
+
     @media print {
+        html, body {
+            background: #fff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 80mm !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
         body * { visibility: hidden; }
         #receipt, #receipt * { visibility: visible; }
-        #receipt { position: absolute; left: 0; top: 0; }
+        #receipt {
+            position: absolute;
+            left: 0;
+            top: 0;
+            margin: 0;
+            padding: 2mm 2.5mm 1.5mm 2.5mm;
+            box-sizing: border-box;
+            width: 80mm;
+        }
     }
 
     .receipt-80mm {
         width: 80mm;
-        font-family: "Arial Narrow", Arial, sans-serif;
+        max-width: 80mm;
+        box-sizing: border-box;
+        padding: 2mm 2.5mm 1.5mm 2.5mm;
+        font-family: "Courier New", Consolas, monospace;
         font-size: 11px;
-        line-height: 1.15;
-        letter-spacing: 0.2px;
+        line-height: 1.2;
+        letter-spacing: 0;
     }
     .receipt-80mm table {
         width: 100%;
         border-collapse: collapse;
+        table-layout: fixed;
     }
     .receipt-80mm th,
     .receipt-80mm td {
         padding: 1px 0;
+        vertical-align: top;
+        word-wrap: break-word;
+        overflow-wrap: anywhere;
+    }
+    .receipt-table th:nth-child(2),
+    .receipt-table th:nth-child(3),
+    .receipt-table th:nth-child(4),
+    .receipt-table td:nth-child(2),
+    .receipt-table td:nth-child(3),
+    .receipt-table td:nth-child(4) {
+        text-align: right;
     }
 </style>
 @endpush
