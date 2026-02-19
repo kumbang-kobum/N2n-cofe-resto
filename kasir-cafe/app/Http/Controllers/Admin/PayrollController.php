@@ -147,6 +147,13 @@ class PayrollController extends Controller
         return back()->with('status', 'Payroll ditandai sudah dibayar.');
     }
 
+    public function slip(Payroll $payroll)
+    {
+        $payroll->load(['employeeMaster', 'employee', 'approver', 'payer']);
+
+        return view('admin.payroll.slip', compact('payroll'));
+    }
+
     public function destroy(Payroll $payroll)
     {
         if ($payroll->status === 'PAID') {

@@ -126,6 +126,10 @@
                                 </td>
                                 <td class="p-2 text-center">
                                     <div class="flex items-center justify-center gap-2">
+                                        <a href="{{ route(request()->routeIs('manager.*') ? 'manager.payroll.slip' : 'admin.payroll.slip', $payroll) }}"
+                                           class="text-xs text-indigo-600 hover:underline">
+                                            Slip
+                                        </a>
                                         @if($payroll->status !== 'PAID')
                                             <form method="POST" action="{{ route(request()->routeIs('manager.*') ? 'manager.payroll.approve' : 'admin.payroll.approve', $payroll) }}">
                                                 @csrf

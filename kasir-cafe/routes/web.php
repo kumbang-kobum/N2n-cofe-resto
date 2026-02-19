@@ -194,6 +194,7 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::post('/payroll', [PayrollController::class, 'store'])->name('payroll.store');
             Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve'])->name('payroll.approve');
             Route::post('/payroll/{payroll}/mark-paid', [PayrollController::class, 'markPaid'])->name('payroll.mark_paid');
+            Route::get('/payroll/{payroll}/slip', [PayrollController::class, 'slip'])->name('payroll.slip');
             Route::delete('/payroll/{payroll}', [PayrollController::class, 'destroy'])->name('payroll.destroy');
         });
 
@@ -242,6 +243,7 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::post('/payroll', [PayrollController::class, 'store'])->name('payroll.store');
             Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve'])->name('payroll.approve');
             Route::post('/payroll/{payroll}/mark-paid', [PayrollController::class, 'markPaid'])->name('payroll.mark_paid');
+            Route::get('/payroll/{payroll}/slip', [PayrollController::class, 'slip'])->name('payroll.slip');
             Route::delete('/payroll/{payroll}', [PayrollController::class, 'destroy'])->name('payroll.destroy');
         });
 
