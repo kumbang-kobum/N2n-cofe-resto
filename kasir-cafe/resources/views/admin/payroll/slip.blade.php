@@ -128,12 +128,23 @@
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
+        body * {
+            visibility: hidden !important;
+        }
+        #slip-payroll, #slip-payroll * {
+            visibility: visible !important;
+        }
         #slip-payroll {
+            position: absolute;
+            left: 0;
+            top: 0;
             box-shadow: none !important;
             border: 1px solid #ddd !important;
             margin: 0 !important;
             max-width: 80mm !important;
             width: 80mm !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
         }
     }
 </style>
