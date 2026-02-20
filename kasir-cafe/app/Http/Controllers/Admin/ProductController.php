@@ -10,11 +10,19 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::orderBy('name')->paginate(20);
+        $q = trim((string) $request->query('q', ''));
 
-        return view('admin.products.index', compact('products'));
+        $products = Product::query()
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where('name', 'like', '%' . $q . '%');
+            })
+            ->orderBy('name')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.products.index', compact('products', 'q'));
     }
 
     public function create()

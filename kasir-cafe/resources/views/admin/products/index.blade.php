@@ -1,10 +1,14 @@
 @extends('layouts.dashboard')
 
 @section('content')
+@php
+  $routePrefix = request()->routeIs('manager.*') ? 'manager' : 'admin';
+@endphp
+
 <div class="flex items-center justify-between mb-4">
   <h1 class="text-xl font-semibold text-blue-700">Produk / Menu</h1>
 
-  <a href="{{ route('admin.products.create') }}"
+  <a href="{{ route($routePrefix.'.products.create') }}"
      class="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm">
     + Tambah Produk
   </a>
@@ -15,6 +19,26 @@
     {{ session('status') }}
   </div>
 @endif
+
+<form method="GET" class="mb-4">
+  <div class="flex items-center gap-2">
+    <input type="text"
+           name="q"
+           value="{{ $q ?? '' }}"
+           placeholder="Cari nama menu..."
+           class="w-full max-w-sm rounded border px-3 py-2 text-sm">
+    <button type="submit"
+            class="rounded bg-slate-700 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">
+      Cari
+    </button>
+    @if(!empty($q))
+      <a href="{{ route($routePrefix.'.products.index') }}"
+         class="rounded border px-3 py-2 text-sm hover:bg-gray-50">
+        Reset
+      </a>
+    @endif
+  </div>
+</form>
 
 <div class="bg-white border rounded-lg overflow-hidden">
   <table class="w-full text-sm">
@@ -51,12 +75,12 @@
             @endif
           </td>
           <td class="p-2 text-right">
-            <a href="{{ route('admin.products.edit', $product) }}"
+            <a href="{{ route($routePrefix.'.products.edit', $product) }}"
                class="text-xs px-2 py-1 rounded bg-blue-500 text-white hover:bg-blue-600">
               Edit
             </a>
 
-            <form action="{{ route('admin.products.destroy', $product) }}"
+            <form action="{{ route($routePrefix.'.products.destroy', $product) }}"
                   method="POST"
                   class="inline-block"
                   onsubmit="return confirm('Hapus produk ini?')">
