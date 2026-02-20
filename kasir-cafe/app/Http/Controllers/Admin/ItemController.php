@@ -9,13 +9,19 @@ use Illuminate\Http\Request;
 
 class ItemController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $items = Item::with('baseUnit')
-            ->orderBy('name')
-            ->paginate(20);
+        $q = trim((string) $request->query('q', ''));
 
-        return view('admin.items.index', compact('items'));
+        $items = Item::with('baseUnit')
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where('name', 'like', '%' . $q . '%');
+            })
+            ->orderBy('name')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.items.index', compact('items', 'q'));
     }
 
     public function create()

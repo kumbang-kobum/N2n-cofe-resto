@@ -19,6 +19,26 @@
   </a>
 </div>
 
+<form method="GET" class="mb-4">
+  <div class="flex items-center gap-2">
+    <input type="text"
+           name="q"
+           value="{{ $q ?? '' }}"
+           placeholder="Cari nama bahan..."
+           class="w-full max-w-sm rounded border px-3 py-2 text-sm">
+    <button type="submit"
+            class="rounded bg-slate-700 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">
+      Cari
+    </button>
+    @if(!empty($q))
+      <a href="{{ route('admin.items.index') }}"
+         class="rounded border px-3 py-2 text-sm hover:bg-gray-50">
+        Reset
+      </a>
+    @endif
+  </div>
+</form>
+
 <div class="overflow-x-auto rounded-lg border bg-white">
   <table class="w-full text-left text-sm">
     <thead class="bg-gray-50 text-xs uppercase text-gray-500">
