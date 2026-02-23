@@ -149,14 +149,9 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::get('/receivings/create', [ReceivingController::class, 'create'])->name('receivings.create');
             Route::post('/receivings', [ReceivingController::class, 'store'])->name('receivings.store');
             Route::get('/receivings/{id}', [ReceivingController::class, 'show'])->name('receivings.show');
-            // 👉 alias untuk link "Dispose" di index.blade.php
-            Route::get('/expired/{id}/dispose', [ExpiredController::class, 'create'])->name('expired.dispose'); 
-
             // Expired disposal
             Route::get('/expired', [ExpiredController::class, 'index'])->name('expired.index');
-            Route::get('/expired/create', [ExpiredController::class, 'create'])->name('expired.create');
-            Route::post('/expired', [ExpiredController::class, 'store'])->name('expired.store');
-            Route::get('/expired/{id}', [ExpiredController::class, 'show'])->name('expired.show');
+            Route::post('/expired/{batchId}/dispose', [ExpiredController::class, 'dispose'])->name('expired.dispose');
 
             // Stock opname
             Route::get('/stock-opname', [StockOpnameController::class, 'index'])->name('stock_opname.index');
