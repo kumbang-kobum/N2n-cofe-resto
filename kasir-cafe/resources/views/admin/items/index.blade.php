@@ -81,6 +81,14 @@
           <td class="px-3 py-2 text-right">
             <a href="{{ route('admin.items.edit', $item) }}"
                class="text-xs text-blue-600 hover:underline">Edit</a>
+            <form action="{{ route('admin.items.destroy', $item) }}"
+                  method="POST"
+                  class="inline"
+                  onsubmit="return confirm('Hapus bahan ini?');">
+              @csrf
+              @method('DELETE')
+              <button type="submit" class="ml-2 text-xs text-red-600 hover:underline">Hapus</button>
+            </form>
           </td>
         </tr>
       @empty
