@@ -39,16 +39,17 @@
   </div>
 </form>
 
-<div class="overflow-x-auto rounded-lg border bg-white">
-  <table class="w-full text-left text-sm">
+<div class="rounded-lg border bg-white">
+  <div class="overflow-x-auto overflow-y-auto max-h-[65vh]">
+    <table class="w-full text-left text-sm">
     <thead class="bg-gray-50 text-xs uppercase text-gray-500">
       <tr>
-        <th class="px-3 py-2">Nama</th>
-        <th class="px-3 py-2 text-right">Min Stok</th>
-        <th class="px-3 py-2">Satuan Dasar</th>
-        <th class="px-3 py-2 text-center">Track Expired</th>
-        <th class="px-3 py-2 text-center">Aktif</th>
-        <th class="px-3 py-2 text-right">Aksi</th>
+        <th class="px-3 py-2 sticky top-0 z-10 bg-gray-50">Nama</th>
+        <th class="px-3 py-2 text-right sticky top-0 z-10 bg-gray-50">Min Stok</th>
+        <th class="px-3 py-2 sticky top-0 z-10 bg-gray-50">Satuan Dasar</th>
+        <th class="px-3 py-2 text-center sticky top-0 z-10 bg-gray-50">Track Expired</th>
+        <th class="px-3 py-2 text-center sticky top-0 z-10 bg-gray-50">Aktif</th>
+        <th class="px-3 py-2 text-right sticky top-0 z-10 bg-gray-50">Aksi</th>
       </tr>
     </thead>
     <tbody>
@@ -90,7 +91,8 @@
         </tr>
       @endforelse
     </tbody>
-  </table>
+    </table>
+  </div>
 </div>
 
 <div class="mt-3">
