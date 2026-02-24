@@ -11,7 +11,14 @@
 
 <img src="n2Nlogo.png" width="140" alt="n2N" />
 
-## Traktir Kopi Chandra Irawan BCA 8110400102
+## Traktir Kopi BCA 8110400102 A/N Chandra Irawan** ☕🙏 
+## ☕ Donasi
+Dukung pengembangan aplikasi ini melalui Saweria:  
+
+| Scan QR Code | Klik Link |
+|--------------|-----------|
+| <img src="./tutorial/qrsaweria.png" alt="QR Saweria" width="200"/> | [👉 Saweria.co](https://saweria.co/KumbangKobum) | 
+ 
 
 ## Screenshot Aplikasi
 <table>
