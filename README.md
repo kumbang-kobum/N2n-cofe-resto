@@ -184,36 +184,75 @@ Dengan ini, COGS selalu mengikuti **biaya per batch yang benar**, bukan harga te
    bash scripts/deploy.sh
    ```
 
-## Instalasi macOS (XAMPP)
+## Instalasi macOS (XAMPP) - Lengkap
 1. Install XAMPP for macOS, lalu start `Apache` dan `MySQL`.
 2. Taruh project di:
    - `/Applications/XAMPP/xamppfiles/htdocs/N2n-cofe-resto/kasir-cafe`
-3. Buat database (mis. `kasir_cafe`) via `http://localhost/phpmyadmin`.
-4. Copy env:
+3. Masuk folder project:
+   ```bash
+   cd /Applications/XAMPP/xamppfiles/htdocs/N2n-cofe-resto/kasir-cafe
+   ```
+4. Buat database (mis. `kasir_cafe`) via `http://localhost/phpmyadmin`.
+5. Copy env:
    ```bash
    cp .env.example .env
    ```
-5. Set `.env`:
+6. Set `.env` minimum:
+   - `APP_ENV=production`
+   - `APP_DEBUG=false`
    - `APP_URL=http://localhost/N2n-cofe-resto/kasir-cafe/public`
+   - `ASSET_URL=http://localhost/N2n-cofe-resto/kasir-cafe/public`
+   - `SESSION_SECURE_COOKIE=false`
    - `DB_HOST=127.0.0.1`
    - `DB_PORT=3306`
    - `DB_DATABASE=kasir_cafe`
    - `DB_USERNAME=root`
    - `DB_PASSWORD=` (kosong default XAMPP)
-6. Install dependency:
+7. Install dependency:
    ```bash
    composer install
-   npm install && npm run build
+   npm install
+   npm run build
    ```
-7. Inisialisasi Laravel:
+8. Inisialisasi Laravel:
    ```bash
    php artisan key:generate
    php artisan migrate --seed
    php artisan storage:link
-   php artisan optimize:clear
    ```
-8. Akses aplikasi:
+9. Set permission agar Apache XAMPP (user `daemon`) bisa menulis cache/log:
+   ```bash
+   sudo chown -R daemon:daemon storage bootstrap/cache
+   sudo find storage bootstrap/cache -type d -exec chmod 775 {} \;
+   sudo find storage bootstrap/cache -type f -exec chmod 664 {} \;
+   ```
+10. Bersihkan dan cache ulang:
+   ```bash
+   php artisan optimize:clear
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache
+   ```
+11. Restart Apache dari XAMPP Control Panel.
+12. Akses aplikasi:
    - `http://localhost/N2n-cofe-resto/kasir-cafe/public`
+
+Troubleshooting macOS XAMPP:
+- Error `500 Internal Server Error` dan `storage/logs/laravel.log` kosong:
+  - Jalankan ulang langkah permission (langkah 9).
+- Error `405 Method Not Allowed` saat login:
+  - Pastikan login dari URL:
+    - `http://localhost/N2n-cofe-resto/kasir-cafe/public/login`
+  - Cek route:
+    ```bash
+    php artisan route:list | grep -E "login|logout"
+    ```
+- Jika route belum terbaca, clear cache:
+  ```bash
+  php artisan optimize:clear
+  ```
+- Jika file `public/.htaccess` hilang, buat isi standar Laravel rewrite.
+- Jangan pakai `https://localhost/...` kecuali SSL lokal memang sudah dikonfigurasi benar.
 
 ## Instalasi Windows (XAMPP, 1 Klik)
 1. Install XAMPP di `C:\xampp`, lalu start `Apache` dan `MySQL`.
