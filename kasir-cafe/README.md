@@ -7,6 +7,10 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Video Instalasi App Resto
+
+https://youtu.be/Jm6dMf-rQG8
+
 ## Kasir Cafe
 
 <img src="n2Nlogo.png" width="140" alt="n2N" />
