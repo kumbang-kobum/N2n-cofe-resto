@@ -17,7 +17,7 @@ Dukung pengembangan aplikasi ini melalui Saweria:
 
 | Scan QR Code | Klik Link |
 |--------------|-----------|
-| <td><img src="screenshot/qrsaweria.png" width="180" /></td> | [👉 Saweria.co](https://saweria.co/KumbangKobum) | 
+| <img src="screenshot/qrsaweria.png" width="180" /> | [👉 Saweria.co](https://saweria.co/KumbangKobum) | 
  
 
 ## Screenshot Aplikasi
