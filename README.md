@@ -184,24 +184,75 @@ Dengan ini, COGS selalu mengikuti **biaya per batch yang benar**, bukan harga te
    bash scripts/deploy.sh
    ```
 
-## Instalasi Windows (XAMPP, 1 Klik)
-1. Install XAMPP di `C:\xampp`.
-2. Letakkan project di `C:\n2n-kasir` (atau folder lain).
-3. Jalankan setup database:
-   ```bat
-   kasir-cafe\scripts\windows\init_db.bat
+## Instalasi macOS (XAMPP)
+1. Install XAMPP for macOS, lalu start `Apache` dan `MySQL`.
+2. Taruh project di:
+   - `/Applications/XAMPP/xamppfiles/htdocs/N2n-cofe-resto/kasir-cafe`
+3. Buat database (mis. `kasir_cafe`) via `http://localhost/phpmyadmin`.
+4. Copy env:
+   ```bash
+   cp .env.example .env
    ```
-4. Jalankan aplikasi:
+5. Set `.env`:
+   - `APP_URL=http://localhost/N2n-cofe-resto/kasir-cafe/public`
+   - `DB_HOST=127.0.0.1`
+   - `DB_PORT=3306`
+   - `DB_DATABASE=kasir_cafe`
+   - `DB_USERNAME=root`
+   - `DB_PASSWORD=` (kosong default XAMPP)
+6. Install dependency:
+   ```bash
+   composer install
+   npm install && npm run build
+   ```
+7. Inisialisasi Laravel:
+   ```bash
+   php artisan key:generate
+   php artisan migrate --seed
+   php artisan storage:link
+   php artisan optimize:clear
+   ```
+8. Akses aplikasi:
+   - `http://localhost/N2n-cofe-resto/kasir-cafe/public`
+
+## Instalasi Windows (XAMPP, 1 Klik)
+1. Install XAMPP di `C:\xampp`, lalu start `Apache` dan `MySQL`.
+2. Clone/copy project ke:
+   - `C:\n2n-kasir\N2n-cofe-resto`
+3. Masuk ke folder aplikasi Laravel:
    ```bat
-   kasir-cafe\scripts\windows\start_pos.bat
+   cd C:\n2n-kasir\N2n-cofe-resto\kasir-cafe
+   ```
+4. Install dependency di Windows (wajib, jangan pakai `vendor/node_modules` dari OS lain):
+   ```bat
+   composer install
+   npm install
+   npm run build
+   ```
+5. Inisialisasi database otomatis:
+   ```bat
+   scripts\windows\init_db.bat
+   ```
+6. Jalankan aplikasi:
+   ```bat
+   scripts\windows\start_pos.bat
    ```
    Aplikasi akan terbuka di `http://localhost/`.
-   - APP_URL otomatis diset ke IP lokal.
-   - Database & user MySQL dibuat otomatis (tanpa config manual).
+
+Catatan anti-gagal:
+- Jalankan semua command dari folder `kasir-cafe`.
+- Default MySQL root password kosong. Jika root pakai password, isi `MYSQL_ROOT_PASSWORD` di `scripts\windows\init_db.bat`.
+- Jika tampilan tidak update, jalankan:
+  ```bat
+  php artisan optimize:clear
+  php artisan config:cache
+  php artisan route:cache
+  php artisan view:cache
+  ```
 
 Stop server:
 ```bat
-kasir-cafe\scripts\windows\stop_pos.bat
+scripts\windows\stop_pos.bat
 ```
 
 ## Installer Windows (.exe, Inno Setup)
