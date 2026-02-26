@@ -11,6 +11,10 @@
 
 https://youtu.be/Jm6dMf-rQG8
 
+## Panduan Penggunaan (PDF)
+- Panduan lengkap: `docs/Panduan_Penggunaan_Sistem_n2N.pdf`
+- Panduan kasir 1 halaman: `docs/Panduan_Kasir_1_Halaman.pdf`
+
 ## Kasir Cafe
 
 <img src="n2Nlogo.png" width="140" alt="n2N" />
