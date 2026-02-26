@@ -18,7 +18,7 @@ class ReceivingController extends Controller
 {
     public function index()
     {
-        $purchases = Purchase::with('lines.item')
+        $purchases = Purchase::with('lines.item', 'lines.unit')
             ->orderByDesc('received_at')
             ->get();
 
@@ -47,6 +47,7 @@ class ReceivingController extends Controller
             'lines.*.qty' => ['required', 'numeric', 'gt:0'],
             'lines.*.unit_id' => ['required', 'exists:units,id'],
             'lines.*.unit_cost' => ['required', 'numeric', 'gte:0'],
+            'lines.*.cost_mode' => ['nullable', 'in:UNIT,TOTAL'],
             'lines.*.expired_at' => ['required', 'date'],
         ]);
 
@@ -60,26 +61,34 @@ class ReceivingController extends Controller
 
             foreach ($request->lines as $line) {
                 $item = Item::findOrFail($line['item_id']);
+                $qty = (float) $line['qty'];
+                $costMode = (string) ($line['cost_mode'] ?? 'UNIT');
+                $inputCost = (float) $line['unit_cost'];
+
+                // Izinkan 2 mode input biaya:
+                // UNIT  = harga per unit input
+                // TOTAL = total harga untuk qty pada baris ini
+                $unitCost = $costMode === 'TOTAL' ? ($inputCost / max($qty, 0.000001)) : $inputCost;
 
                 // simpan audit purchase_line
                 $pl = PurchaseLine::create([
                     'purchase_id' => $purchase->id,
                     'item_id' => $item->id,
-                    'qty' => $line['qty'],
+                    'qty' => $qty,
                     'unit_id' => $line['unit_id'],
-                    'unit_cost' => $line['unit_cost'],
+                    'unit_cost' => $unitCost,
                     'expired_at' => $line['expired_at'],
                 ]);
 
                 // konversi ke base unit
                 $qtyBase = $converter->toBase(
-                    $line['qty'],
+                    $qty,
                     $line['unit_id'],
                     $item->base_unit_id
                 );
 
                 $costBase = $converter->costToBase(
-                    $line['unit_cost'],
+                    $unitCost,
                     $line['unit_id'],
                     $item->base_unit_id
                 );

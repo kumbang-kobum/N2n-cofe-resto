@@ -23,7 +23,8 @@
             <tr>
               <th class="text-left p-2">Bahan</th>
               <th class="text-right p-2">Qty</th>
-              <th class="text-right p-2">Cost</th>
+              <th class="text-right p-2">Harga/Unit</th>
+              <th class="text-right p-2">Total</th>
               <th class="text-left p-2">Expired</th>
             </tr>
           </thead>
@@ -31,8 +32,9 @@
             @foreach($p->lines as $l)
               <tr class="border-t">
                 <td class="p-2">{{ $l->item->name }}</td>
-                <td class="p-2 text-right">{{ $l->qty }}</td>
+                <td class="p-2 text-right">{{ rtrim(rtrim(number_format($l->qty, 6, ',', '.'), '0'), ',') }} {{ $l->unit?->symbol }}</td>
                 <td class="p-2 text-right">{{ number_format($l->unit_cost,2,',','.') }}</td>
+                <td class="p-2 text-right">{{ number_format(($l->qty * $l->unit_cost),2,',','.') }}</td>
                 <td class="p-2">{{ \Carbon\Carbon::parse($l->expired_at)->format('d M Y') }}</td>
               </tr>
             @endforeach

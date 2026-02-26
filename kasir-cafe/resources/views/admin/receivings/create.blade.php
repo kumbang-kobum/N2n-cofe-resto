@@ -25,6 +25,9 @@
 
   <div class="bg-white border rounded-lg p-4 space-y-2">
     <div class="font-semibold">Detail Barang</div>
+    <div class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+      Perhatian: biaya bisa diisi sebagai <b>harga per unit</b> atau <b>total harga</b> sesuai mode pada setiap baris.
+    </div>
     <div id="lines" class="space-y-2"></div>
     <button type="button" id="addLine" class="px-3 py-2 rounded border bg-white">+ Tambah baris</button>
   </div>
@@ -41,7 +44,7 @@
     const el = document.createElement('div');
     el.className = 'grid grid-cols-12 gap-2';
     el.innerHTML = `
-      <div class="col-span-12 md:col-span-4">
+      <div class="col-span-12 md:col-span-3">
         <select name="lines[${idx}][item_id]" class="w-full rounded border p-2" required>
           ${items.map(it => `<option value="${it.id}">${it.name} (base: ${it.base})</option>`).join('')}
         </select>
@@ -55,9 +58,15 @@
         </select>
       </div>
       <div class="col-span-6 md:col-span-2">
-        <input name="lines[${idx}][unit_cost]" type="number" step="0.0001" class="w-full rounded border p-2" placeholder="Harga/unit" required>
+        <select name="lines[${idx}][cost_mode]" class="w-full rounded border p-2" required>
+          <option value="UNIT">Harga per unit</option>
+          <option value="TOTAL">Total harga</option>
+        </select>
       </div>
       <div class="col-span-6 md:col-span-2">
+        <input name="lines[${idx}][unit_cost]" type="number" step="0.0001" class="w-full rounded border p-2" placeholder="Biaya (lihat mode)" required>
+      </div>
+      <div class="col-span-6 md:col-span-1">
         <input name="lines[${idx}][expired_at]" type="date" class="w-full rounded border p-2" required>
       </div>
       <div class="col-span-12 md:col-span-12">
