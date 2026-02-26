@@ -102,6 +102,36 @@ Stok yang **paling lama masuk** dipakai dulu. Cocok bila tidak ada expiry atau s
 
 Dengan ini, COGS selalu mengikuti **biaya per batch yang benar**, bukan harga terbaru.
 
+## Contoh Input Benar (Agar COGS Akurat)
+Prinsip:
+- `Qty` di penerimaan = jumlah barang datang.
+- `Unit` = satuan input saat beli.
+- `Mode biaya`:
+  - `Harga per unit` = isi harga 1 unit.
+  - `Total harga` = isi total belanja baris itu.
+
+Contoh penerimaan yang benar:
+
+| Item | Qty | Unit | Mode Biaya | Nilai Biaya Diisi | Hasil Biaya/Unit |
+|---|---:|---|---|---:|---:|
+| Kopi Arabica | 10 | kg | Harga per unit | 100000 | 100000/kg |
+| Kopi Arabica | 10 | kg | Total harga | 1000000 | 100000/kg |
+| Gula | 10 | kg | Total harga | 200000 | 20000/kg |
+| Susu | 10 | liter | Total harga | 90000 | 9000/liter |
+| Set Cup Minuman | 50 | pcs | Total harga | 7000 | 140/pcs |
+
+Contoh resep yang benar:
+- Kopi Cappucino:
+  - Kopi `18 g`
+  - Gula `15 g`
+  - Susu `100 ml`
+  - Cup `1 pcs`
+
+Catatan penting:
+- Jangan isi total belanja pada mode `Harga per unit`.
+- Jika item base `liter`, input pembelian susu pakai `liter` (bukan `ml`).
+- Salah input unit/biaya akan membuat COGS membengkak dan laba terlihat minus.
+
 ## Alur Kerja Sistem
 1. **Input Bahan & Stok Awal**
    - Admin input bahan (item), satuan, stok awal melalui receiving/stock opname.
