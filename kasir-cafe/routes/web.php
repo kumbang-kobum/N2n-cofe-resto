@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
@@ -282,5 +284,16 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::post('/expenses', [CashExpenseController::class, 'store'])->name('expenses.store');
         });
 });
+
+// Fallback anti 405: jika ada GET /logout (mis. klik link lama), tetap logout aman lalu redirect login.
+Route::get('/logout', function (Request $request) {
+    if (Auth::check()) {
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+    }
+
+    return redirect()->route('login');
+})->name('logout.get');
 
 require __DIR__ . '/auth.php';
