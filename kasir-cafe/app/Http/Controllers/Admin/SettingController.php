@@ -24,9 +24,17 @@ class SettingController extends Controller
             'restaurant_phone' => ['nullable', 'string', 'max:255'],
             'tax_enabled' => ['nullable', 'boolean'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
-            'tv_video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:51200'],
+            'tv_video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg,video/quicktime', 'max:102400'],
             'tv_running_text' => ['nullable', 'string', 'max:1000'],
             'license_key' => ['nullable', 'string', 'max:255'],
+        ], [
+            'logo.image' => 'Logo harus berupa gambar.',
+            'logo.mimes' => 'Logo hanya mendukung PNG, JPG, JPEG, atau WebP.',
+            'logo.max' => 'Logo terlalu besar. Maksimal 2 MB.',
+            'tv_video.file' => 'File video tidak valid.',
+            'tv_video.mimetypes' => 'Video TV hanya mendukung MP4, WebM, Ogg, atau MOV.',
+            'tv_video.max' => 'Video TV terlalu besar. Maksimal 100 MB di aplikasi. Jika tetap gagal, naikkan batas upload PHP/server.',
+            'tv_running_text.max' => 'Running text terlalu panjang. Maksimal 1000 karakter.',
         ]);
 
         $setting = Setting::first() ?? new Setting();
@@ -45,6 +53,11 @@ class SettingController extends Controller
 
             $path = $request->file('logo')->store('logos', 'public');
             $setting->logo_path = $path;
+        }
+
+        if ($request->boolean('remove_tv_video') && $setting->tv_video_path) {
+            Storage::disk('public')->delete($setting->tv_video_path);
+            $setting->tv_video_path = null;
         }
 
         if ($request->hasFile('tv_video')) {

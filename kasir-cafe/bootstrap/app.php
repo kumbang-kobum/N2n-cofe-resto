@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\PostTooLargeException;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -19,6 +21,21 @@ return Application::configure(basePath: dirname(__DIR__))
             'license' => \App\Http\Middleware\EnsureLicenseValid::class,
         ]);
     })
-    ->withExceptions(function ($exceptions) {
-        //
+    ->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->render(function (PostTooLargeException $e, $request): Response {
+            $message = 'Upload gagal: ukuran file terlalu besar untuk server. Kecilkan ukuran video atau naikkan batas upload PHP/web server.';
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $message,
+                ], 413);
+            }
+
+            return redirect()
+                ->back()
+                ->withInput($request->except(['logo', 'tv_video']))
+                ->withErrors([
+                    'tv_video' => $message,
+                ]);
+        });
     })->create();

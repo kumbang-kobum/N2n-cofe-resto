@@ -9,6 +9,13 @@
   </div>
 @endif
 
+@if ($errors->has('tv_video'))
+  <div class="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+    <div class="font-medium">Upload video TV gagal.</div>
+    <div class="mt-1">{{ $errors->first('tv_video') }}</div>
+  </div>
+@endif
+
 <div class="bg-white border rounded-lg p-4 max-w-2xl">
   @php
     $settingsUpdateRoute = request()->routeIs('manager.*')
@@ -73,12 +80,17 @@
                  class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
           @error('tv_video')<div class="text-xs text-red-600 mt-1">{{ $message }}</div>@enderror
           <div class="text-xs text-gray-500 mt-1">
-            Video akan diputar otomatis di halaman TV Informasi.
+            Video akan diputar otomatis di halaman TV Informasi. Batas upload aplikasi: 100 MB.
           </div>
           @if (!empty($setting?->tv_video_path))
             <div class="mt-2">
               <video src="{{ asset('storage/' . $setting->tv_video_path) }}" controls class="h-40 rounded border bg-black"></video>
             </div>
+            <label class="mt-2 inline-flex items-center gap-2 text-sm text-red-700">
+              <input type="checkbox" name="remove_tv_video" value="1"
+                     class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+              Hapus video saat ini
+            </label>
           @endif
         </div>
 

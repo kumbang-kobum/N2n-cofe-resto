@@ -19,8 +19,9 @@
             animation: marquee-left 24s linear infinite;
             white-space: nowrap;
         }
+        /* pengaturan kecepatan scroll dengan mengubah durasi animasi (misalnya 24s untuk teks berjalan dan 36s untuk menu) */
         .tv-menu-scroll {
-            animation: menu-scroll-up 36s linear infinite;
+            animation: menu-scroll-up 150s linear infinite;
         }
         .tv-menu-scroll:hover {
             animation-play-state: paused;
@@ -28,7 +29,7 @@
     </style>
 </head>
 <body class="min-h-screen bg-slate-950 text-white">
-    <div class="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.25),transparent_32%),linear-gradient(135deg,#020617,#0f172a_45%,#172554_100%)]">
+    <div id="tvInformationApp" class="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.25),transparent_32%),linear-gradient(135deg,#020617,#0f172a_45%,#172554_100%)]">
         <header class="border-b border-white/10 bg-black/20 backdrop-blur">
             <div class="mx-auto flex max-w-[1600px] items-center justify-between px-6 py-4">
                 <div class="flex items-center gap-3">
@@ -44,9 +45,14 @@
                         <div class="text-2xl font-semibold">{{ $settings->restaurant_name ?? 'n2N Cafe Resto' }}</div>
                     </div>
                 </div>
-                <a href="{{ route('landing') }}" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm hover:bg-white/10">
-                    Kembali ke Beranda
-                </a>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="tvFullscreenButton" class="rounded-xl border border-white/10 bg-blue-600/80 px-4 py-2 text-sm font-medium hover:bg-blue-500">
+                        Fullscreen
+                    </button>
+                    <a href="{{ route('landing') }}" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm hover:bg-white/10">
+                        Kembali ke Beranda
+                    </a>
+                </div>
             </div>
         </header>
 
@@ -130,5 +136,38 @@
             </aside>
         </main>
     </div>
+    <script>
+        (() => {
+            const app = document.getElementById('tvInformationApp');
+            const button = document.getElementById('tvFullscreenButton');
+
+            if (!app || !button) {
+                return;
+            }
+
+            const syncLabel = () => {
+                button.textContent = document.fullscreenElement ? 'Keluar Fullscreen' : 'Fullscreen';
+            };
+
+            const toggleFullscreen = async () => {
+                try {
+                    if (document.fullscreenElement) {
+                        await document.exitFullscreen();
+                    } else {
+                        await app.requestFullscreen();
+                    }
+                } catch (error) {
+                    console.error('Fullscreen gagal dijalankan.', error);
+                } finally {
+                    syncLabel();
+                }
+            };
+
+            button.addEventListener('click', toggleFullscreen);
+            app.addEventListener('dblclick', toggleFullscreen);
+            document.addEventListener('fullscreenchange', syncLabel);
+            syncLabel();
+        })();
+    </script>
 </body>
 </html>
