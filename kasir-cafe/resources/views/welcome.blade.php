@@ -7,7 +7,13 @@
   <title>{{ config('app.name','n2N Kasir Cafe') }}</title>
   <link rel="icon" type="image/png" href="{{ asset('n2Nlogo.png') }}">
   <link rel="apple-touch-icon" href="{{ asset('n2Nlogo.png') }}">
-
+  <script>
+    (() => {
+      if (localStorage.getItem('n2n-theme') === 'dark') {
+        document.documentElement.classList.add('theme-dark');
+      }
+    })();
+  </script>
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 @php
@@ -38,6 +44,10 @@
         </div>
 
         <div class="flex items-center gap-2">
+          <button type="button" data-theme-toggle
+             class="inline-flex px-3 py-2 rounded border border-slate-200 text-slate-700 text-sm hover:bg-slate-50">
+            Dark Mode
+          </button>
           <a href="{{ route('tv.information') }}"
              class="hidden sm:inline-flex px-3 py-2 rounded border border-slate-200 text-slate-700 text-sm hover:bg-slate-50">
             TV Informasi
@@ -466,5 +476,26 @@
       </div>
     </footer>
   </div>
+  <script>
+    (() => {
+      const buttons = document.querySelectorAll('[data-theme-toggle]');
+      const sync = () => {
+        const dark = document.documentElement.classList.contains('theme-dark');
+        buttons.forEach((button) => {
+          button.textContent = dark ? 'Light Mode' : 'Dark Mode';
+        });
+      };
+
+      buttons.forEach((button) => {
+        button.addEventListener('click', () => {
+          document.documentElement.classList.toggle('theme-dark');
+          localStorage.setItem('n2n-theme', document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light');
+          sync();
+        });
+      });
+
+      sync();
+    })();
+  </script>
 </body>
 </html>

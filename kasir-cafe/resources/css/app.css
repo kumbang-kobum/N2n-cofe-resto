@@ -29,6 +29,13 @@
       radial-gradient(circle at top left, rgba(50, 105, 219, 0.12), transparent 28%),
       linear-gradient(180deg, #eef4ff 0%, #f8fbff 38%, #f5f8ff 100%);
   }
+
+  html.theme-dark body {
+    color: #e5eefc;
+    background:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 26%),
+      linear-gradient(180deg, #020617 0%, #0f172a 42%, #111827 100%);
+  }
 }
 
 @layer components {
@@ -100,5 +107,72 @@
 
   .dashboard-badge {
     @apply inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700;
+  }
+}
+
+@layer utilities {
+  html.theme-dark .shell-card,
+  html.theme-dark .panel-card,
+  html.theme-dark .panel-section,
+  html.theme-dark .table-shell,
+  html.theme-dark .stat-card,
+  html.theme-dark .bg-white,
+  html.theme-dark .bg-white\/95,
+  html.theme-dark .bg-white\/10,
+  html.theme-dark .bg-white\/5,
+  html.theme-dark .bg-slate-50,
+  html.theme-dark .bg-slate-100,
+  html.theme-dark .bg-blue-50 {
+    background-color: rgba(15, 23, 42, 0.82) !important;
+    color: #e5eefc;
+  }
+
+  html.theme-dark .border-slate-100,
+  html.theme-dark .border-slate-200,
+  html.theme-dark .border-slate-300,
+  html.theme-dark .border-blue-100,
+  html.theme-dark .border-blue-200,
+  html.theme-dark .border-white\/10 {
+    border-color: rgba(148, 163, 184, 0.22) !important;
+  }
+
+  html.theme-dark .text-slate-900,
+  html.theme-dark .text-slate-800,
+  html.theme-dark .text-slate-700,
+  html.theme-dark .text-blue-700 {
+    color: #f8fafc !important;
+  }
+
+  html.theme-dark .text-slate-600,
+  html.theme-dark .text-slate-500,
+  html.theme-dark .text-slate-400,
+  html.theme-dark .text-blue-600 {
+    color: #cbd5e1 !important;
+  }
+
+  html.theme-dark .table-head {
+    background-color: rgba(30, 41, 59, 0.95) !important;
+    color: #cbd5e1 !important;
+  }
+
+  html.theme-dark .dashboard-input {
+    background-color: rgba(15, 23, 42, 0.92) !important;
+    border-color: rgba(148, 163, 184, 0.22) !important;
+    color: #f8fafc !important;
+  }
+
+  html.theme-dark .dashboard-input::placeholder {
+    color: #94a3b8 !important;
+  }
+
+  html.theme-dark .btn-secondary {
+    background-color: rgba(15, 23, 42, 0.92) !important;
+    border-color: rgba(148, 163, 184, 0.22) !important;
+    color: #e5eefc !important;
+  }
+
+  html.theme-dark .shadow-sm,
+  html.theme-dark .shadow-xl {
+    box-shadow: 0 18px 50px rgba(2, 6, 23, 0.35) !important;
   }
 }
