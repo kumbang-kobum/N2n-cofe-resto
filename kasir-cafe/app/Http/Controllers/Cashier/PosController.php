@@ -79,6 +79,18 @@ class PosController extends Controller
                 ->first();
         }
 
+        // Jika belum ada transaksi aktif sama sekali, siapkan draft baru otomatis
+        if (! $sale) {
+            $sale = Sale::create([
+                'receipt_no' => $this->generateReceiptNo(),
+                'status' => 'DRAFT',
+                'cashier_id' => auth()->id(),
+                'total' => 0,
+            ]);
+
+            $sale->load('lines.product');
+        }
+
         $openQuery = trim((string) $request->get('open_q', ''));
 
         $openSalesQuery = Sale::with(['lines.product', 'cashier'])

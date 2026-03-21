@@ -1,117 +1,162 @@
 @extends('layouts.dashboard')
 
 @section('content')
-<h1 class="text-xl font-semibold mb-4">Admin Dashboard</h1>
-
-<div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
-  <div class="bg-white border rounded-lg p-4">
-    <div class="text-sm text-gray-600">Omzet ({{ $from }} s/d {{ $to }})</div>
-    <div class="text-lg font-semibold">Rp {{ number_format($summary['omzet'],0,',','.') }}</div>
-  </div>
-  <div class="bg-white border rounded-lg p-4">
-    <div class="text-sm text-gray-600">COGS</div>
-    <div class="text-lg font-semibold">Rp {{ number_format($summary['cogs'],0,',','.') }}</div>
-  </div>
-  <div class="bg-white border rounded-lg p-4">
-    <div class="text-sm text-gray-600">Profit Kotor</div>
-    <div class="text-lg font-semibold">Rp {{ number_format($summary['profit'],0,',','.') }}</div>
-  </div>
-  <div class="bg-white border rounded-lg p-4">
-    <div class="text-sm text-gray-600">Transaksi</div>
-    <div class="text-lg font-semibold">{{ $summary['trx'] }}</div>
-  </div>
-</div>
-
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-  <div class="bg-white border rounded-lg overflow-hidden lg:col-span-2">
-    <div class="p-4 border-b">
-      <div class="font-semibold">Top 10 Menu Terlaris (Qty)</div>
-      <div class="text-xs text-gray-500">Periode {{ $from }} s/d {{ $to }}</div>
+<div class="space-y-6">
+  <section class="panel-section">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div>
+        <div class="section-kicker">Executive Overview</div>
+        <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-950">Admin Dashboard</h1>
+        <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+          Ringkasan performa penjualan, stok kritis, dan pergerakan menu terlaris untuk periode
+          <span class="font-semibold text-slate-700">{{ $from }}</span> sampai
+          <span class="font-semibold text-slate-700">{{ $to }}</span>.
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <span class="dashboard-badge">Periode aktif</span>
+        <span class="dashboard-badge">{{ $summary['trx'] }} transaksi</span>
+      </div>
     </div>
-    <div class="p-4">
-      <canvas id="topProductBarChart" height="110"></canvas>
-    </div>
-  </div>
+  </section>
 
-  <div class="bg-white border rounded-lg overflow-hidden">
-    <div class="p-4 font-semibold">Top 10 Menu Terlaris</div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="bg-gray-50">
+  <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <article class="stat-card">
+      <div class="stat-label">Omzet</div>
+      <div class="stat-value">Rp {{ number_format($summary['omzet'], 0, ',', '.') }}</div>
+      <div class="stat-meta">{{ $from }} s/d {{ $to }}</div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">COGS</div>
+      <div class="stat-value">Rp {{ number_format($summary['cogs'], 0, ',', '.') }}</div>
+      <div class="stat-meta">Biaya bahan terpakai</div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">Profit Kotor</div>
+      <div class="stat-value">Rp {{ number_format($summary['profit'], 0, ',', '.') }}</div>
+      <div class="stat-meta">Sebelum biaya operasional</div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-label">Transaksi</div>
+      <div class="stat-value">{{ number_format($summary['trx'], 0, ',', '.') }}</div>
+      <div class="stat-meta">Total bill selesai</div>
+    </article>
+  </section>
+
+  <section class="grid grid-cols-1 gap-5 xl:grid-cols-12">
+    <div class="panel-section xl:col-span-8">
+      <div class="flex items-start justify-between gap-3 border-b border-slate-200 pb-4">
+        <div>
+          <div class="section-title">Top 10 Menu Terlaris</div>
+          <p class="muted-copy mt-1">Distribusi jumlah item terjual selama periode aktif.</p>
+        </div>
+        <span class="dashboard-badge">Qty</span>
+      </div>
+      <div class="mt-5 h-[360px]">
+        <canvas id="topProductBarChart"></canvas>
+      </div>
+    </div>
+
+    <div class="space-y-5 xl:col-span-4">
+      <div class="table-shell">
+        <div class="border-b border-slate-200 px-5 py-4">
+          <div class="section-title text-lg">Stok Menipis</div>
+          <p class="muted-copy mt-1">Item bahan yang mendekati batas minimum.</p>
+        </div>
+        <div class="max-h-[320px] overflow-auto">
+          <table class="min-w-full text-sm">
+            <thead class="table-head sticky top-0">
+              <tr>
+                <th class="px-4 py-3 text-left">Bahan</th>
+                <th class="px-4 py-3 text-right">Stok</th>
+                <th class="px-4 py-3 text-right">Min</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              @forelse($lowStock as $it)
+                <tr class="hover:bg-slate-50/70">
+                  <td class="px-4 py-3">
+                    <div class="font-medium text-slate-800">{{ $it->name }}</div>
+                    <div class="text-xs text-slate-500">{{ $it->baseUnit->symbol }}</div>
+                  </td>
+                  <td class="px-4 py-3 text-right text-slate-700">{{ number_format($it->stock_base, 3, ',', '.') }}</td>
+                  <td class="px-4 py-3 text-right text-slate-500">{{ number_format((float) $it->min_stock, 3, ',', '.') }}</td>
+                </tr>
+              @empty
+                <tr>
+                  <td class="px-4 py-4 text-slate-500" colspan="3">Tidak ada item kritis.</td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-shell">
+        <div class="border-b border-slate-200 px-5 py-4">
+          <div class="section-title text-lg">Mendekati Expired</div>
+          <p class="muted-copy mt-1">Batch dengan masa simpan kurang dari 7 hari.</p>
+        </div>
+        <div class="max-h-[320px] overflow-auto">
+          <table class="min-w-full text-sm">
+            <thead class="table-head sticky top-0">
+              <tr>
+                <th class="px-4 py-3 text-left">Bahan</th>
+                <th class="px-4 py-3 text-right">Qty</th>
+                <th class="px-4 py-3 text-left">Expired</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              @forelse($expSoon as $b)
+                <tr class="hover:bg-slate-50/70">
+                  <td class="px-4 py-3 font-medium text-slate-800">{{ $b->item->name }}</td>
+                  <td class="px-4 py-3 text-right text-slate-700">{{ number_format($b->qty_on_hand_base, 3, ',', '.') }}</td>
+                  <td class="px-4 py-3 text-slate-500">{{ \Carbon\Carbon::parse($b->expired_at)->format('d M Y') }}</td>
+                </tr>
+              @empty
+                <tr>
+                  <td class="px-4 py-4 text-slate-500" colspan="3">Tidak ada batch mendekati expired.</td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="table-shell">
+    <div class="border-b border-slate-200 px-5 py-4">
+      <div class="section-title text-lg">Top 10 Menu Terlaris</div>
+      <p class="muted-copy mt-1">Ringkasan qty, omzet, dan jumlah transaksi per menu.</p>
+    </div>
+    <div class="overflow-auto">
+      <table class="min-w-full text-sm">
+        <thead class="table-head">
           <tr>
-            <th class="text-left p-2">Menu</th>
-            <th class="text-right p-2">Qty</th>
-            <th class="text-right p-2">Omzet</th>
-            <th class="text-right p-2">Trx</th>
+            <th class="px-4 py-3 text-left">Menu</th>
+            <th class="px-4 py-3 text-right">Qty</th>
+            <th class="px-4 py-3 text-right">Omzet</th>
+            <th class="px-4 py-3 text-right">Trx</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-slate-100">
           @forelse($topProducts as $row)
-            <tr class="border-t">
-              <td class="p-2">{{ $row->product_name }}</td>
-              <td class="p-2 text-right">{{ number_format((float) $row->qty_total, 0, ',', '.') }}</td>
-              <td class="p-2 text-right">Rp {{ number_format((float) $row->omzet_total, 0, ',', '.') }}</td>
-              <td class="p-2 text-right">{{ number_format((float) $row->trx_total, 0, ',', '.') }}</td>
+            <tr class="hover:bg-slate-50/70">
+              <td class="px-4 py-3 font-medium text-slate-800">{{ $row->product_name }}</td>
+              <td class="px-4 py-3 text-right text-slate-700">{{ number_format((float) $row->qty_total, 0, ',', '.') }}</td>
+              <td class="px-4 py-3 text-right text-slate-700">Rp {{ number_format((float) $row->omzet_total, 0, ',', '.') }}</td>
+              <td class="px-4 py-3 text-right text-slate-500">{{ number_format((float) $row->trx_total, 0, ',', '.') }}</td>
             </tr>
           @empty
-            <tr class="border-t"><td class="p-2 text-gray-600" colspan="4">Belum ada data penjualan.</td></tr>
+            <tr>
+              <td class="px-4 py-4 text-slate-500" colspan="4">Belum ada data penjualan.</td>
+            </tr>
           @endforelse
         </tbody>
       </table>
     </div>
-  </div>
-
-  <div class="bg-white border rounded-lg overflow-hidden">
-    <div class="p-4 font-semibold">Stok Menipis</div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="text-left p-2">Bahan</th>
-            <th class="text-right p-2">Stok</th>
-            <th class="text-right p-2">Min</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($lowStock as $it)
-            <tr class="border-t">
-              <td class="p-2">{{ $it->name }} <span class="text-gray-500">({{ $it->baseUnit->symbol }})</span></td>
-              <td class="p-2 text-right">{{ number_format($it->stock_base, 3, ',', '.') }}</td>
-              <td class="p-2 text-right">{{ number_format((float)$it->min_stock, 3, ',', '.') }}</td>
-            </tr>
-          @empty
-            <tr class="border-t"><td class="p-2 text-gray-600" colspan="3">Aman.</td></tr>
-          @endforelse
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="bg-white border rounded-lg overflow-hidden">
-    <div class="p-4 font-semibold">Mendekati Expired (≤ 7 hari)</div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="text-left p-2">Bahan</th>
-            <th class="text-right p-2">Qty</th>
-            <th class="text-left p-2">Expired</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($expSoon as $b)
-            <tr class="border-t">
-              <td class="p-2">{{ $b->item->name }}</td>
-              <td class="p-2 text-right">{{ number_format($b->qty_on_hand_base, 3, ',', '.') }}</td>
-              <td class="p-2">{{ \Carbon\Carbon::parse($b->expired_at)->format('d M Y') }}</td>
-            </tr>
-          @empty
-            <tr class="border-t"><td class="p-2 text-gray-600" colspan="3">Tidak ada.</td></tr>
-          @endforelse
-        </tbody>
-      </table>
-    </div>
-  </div>
+  </section>
 </div>
 @endsection
 
@@ -130,22 +175,43 @@
         datasets: [{
           label: 'Qty Terjual',
           data: topQty,
-          borderWidth: 1,
-          borderRadius: 6,
-          backgroundColor: '#2563eb'
+          borderWidth: 0,
+          borderRadius: 12,
+          backgroundColor: [
+            '#2557be',
+            '#3269db',
+            '#457ae5',
+            '#5d8ceb',
+            '#75a0f1',
+            '#8db4f5',
+            '#9fc1f8',
+            '#b1cdfa',
+            '#c3dafc',
+            '#d8e8ff'
+          ]
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: '#667085', font: { size: 11 } }
+          },
           y: {
             beginAtZero: true,
-            ticks: { precision: 0 }
+            ticks: { precision: 0, color: '#667085' },
+            grid: { color: 'rgba(148, 163, 184, 0.18)' }
           }
         },
         plugins: {
-          legend: { display: false }
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            cornerRadius: 10,
+            padding: 12
+          }
         }
       }
     });

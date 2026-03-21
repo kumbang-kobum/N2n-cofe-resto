@@ -1,3 +1,104 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --brand-950: #0f1f52;
+    --brand-900: #15306f;
+    --brand-800: #1d4397;
+    --brand-700: #2557be;
+    --brand-600: #3269db;
+    --brand-100: #dbe8ff;
+    --ink-950: #121826;
+    --ink-700: #344054;
+    --ink-500: #667085;
+    --line-200: #d8e1f0;
+    --surface-0: #f4f8ff;
+    --surface-1: #ffffff;
+    --surface-2: #eef4ff;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    color: var(--ink-950);
+    background:
+      radial-gradient(circle at top left, rgba(50, 105, 219, 0.12), transparent 28%),
+      linear-gradient(180deg, #eef4ff 0%, #f8fbff 38%, #f5f8ff 100%);
+  }
+}
+
+@layer components {
+  .shell-card {
+    @apply rounded-3xl border border-slate-200/80 bg-white/95 shadow-[0_20px_50px_rgba(37,87,190,0.08)] backdrop-blur;
+  }
+
+  .panel-card {
+    @apply rounded-2xl border border-slate-200/90 bg-white shadow-[0_12px_30px_rgba(15,31,82,0.06)];
+  }
+
+  .panel-section {
+    @apply panel-card p-5 sm:p-6;
+  }
+
+  .section-title {
+    @apply text-xl font-semibold tracking-tight text-slate-900;
+  }
+
+  .section-kicker {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-blue-700/80;
+  }
+
+  .muted-copy {
+    @apply text-sm text-slate-500;
+  }
+
+  .stat-card {
+    @apply relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_12px_24px_rgba(15,31,82,0.05)];
+  }
+
+  .stat-card::before {
+    content: "";
+    @apply absolute inset-x-0 top-0 h-1 rounded-full;
+    background: linear-gradient(90deg, var(--brand-700), #6ea8ff);
+  }
+
+  .stat-label {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-slate-500;
+  }
+
+  .stat-value {
+    @apply mt-3 text-3xl font-semibold tracking-tight text-slate-900;
+  }
+
+  .stat-meta {
+    @apply mt-2 text-sm text-slate-500;
+  }
+
+  .table-shell {
+    @apply overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_24px_rgba(15,31,82,0.04)];
+  }
+
+  .table-head {
+    @apply bg-slate-50/80 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500;
+  }
+
+  .dashboard-input {
+    @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-100;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50;
+  }
+
+  .dashboard-badge {
+    @apply inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700;
+  }
+}
