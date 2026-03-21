@@ -47,6 +47,9 @@
         <th class="px-3 py-2 sticky top-0 z-10 bg-gray-50">Nama</th>
         <th class="px-3 py-2 text-right sticky top-0 z-10 bg-gray-50">Min Stok</th>
         <th class="px-3 py-2 sticky top-0 z-10 bg-gray-50">Satuan Dasar</th>
+        <th class="px-3 py-2 text-right sticky top-0 z-10 bg-gray-50">Harga / Base</th>
+        <th class="px-3 py-2 text-right sticky top-0 z-10 bg-gray-50">Stok Aktif</th>
+        <th class="px-3 py-2 text-right sticky top-0 z-10 bg-gray-50">Nilai Stok</th>
         <th class="px-3 py-2 text-center sticky top-0 z-10 bg-gray-50">Track Expired</th>
         <th class="px-3 py-2 text-center sticky top-0 z-10 bg-gray-50">Aktif</th>
         <th class="px-3 py-2 text-right sticky top-0 z-10 bg-gray-50">Aksi</th>
@@ -63,6 +66,15 @@
           </td>
           <td class="px-3 py-2">
             {{ $item->baseUnit?->symbol }}
+          </td>
+          <td class="px-3 py-2 text-right">
+            Rp {{ number_format((float) ($item->avg_unit_cost_base ?? 0), 2, ',', '.') }}
+          </td>
+          <td class="px-3 py-2 text-right">
+            {{ number_format((float) ($item->stock_base ?? 0), 3, ',', '.') }}
+          </td>
+          <td class="px-3 py-2 text-right">
+            Rp {{ number_format((float) ($item->stock_value ?? 0), 2, ',', '.') }}
           </td>
           <td class="px-3 py-2 text-center">
             @if($item->track_expiry)
@@ -93,7 +105,7 @@
         </tr>
       @empty
         <tr class="border-t">
-          <td colspan="6" class="px-3 py-4 text-center text-sm text-gray-500">
+          <td colspan="9" class="px-3 py-4 text-center text-sm text-gray-500">
             Belum ada data bahan.
           </td>
         </tr>

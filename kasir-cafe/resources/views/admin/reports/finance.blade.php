@@ -4,7 +4,7 @@
     <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div>
             <h1 class="text-xl font-semibold">Laporan Keuangan</h1>
-            <p class="text-sm text-gray-600">Rekap harian dan bulanan: omzet, HPP, pengeluaran kasir, dan laba.</p>
+            <p class="text-sm text-gray-600">Rekap harian dan bulanan: omzet, HPP, pengeluaran kasir, makan karyawan, dan laba.</p>
         </div>
         <a href="{{ route(request()->routeIs('cashier.*') ? 'cashier.reports.finance.export' : (request()->routeIs('manager.*') ? 'manager.reports.finance.export' : 'admin.reports.finance.export'), request()->query()) }}"
            class="px-3 py-2 rounded bg-green-600 text-white text-sm font-medium hover:bg-green-700">
@@ -37,7 +37,7 @@
         </form>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-5 xl:grid-cols-9 gap-3 mb-5">
+    <div class="grid grid-cols-1 md:grid-cols-5 xl:grid-cols-12 gap-3 mb-5">
         <div class="bg-white border rounded-lg p-3"><div class="text-xs text-gray-500">Subtotal</div><div class="font-semibold">Rp {{ number_format($summary['subtotal'], 0, ',', '.') }}</div></div>
         <div class="bg-white border rounded-lg p-3"><div class="text-xs text-gray-500">Diskon</div><div class="font-semibold">Rp {{ number_format($summary['discount'], 0, ',', '.') }}</div></div>
         <div class="bg-white border rounded-lg p-3"><div class="text-xs text-gray-500">Pajak</div><div class="font-semibold">Rp {{ number_format($summary['tax'], 0, ',', '.') }}</div></div>
@@ -46,7 +46,10 @@
         <div class="bg-white border rounded-lg p-3"><div class="text-xs text-gray-500">COGS (HPP)</div><div class="font-semibold">Rp {{ number_format($summary['cogs'], 0, ',', '.') }}</div></div>
         <div class="bg-white border rounded-lg p-3"><div class="text-xs text-gray-500">Laba Kotor</div><div class="font-semibold">Rp {{ number_format($summary['gross_profit'], 0, ',', '.') }}</div></div>
         <div class="bg-white border rounded-lg p-3"><div class="text-xs text-gray-500">Pengeluaran Kas</div><div class="font-semibold">Rp {{ number_format($summary['expense_total'], 0, ',', '.') }}</div></div>
-        <div class="bg-white border rounded-lg p-3"><div class="text-xs text-gray-500">Payroll (Paid)</div><div class="font-semibold">Rp {{ number_format($summary['payroll_total'] ?? 0, 0, ',', '.') }}</div></div>
+        <div class="bg-white border rounded-lg p-3"><div class="text-xs text-gray-500">Beban Makan Karyawan</div><div class="font-semibold">Rp {{ number_format($summary['employee_meal_expense_total'] ?? 0, 0, ',', '.') }}</div></div>
+        <div class="bg-white border rounded-lg p-3"><div class="text-xs text-gray-500">Lebih Jatah</div><div class="font-semibold text-rose-700">Rp {{ number_format($summary['employee_meal_excess_total'] ?? 0, 0, ',', '.') }}</div></div>
+        <div class="bg-white border rounded-lg p-3"><div class="text-xs text-gray-500">Payroll (Beban)</div><div class="font-semibold">Rp {{ number_format($summary['payroll_total'] ?? 0, 0, ',', '.') }}</div></div>
+        <div class="bg-white border rounded-lg p-3"><div class="text-xs text-gray-500">Payroll (Kas Keluar)</div><div class="font-semibold">Rp {{ number_format($summary['payroll_cash_total'] ?? 0, 0, ',', '.') }}</div></div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
@@ -55,7 +58,7 @@
             <div class="text-2xl font-bold {{ ($summary['net_profit_after_payroll'] ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
                 Rp {{ number_format($summary['net_profit_after_payroll'] ?? 0, 0, ',', '.') }}
             </div>
-            <div class="text-xs text-gray-500 mt-1">Sebelum payroll: Rp {{ number_format($summary['net_profit'] ?? 0, 0, ',', '.') }}</div>
+            <div class="text-xs text-gray-500 mt-1">Sudah termasuk beban makan karyawan: Rp {{ number_format($summary['net_profit'] ?? 0, 0, ',', '.') }}</div>
         </div>
         <div class="bg-white border rounded-lg p-4">
             <div class="text-sm text-gray-600 mb-1">Saldo Kas dari Penjualan CASH - Pengeluaran</div>
@@ -78,6 +81,7 @@
                         <th class="text-right p-2 border-b">COGS</th>
                         <th class="text-right p-2 border-b">Laba Kotor</th>
                         <th class="text-right p-2 border-b">Pengeluaran</th>
+                        <th class="text-right p-2 border-b">Beban Makan</th>
                         <th class="text-right p-2 border-b">Payroll</th>
                         <th class="text-right p-2 border-b">Laba Bersih</th>
                         <th class="text-right p-2 border-b">Laba Setelah Payroll</th>
@@ -92,6 +96,7 @@
                             <td class="p-2 text-right">Rp {{ number_format($row['cogs'], 0, ',', '.') }}</td>
                             <td class="p-2 text-right">Rp {{ number_format($row['gross_profit'], 0, ',', '.') }}</td>
                             <td class="p-2 text-right">Rp {{ number_format($row['expense_total'], 0, ',', '.') }}</td>
+                            <td class="p-2 text-right">Rp {{ number_format($row['employee_meal_expense_total'] ?? 0, 0, ',', '.') }}</td>
                             <td class="p-2 text-right">Rp {{ number_format($row['payroll_total'] ?? 0, 0, ',', '.') }}</td>
                             <td class="p-2 text-right font-medium {{ $row['net_profit'] >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
                                 Rp {{ number_format($row['net_profit'], 0, ',', '.') }}
@@ -101,7 +106,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="9" class="text-center p-4 text-gray-500">Belum ada data.</td></tr>
+                        <tr><td colspan="10" class="text-center p-4 text-gray-500">Belum ada data.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -120,6 +125,7 @@
                         <th class="text-right p-2 border-b">COGS</th>
                         <th class="text-right p-2 border-b">Laba Kotor</th>
                         <th class="text-right p-2 border-b">Pengeluaran</th>
+                        <th class="text-right p-2 border-b">Beban Makan</th>
                         <th class="text-right p-2 border-b">Payroll</th>
                         <th class="text-right p-2 border-b">Laba Bersih</th>
                         <th class="text-right p-2 border-b">Laba Setelah Payroll</th>
@@ -134,6 +140,7 @@
                             <td class="p-2 text-right">Rp {{ number_format($row['cogs'], 0, ',', '.') }}</td>
                             <td class="p-2 text-right">Rp {{ number_format($row['gross_profit'], 0, ',', '.') }}</td>
                             <td class="p-2 text-right">Rp {{ number_format($row['expense_total'], 0, ',', '.') }}</td>
+                            <td class="p-2 text-right">Rp {{ number_format($row['employee_meal_expense_total'] ?? 0, 0, ',', '.') }}</td>
                             <td class="p-2 text-right">Rp {{ number_format($row['payroll_total'] ?? 0, 0, ',', '.') }}</td>
                             <td class="p-2 text-right font-medium {{ $row['net_profit'] >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
                                 Rp {{ number_format($row['net_profit'], 0, ',', '.') }}
@@ -143,7 +150,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="9" class="text-center p-4 text-gray-500">Belum ada data.</td></tr>
+                        <tr><td colspan="10" class="text-center p-4 text-gray-500">Belum ada data.</td></tr>
                     @endforelse
                 </tbody>
             </table>

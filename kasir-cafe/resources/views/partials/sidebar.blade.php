@@ -63,6 +63,7 @@
                     <a href="{{ route('admin.expired.index') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('admin.expired.*') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Expired Disposal</a>
                     <a href="{{ route('admin.stock.index') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('admin.stock.index') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Stok Saat Ini</a>
                     <a href="{{ route('admin.stock_opname.index') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('admin.stock_opname.*') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Stock Opname</a>
+                    <a href="{{ route('admin.employee_meals.index') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('admin.employee_meals.*') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Makan Karyawan</a>
                     <a href="{{ route('admin.payroll.index') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('admin.payroll.*') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Penggajian Petugas</a>
                     <a href="{{ route('cashier.pos') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('cashier.pos') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">POS Kasir</a>
                 </div>
@@ -100,6 +101,7 @@
                     <a href="{{ route('manager.asset_categories.index') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('manager.asset_categories.*') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Master Kategori</a>
                     <a href="{{ route('manager.asset_locations.index') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('manager.asset_locations.*') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Master Lokasi</a>
                     <a href="{{ route('manager.asset_incidents.index') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('manager.asset_incidents.*') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Kerusakan / Pemusnahan</a>
+                    <a href="{{ route('manager.employee_meals.index') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('manager.employee_meals.*') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Makan Karyawan</a>
                     <a href="{{ route('manager.payroll.index') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('manager.payroll.*') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Penggajian Petugas</a>
                 </div>
 
@@ -125,9 +127,11 @@
                 </button>
                 <div x-show="open.cashierMain" class="space-y-1">
                     <a href="{{ route('cashier.pos') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('cashier.pos') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">POS Kasir</a>
+                    <a href="{{ route('cashier.employee_meals.index') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('cashier.employee_meals.*') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Makan Karyawan</a>
                     <a href="{{ route('cashier.reports.sales') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('cashier.reports.sales') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Laporan Penjualan</a>
                     <a href="{{ route('profile.edit') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('profile.*') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Ubah Password</a>
                     <a href="{{ route('cashier.expenses.index') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('cashier.expenses.*') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Pengeluaran Harian</a>
+                    <a href="{{ route('cashier.settings.edit') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('cashier.settings.*') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Pengaturan Resto</a>
                 </div>
             </div>
         @endrole

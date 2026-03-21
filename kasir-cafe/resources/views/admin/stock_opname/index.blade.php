@@ -28,6 +28,8 @@
                     <th class="px-3 py-2 text-left">Kode</th>
                     <th class="px-3 py-2 text-left">Status</th>
                     <th class="px-3 py-2 text-right"># Line</th>
+                    <th class="px-3 py-2 text-right">Avg Harga/Base</th>
+                    <th class="px-3 py-2 text-right">Nilai Estimasi</th>
                     <th class="px-3 py-2 text-left">Catatan</th>
                     <th class="px-3 py-2 text-left">Dibuat</th>
                     <th class="px-3 py-2 text-left">Posted</th>
@@ -58,6 +60,12 @@
                         </td>
                         <td class="px-3 py-2 text-right text-sm">
                             {{ $opname->lines_count }}
+                        </td>
+                        <td class="px-3 py-2 text-right text-sm">
+                            Rp {{ number_format((float) ($opname->avg_unit_cost_base ?? 0), 2, ',', '.') }}
+                        </td>
+                        <td class="px-3 py-2 text-right text-sm">
+                            Rp {{ number_format((float) ($opname->estimated_value_total ?? 0), 2, ',', '.') }}
                         </td>
                         <td class="px-3 py-2 text-sm truncate max-w-xs">
                             {{ \Illuminate\Support\Str::limit($opname->note, 40) }}
@@ -111,7 +119,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-3 py-4 text-center text-gray-500">
+                        <td colspan="10" class="px-3 py-4 text-center text-gray-500">
                             Belum ada dokumen stock opname.
                         </td>
                     </tr>

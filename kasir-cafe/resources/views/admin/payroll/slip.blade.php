@@ -68,8 +68,16 @@
                     <td class="p-1.5 text-right font-semibold">Rp {{ number_format($totalTambah, 0, ',', '.') }}</td>
                 </tr>
                 <tr class="border-b">
-                    <td class="p-1.5">Potongan</td>
+                    <td class="p-1.5">Potongan Manual</td>
                     <td class="p-1.5 text-right">Rp {{ number_format($payroll->deduction_amount, 0, ',', '.') }}</td>
+                </tr>
+                <tr class="border-b">
+                    <td class="p-1.5">Potongan Makan</td>
+                    <td class="p-1.5 text-right">Rp {{ number_format($payroll->meal_deduction_amount, 0, ',', '.') }}</td>
+                </tr>
+                <tr class="border-b bg-amber-50">
+                    <td class="p-1.5 font-semibold">Total Potongan</td>
+                    <td class="p-1.5 text-right font-semibold">Rp {{ number_format($payroll->total_deduction_amount, 0, ',', '.') }}</td>
                 </tr>
                 <tr class="bg-blue-50">
                     <td class="p-1.5 font-bold">Gaji Bersih (Net)</td>

@@ -26,15 +26,15 @@
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <div class="bg-white border rounded-lg p-4">
             <h2 class="font-semibold mb-3">Input Payroll</h2>
-            <form method="POST" action="{{ route(request()->routeIs('manager.*') ? 'manager.payroll.store' : 'admin.payroll.store') }}" class="space-y-3">
+            <form method="POST" action="{{ route(request()->routeIs('manager.*') ? 'manager.payroll.store' : 'admin.payroll.store') }}" class="space-y-3" id="payroll-form">
                 @csrf
                 <div>
                     <label class="block text-xs text-gray-600 mb-1">Periode (Bulan)</label>
-                    <input type="month" name="period_month" class="w-full border rounded px-3 py-2 text-sm" value="{{ old('period_month', $period) }}" required>
+                    <input type="month" name="period_month" id="payroll-period-month" class="w-full border rounded px-3 py-2 text-sm" value="{{ old('period_month', $period) }}" required>
                 </div>
                 <div>
                     <label class="block text-xs text-gray-600 mb-1">Petugas</label>
-                    <select name="employee_master_id" class="w-full border rounded px-3 py-2 text-sm" required>
+                    <select name="employee_master_id" id="payroll-employee-master-id" class="w-full border rounded px-3 py-2 text-sm" required>
                         <option value="">Pilih petugas</option>
                         @foreach($employees as $employee)
                             <option value="{{ $employee->id }}" @selected(old('employee_master_id') == $employee->id)>{{ $employee->name }}</option>
@@ -58,6 +58,12 @@
                 <div>
                     <label class="block text-xs text-gray-600 mb-1">Potongan</label>
                     <input type="number" name="deduction_amount" min="0" step="1" class="w-full border rounded px-3 py-2 text-sm" value="{{ old('deduction_amount', 0) }}">
+                    <div class="mt-1 text-[11px] text-gray-500">Potongan makan karyawan dihitung otomatis dari selisih nominal di atas jatah bulanan.</div>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1">Preview Potongan Makan</label>
+                    <input type="text" id="meal-deduction-preview" class="w-full border rounded px-3 py-2 text-sm bg-gray-50" value="Rp 0" readonly>
+                    <div id="meal-deduction-preview-note" class="mt-1 text-[11px] text-gray-500">Pilih periode dan petugas untuk melihat potongan makan otomatis.</div>
                 </div>
                 <div>
                     <label class="block text-xs text-gray-600 mb-1">Catatan</label>
@@ -105,6 +111,7 @@
                             <th class="text-right p-2 border-b">Pokok</th>
                             <th class="text-right p-2 border-b">Lembur+Bonus</th>
                             <th class="text-right p-2 border-b">Potongan</th>
+                            <th class="text-right p-2 border-b">Pot. Makan</th>
                             <th class="text-right p-2 border-b">Net</th>
                             <th class="text-left p-2 border-b">Status</th>
                             <th class="text-center p-2 border-b">Aksi</th>
@@ -118,6 +125,7 @@
                                 <td class="p-2 text-right">Rp {{ number_format($payroll->base_salary, 0, ',', '.') }}</td>
                                 <td class="p-2 text-right">Rp {{ number_format($payroll->overtime_amount + $payroll->bonus_amount, 0, ',', '.') }}</td>
                                 <td class="p-2 text-right">Rp {{ number_format($payroll->deduction_amount, 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($payroll->meal_deduction_amount, 0, ',', '.') }}</td>
                                 <td class="p-2 text-right font-semibold">Rp {{ number_format($payroll->net_amount, 0, ',', '.') }}</td>
                                 <td class="p-2">
                                     <span class="text-xs px-2 py-1 rounded {{ $payroll->status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : ($payroll->status === 'APPROVED' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700') }}">
@@ -154,7 +162,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="p-4 text-center text-gray-500">Belum ada data payroll.</td>
+                                <td colspan="9" class="p-4 text-center text-gray-500">Belum ada data payroll.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -166,4 +174,62 @@
             </div>
         </div>
     </div>
+
+    <script>
+        (() => {
+            const employeeInput = document.getElementById('payroll-employee-master-id');
+            const periodInput = document.getElementById('payroll-period-month');
+            const previewInput = document.getElementById('meal-deduction-preview');
+            const previewNote = document.getElementById('meal-deduction-preview-note');
+            const previewUrl = @json(route(request()->routeIs('manager.*') ? 'manager.payroll.meal_deduction_preview' : 'admin.payroll.meal_deduction_preview'));
+
+            const formatRupiah = (amount) => `Rp ${new Intl.NumberFormat('id-ID').format(Math.round(amount || 0))}`;
+
+            const loadPreview = async () => {
+                const employeeId = employeeInput?.value;
+                const periodMonth = periodInput?.value;
+
+                if (!employeeId || !periodMonth) {
+                    previewInput.value = 'Rp 0';
+                    previewNote.textContent = 'Pilih periode dan petugas untuk melihat potongan makan otomatis.';
+                    return;
+                }
+
+                previewInput.value = 'Memuat...';
+                previewNote.textContent = 'Menghitung transaksi makan lebih jatah...';
+
+                try {
+                    const url = new URL(previewUrl, window.location.origin);
+                    url.searchParams.set('employee_master_id', employeeId);
+                    url.searchParams.set('period_month', periodMonth);
+
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Gagal memuat preview');
+                    }
+
+                    const data = await response.json();
+                    const amount = Number(data.meal_deduction_amount || 0);
+
+                    previewInput.value = formatRupiah(amount);
+                    previewNote.textContent = amount > 0
+                        ? 'Nominal ini akan otomatis masuk ke Pot. Makan saat payroll disimpan.'
+                        : 'Belum ada kelebihan makan pada periode ini.';
+                } catch (error) {
+                    previewInput.value = 'Rp 0';
+                    previewNote.textContent = 'Preview potongan makan gagal dimuat.';
+                }
+            };
+
+            employeeInput?.addEventListener('change', loadPreview);
+            periodInput?.addEventListener('change', loadPreview);
+            loadPreview();
+        })();
+    </script>
 @endsection

@@ -13,6 +13,8 @@
           <tr>
             <th class="text-left p-2">Bahan</th>
             <th class="text-right p-2">Stok (base)</th>
+            <th class="text-right p-2">Harga / Base</th>
+            <th class="text-right p-2">Nilai Stok</th>
           </tr>
         </thead>
         <tbody>
@@ -20,6 +22,8 @@
             <tr class="border-t">
               <td class="p-2">{{ $it->name }} <span class="text-gray-500">({{ $it->baseUnit->symbol }})</span></td>
               <td class="p-2 text-right">{{ number_format($it->stock_base, 3, ',', '.') }}</td>
+              <td class="p-2 text-right">Rp {{ number_format((float) ($it->avg_unit_cost_base ?? 0), 2, ',', '.') }}</td>
+              <td class="p-2 text-right">Rp {{ number_format((float) ($it->stock_value ?? 0), 2, ',', '.') }}</td>
             </tr>
           @endforeach
         </tbody>
@@ -35,6 +39,8 @@
           <tr>
             <th class="text-left p-2">Bahan</th>
             <th class="text-right p-2">Qty</th>
+            <th class="text-right p-2">Harga / Base</th>
+            <th class="text-right p-2">Nilai Batch</th>
             <th class="text-left p-2">Expired</th>
           </tr>
         </thead>
@@ -43,11 +49,13 @@
             <tr class="border-t">
               <td class="p-2">{{ $b->item->name }}</td>
               <td class="p-2 text-right">{{ number_format($b->qty_on_hand_base, 3, ',', '.') }}</td>
+              <td class="p-2 text-right">Rp {{ number_format((float) $b->unit_cost_base, 2, ',', '.') }}</td>
+              <td class="p-2 text-right">Rp {{ number_format((float) $b->qty_on_hand_base * (float) $b->unit_cost_base, 2, ',', '.') }}</td>
               <td class="p-2">{{ \Carbon\Carbon::parse($b->expired_at)->format('d M Y') }}</td>
             </tr>
           @endforeach
           @if($batchesExpSoon->isEmpty())
-            <tr class="border-t"><td class="p-2 text-gray-600" colspan="3">Tidak ada.</td></tr>
+            <tr class="border-t"><td class="p-2 text-gray-600" colspan="5">Tidak ada.</td></tr>
           @endif
         </tbody>
       </table>

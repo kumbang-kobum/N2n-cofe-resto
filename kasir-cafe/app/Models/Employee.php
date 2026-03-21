@@ -14,6 +14,7 @@ class Employee extends Model
         'name',
         'position',
         'department',
+        'meal_allowance_monthly',
         'uses_app',
         'user_id',
         'is_active',
@@ -21,6 +22,7 @@ class Employee extends Model
     ];
 
     protected $casts = [
+        'meal_allowance_monthly' => 'float',
         'uses_app' => 'boolean',
         'is_active' => 'boolean',
     ];
@@ -28,5 +30,10 @@ class Employee extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function meals()
+    {
+        return $this->hasMany(EmployeeMeal::class);
     }
 }

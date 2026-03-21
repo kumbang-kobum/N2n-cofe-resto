@@ -38,6 +38,10 @@
         </div>
 
         <div class="flex items-center gap-2">
+          <a href="{{ route('tv.information') }}"
+             class="hidden sm:inline-flex px-3 py-2 rounded border border-slate-200 text-slate-700 text-sm hover:bg-slate-50">
+            TV Informasi
+          </a>
           <a href="{{ route('login') }}"
              class="hidden sm:inline-flex px-3 py-2 rounded border border-blue-600 text-blue-600 text-sm hover:bg-blue-50">
             Login Admin / Kasir / Manager
@@ -72,6 +76,10 @@
             <a href="#alur"
                class="px-4 py-2.5 rounded border border-blue-100 text-sm text-blue-50 hover:bg-blue-600/40">
               Lihat alur kerja
+            </a>
+            <a href="{{ route('tv.information') }}"
+               class="px-4 py-2.5 rounded border border-blue-100 text-sm text-blue-50 hover:bg-blue-600/40">
+              TV informasi
             </a>
           </div>
         </div>

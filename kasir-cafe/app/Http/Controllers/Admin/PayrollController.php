@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Employee;
+use App\Models\EmployeeMeal;
 use App\Models\Payroll;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class PayrollController extends Controller
 {
@@ -69,8 +71,10 @@ class PayrollController extends Controller
         $base = (float) $validated['base_salary'];
         $overtime = (float) ($validated['overtime_amount'] ?? 0);
         $bonus = (float) ($validated['bonus_amount'] ?? 0);
-        $deduction = (float) ($validated['deduction_amount'] ?? 0);
-        $net = $base + $overtime + $bonus - $deduction;
+        $manualDeduction = (float) ($validated['deduction_amount'] ?? 0);
+        $mealDeduction = $this->pendingMealDeduction((int) $validated['employee_master_id'], $periodMonth);
+        $totalDeduction = $manualDeduction + $mealDeduction;
+        $net = $base + $overtime + $bonus - $totalDeduction;
         $employee = Employee::findOrFail((int) $validated['employee_master_id']);
 
         $payroll = Payroll::create([
@@ -80,21 +84,48 @@ class PayrollController extends Controller
             'base_salary' => $base,
             'overtime_amount' => $overtime,
             'bonus_amount' => $bonus,
-            'deduction_amount' => $deduction,
+            'deduction_amount' => $manualDeduction,
+            'meal_deduction_amount' => $mealDeduction,
             'net_amount' => $net,
             'status' => 'DRAFT',
             'note' => $validated['note'] ?? null,
             'created_by' => auth()->id(),
         ]);
 
+        if ($mealDeduction > 0) {
+            EmployeeMeal::query()
+                ->where('employee_id', (int) $validated['employee_master_id'])
+                ->whereNull('payroll_id')
+                ->where('excess_amount', '>', 0)
+                ->whereDate('consumed_at', '>=', $periodMonth)
+                ->whereDate('consumed_at', '<=', date('Y-m-t', strtotime($periodMonth)))
+                ->update(['payroll_id' => $payroll->id]);
+        }
+
         AuditLog::log(auth()->id(), 'PAYROLL_CREATED', $payroll, [
             'period_month' => $payroll->period_month?->format('Y-m'),
             'employee_master_id' => $payroll->employee_master_id,
             'net_amount' => $payroll->net_amount,
+            'meal_deduction_amount' => $payroll->meal_deduction_amount,
             'status' => $payroll->status,
         ]);
 
         return back()->with('status', 'Payroll berhasil dibuat.');
+    }
+
+    public function mealDeductionPreview(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'period_month' => ['required', 'date_format:Y-m'],
+            'employee_master_id' => ['required', 'exists:employees,id'],
+        ]);
+
+        $periodMonth = $validated['period_month'] . '-01';
+        $amount = $this->pendingMealDeduction((int) $validated['employee_master_id'], $periodMonth);
+
+        return response()->json([
+            'meal_deduction_amount' => $amount,
+        ]);
     }
 
     public function approve(Request $request, Payroll $payroll)
@@ -167,8 +198,23 @@ class PayrollController extends Controller
             'status' => $payroll->status,
         ]);
 
+        EmployeeMeal::query()
+            ->where('payroll_id', $payroll->id)
+            ->update(['payroll_id' => null]);
+
         $payroll->delete();
 
         return back()->with('status', 'Payroll dihapus.');
+    }
+
+    protected function pendingMealDeduction(int $employeeMasterId, string $periodMonth): float
+    {
+        return (float) EmployeeMeal::query()
+            ->where('employee_id', $employeeMasterId)
+            ->whereNull('payroll_id')
+            ->where('excess_amount', '>', 0)
+            ->whereDate('consumed_at', '>=', $periodMonth)
+            ->whereDate('consumed_at', '<=', date('Y-m-t', strtotime($periodMonth)))
+            ->sum('excess_amount');
     }
 }

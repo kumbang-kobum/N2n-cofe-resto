@@ -24,6 +24,19 @@ class StockOpnameController extends Controller
             ->orderByDesc('id')
             ->paginate(20);
 
+        $opnames->getCollection()->load('lines');
+        $opnames->getCollection()->transform(function ($opname) {
+            $estimatedValueTotal = (float) $opname->lines->sum(function ($line) {
+                return ((float) $line->physical_qty_base) * ((float) $line->unit_cost_base);
+            });
+            $totalPhysicalQtyBase = (float) $opname->lines->sum('physical_qty_base');
+
+            $opname->estimated_value_total = $estimatedValueTotal;
+            $opname->avg_unit_cost_base = $totalPhysicalQtyBase > 0 ? ($estimatedValueTotal / $totalPhysicalQtyBase) : 0;
+
+            return $opname;
+        });
+
         return view('admin.stock_opname.index', compact('opnames'));
     }
 

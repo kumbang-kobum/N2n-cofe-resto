@@ -24,6 +24,7 @@
                     <th class="px-3 py-2">Nama</th>
                     <th class="px-3 py-2">Jabatan</th>
                     <th class="px-3 py-2">Departemen</th>
+                    <th class="px-3 py-2">Jatah Makan</th>
                     <th class="px-3 py-2">Akun App</th>
                     <th class="px-3 py-2">Status</th>
                     <th class="px-3 py-2 text-right">Aksi</th>
@@ -36,6 +37,9 @@
                         <td class="px-3 py-2">{{ $employee->name }}</td>
                         <td class="px-3 py-2">{{ $employee->position ?: '-' }}</td>
                         <td class="px-3 py-2">{{ $employee->department ?: '-' }}</td>
+                        <td class="px-3 py-2">
+                            {{ is_null($employee->meal_allowance_monthly) ? 'Tidak dibatasi' : 'Rp ' . number_format($employee->meal_allowance_monthly, 0, ',', '.') . ' / bulan' }}
+                        </td>
                         <td class="px-3 py-2">
                             @if($employee->uses_app)
                                 <span class="text-xs rounded px-2 py-0.5 bg-blue-100 text-blue-700">
@@ -64,7 +68,7 @@
                     </tr>
                 @empty
                     <tr class="border-t">
-                        <td colspan="7" class="px-3 py-4 text-center text-sm text-gray-500">Belum ada data karyawan.</td>
+                        <td colspan="8" class="px-3 py-4 text-center text-sm text-gray-500">Belum ada data karyawan.</td>
                     </tr>
                 @endforelse
             </tbody>

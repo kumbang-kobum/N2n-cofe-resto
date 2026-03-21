@@ -17,6 +17,11 @@
         <label class="block text-sm font-medium text-gray-700 mb-1">Departemen</label>
         <input type="text" name="department" value="{{ old('department', $employee->department ?? '') }}" class="w-full border rounded px-3 py-2 text-sm">
     </div>
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Jatah Makan Nominal / Bulan</label>
+        <input type="number" name="meal_allowance_monthly" min="0" step="1" value="{{ old('meal_allowance_monthly', $employee->meal_allowance_monthly ?? '') }}" class="w-full border rounded px-3 py-2 text-sm">
+        <div class="mt-1 text-xs text-gray-500">Kosongkan jika tidak dibatasi. Isi 0 jika seluruh makan karyawan harus dipotong payroll.</div>
+    </div>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">

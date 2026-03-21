@@ -12,6 +12,8 @@ class Setting extends Model
         'restaurant_phone',
         'tax_enabled',
         'logo_path',
+        'tv_video_path',
+        'tv_running_text',
         'license_key',
         'installed_at',
         'installation_code',

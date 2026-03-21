@@ -24,6 +24,8 @@ class SettingController extends Controller
             'restaurant_phone' => ['nullable', 'string', 'max:255'],
             'tax_enabled' => ['nullable', 'boolean'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+            'tv_video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:51200'],
+            'tv_running_text' => ['nullable', 'string', 'max:1000'],
             'license_key' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -33,6 +35,7 @@ class SettingController extends Controller
         $setting->restaurant_address = $data['restaurant_address'] ?? null;
         $setting->restaurant_phone = $data['restaurant_phone'] ?? null;
         $setting->tax_enabled = $request->boolean('tax_enabled');
+        $setting->tv_running_text = $data['tv_running_text'] ?? null;
         $setting->license_key = $data['license_key'] ?? null;
 
         if ($request->hasFile('logo')) {
@@ -44,10 +47,32 @@ class SettingController extends Controller
             $setting->logo_path = $path;
         }
 
+        if ($request->hasFile('tv_video')) {
+            if ($setting->tv_video_path) {
+                Storage::disk('public')->delete($setting->tv_video_path);
+            }
+
+            $path = $request->file('tv_video')->store('tv-videos', 'public');
+            $setting->tv_video_path = $path;
+        }
+
         $setting->save();
 
         return redirect()
-            ->route('admin.settings.edit')
+            ->to($this->settingsEditUrl($request))
             ->with('status', 'Pengaturan berhasil disimpan.');
+    }
+
+    protected function settingsEditUrl(Request $request): string
+    {
+        if ($request->routeIs('manager.*')) {
+            return route('manager.settings.edit');
+        }
+
+        if ($request->routeIs('cashier.*')) {
+            return route('cashier.settings.edit');
+        }
+
+        return route('admin.settings.edit');
     }
 }

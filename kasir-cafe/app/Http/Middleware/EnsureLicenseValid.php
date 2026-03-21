@@ -32,7 +32,14 @@ class EnsureLicenseValid
         $path = trim($request->path(), '/');
 
         // Allow access to settings page to input license (admin only route anyway)
-        if ($routeName === 'admin.settings.edit' || $routeName === 'admin.settings.update' || $path === 'logout') {
+        if (in_array($routeName, [
+            'admin.settings.edit',
+            'admin.settings.update',
+            'manager.settings.edit',
+            'manager.settings.update',
+            'cashier.settings.edit',
+            'cashier.settings.update',
+        ], true) || $path === 'logout') {
             return $next($request);
         }
 

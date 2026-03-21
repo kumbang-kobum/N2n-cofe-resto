@@ -22,12 +22,14 @@ use App\Http\Controllers\Admin\CashExpenseController;
 use App\Http\Controllers\Admin\FinanceReportController;
 use App\Http\Controllers\Admin\PayrollController;
 use App\Http\Controllers\Admin\EmployeeController;
+use App\Http\Controllers\Admin\EmployeeMealController;
 use App\Http\Controllers\Admin\AssetController;
 use App\Http\Controllers\Admin\AssetIncidentController;
 use App\Http\Controllers\Admin\AssetCategoryController;
 use App\Http\Controllers\Admin\AssetLocationController;
 use App\Http\Controllers\SaleRefundController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicDisplayController;
 use App\Models\Product;
 
 /*
@@ -44,6 +46,7 @@ Route::get('/', function () {
 
     return view('welcome', compact('products'));
 })->name('landing');
+Route::get('/tv-informasi', [PublicDisplayController::class, 'tvInformation'])->name('tv.information');
 
 /*
 |--------------------------------------------------------------------------
@@ -188,11 +191,14 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::post('/expenses/{cashExpense}/approve', [CashExpenseController::class, 'approve'])->name('expenses.approve');
             Route::post('/expenses/{cashExpense}/reject', [CashExpenseController::class, 'reject'])->name('expenses.reject');
             Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
+            Route::get('/payroll/meal-deduction-preview', [PayrollController::class, 'mealDeductionPreview'])->name('payroll.meal_deduction_preview');
             Route::post('/payroll', [PayrollController::class, 'store'])->name('payroll.store');
             Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve'])->name('payroll.approve');
             Route::post('/payroll/{payroll}/mark-paid', [PayrollController::class, 'markPaid'])->name('payroll.mark_paid');
             Route::get('/payroll/{payroll}/slip', [PayrollController::class, 'slip'])->name('payroll.slip');
             Route::delete('/payroll/{payroll}', [PayrollController::class, 'destroy'])->name('payroll.destroy');
+            Route::get('/employee-meals', [EmployeeMealController::class, 'index'])->name('employee_meals.index');
+            Route::post('/employee-meals', [EmployeeMealController::class, 'store'])->name('employee_meals.store');
         });
 
     /*
@@ -237,11 +243,14 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::post('/expenses/{cashExpense}/approve', [CashExpenseController::class, 'approve'])->name('expenses.approve');
             Route::post('/expenses/{cashExpense}/reject', [CashExpenseController::class, 'reject'])->name('expenses.reject');
             Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
+            Route::get('/payroll/meal-deduction-preview', [PayrollController::class, 'mealDeductionPreview'])->name('payroll.meal_deduction_preview');
             Route::post('/payroll', [PayrollController::class, 'store'])->name('payroll.store');
             Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve'])->name('payroll.approve');
             Route::post('/payroll/{payroll}/mark-paid', [PayrollController::class, 'markPaid'])->name('payroll.mark_paid');
             Route::get('/payroll/{payroll}/slip', [PayrollController::class, 'slip'])->name('payroll.slip');
             Route::delete('/payroll/{payroll}', [PayrollController::class, 'destroy'])->name('payroll.destroy');
+            Route::get('/employee-meals', [EmployeeMealController::class, 'index'])->name('employee_meals.index');
+            Route::post('/employee-meals', [EmployeeMealController::class, 'store'])->name('employee_meals.store');
         });
 
     /*
@@ -282,6 +291,10 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::get('/reports/finance/export', [FinanceReportController::class, 'export'])->name('reports.finance.export');
             Route::get('/expenses', [CashExpenseController::class, 'index'])->name('expenses.index');
             Route::post('/expenses', [CashExpenseController::class, 'store'])->name('expenses.store');
+            Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
+            Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
+            Route::get('/employee-meals', [EmployeeMealController::class, 'index'])->name('employee_meals.index');
+            Route::post('/employee-meals', [EmployeeMealController::class, 'store'])->name('employee_meals.store');
         });
 });
 

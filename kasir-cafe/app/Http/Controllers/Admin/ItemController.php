@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\Unit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ItemController extends Controller
 {
@@ -20,6 +21,25 @@ class ItemController extends Controller
             ->orderBy('name')
             ->paginate(20)
             ->withQueryString();
+
+        $batchStats = DB::table('item_batches')
+            ->selectRaw('item_id, SUM(qty_on_hand_base) as stock_base, SUM(qty_on_hand_base * unit_cost_base) as stock_value')
+            ->where('status', 'ACTIVE')
+            ->groupBy('item_id')
+            ->get()
+            ->keyBy('item_id');
+
+        $items->getCollection()->transform(function ($item) use ($batchStats) {
+            $stats = $batchStats->get($item->id);
+            $stockBase = (float) ($stats->stock_base ?? 0);
+            $stockValue = (float) ($stats->stock_value ?? 0);
+
+            $item->stock_base = $stockBase;
+            $item->stock_value = $stockValue;
+            $item->avg_unit_cost_base = $stockBase > 0 ? ($stockValue / $stockBase) : 0;
+
+            return $item;
+        });
 
         return view('admin.items.index', compact('items', 'q'));
     }

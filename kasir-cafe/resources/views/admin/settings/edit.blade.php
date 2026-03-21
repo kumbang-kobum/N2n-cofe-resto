@@ -10,7 +10,12 @@
 @endif
 
 <div class="bg-white border rounded-lg p-4 max-w-2xl">
-  <form method="POST" action="{{ route('admin.settings.update') }}" enctype="multipart/form-data" class="space-y-4">
+  @php
+    $settingsUpdateRoute = request()->routeIs('manager.*')
+      ? route('manager.settings.update')
+      : (request()->routeIs('cashier.*') ? route('cashier.settings.update') : route('admin.settings.update'));
+  @endphp
+  <form method="POST" action="{{ $settingsUpdateRoute }}" enctype="multipart/form-data" class="space-y-4">
     @csrf
 
     <div>
@@ -56,6 +61,35 @@
           <img src="{{ asset('storage/' . $setting->logo_path) }}" alt="Logo" class="h-16">
         </div>
       @endif
+    </div>
+
+    <div class="border-t pt-4">
+      <div class="text-sm font-semibold text-gray-700 mb-2">TV Informasi</div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Video TV (MP4/WebM/Ogg)</label>
+          <input type="file" name="tv_video" accept=".mp4,.webm,.ogg,video/mp4,video/webm,video/ogg"
+                 class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+          @error('tv_video')<div class="text-xs text-red-600 mt-1">{{ $message }}</div>@enderror
+          <div class="text-xs text-gray-500 mt-1">
+            Video akan diputar otomatis di halaman TV Informasi.
+          </div>
+          @if (!empty($setting?->tv_video_path))
+            <div class="mt-2">
+              <video src="{{ asset('storage/' . $setting->tv_video_path) }}" controls class="h-40 rounded border bg-black"></video>
+            </div>
+          @endif
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Running Text</label>
+          <textarea name="tv_running_text" rows="3"
+                    class="w-full rounded border border-gray-300 px-3 py-2 text-sm"
+                    placeholder="Contoh: Selamat datang di resto kami • Promo paket hemat tersedia hari ini • Terima kasih atas kunjungan Anda">{{ old('tv_running_text', $setting->tv_running_text ?? '') }}</textarea>
+          @error('tv_running_text')<div class="text-xs text-red-600 mt-1">{{ $message }}</div>@enderror
+        </div>
+      </div>
     </div>
 
     <div class="border-t pt-4">
