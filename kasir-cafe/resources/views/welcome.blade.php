@@ -168,6 +168,52 @@
       </div>
     </section>
 
+    <section class="-mt-1 py-8 sm:py-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="rounded-[28px] border border-slate-200 bg-white p-5 sm:p-6 shadow-[0_20px_50px_rgba(15,23,42,0.06)]">
+          <div class="mb-5 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <div class="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">Highlights</div>
+              <h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900">Keunggulan Sistem</h2>
+              <p class="mt-2 max-w-3xl text-sm sm:text-base text-slate-600">
+                Dirancang untuk operasional resto yang butuh kecepatan transaksi, kontrol stok yang rapi, dan laporan yang mudah diaudit.
+              </p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              Fokus utama: <span class="font-semibold text-slate-900">praktis dipakai, jelas dibaca, dan mudah diawasi.</span>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <div class="text-sm font-semibold text-slate-900">Kasir lebih cepat</div>
+              <div class="mt-2 text-sm leading-6 text-slate-600">
+                Katalog menu, keranjang, open bill, dan pembayaran final dirancang untuk alur kerja kasir yang ringkas.
+              </div>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <div class="text-sm font-semibold text-slate-900">Stok lebih akurat</div>
+              <div class="mt-2 text-sm leading-6 text-slate-600">
+                Receiving, FEFO, expired, stock opname, dan resep saling terhubung agar persediaan lebih terkontrol.
+              </div>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <div class="text-sm font-semibold text-slate-900">Biaya lebih transparan</div>
+              <div class="mt-2 text-sm leading-6 text-slate-600">
+                Pengeluaran harian, payroll, makan karyawan, dan transaksi internal dicatat terpisah dari omzet.
+              </div>
+            </div>
+            <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <div class="text-sm font-semibold text-slate-900">Laporan siap audit</div>
+              <div class="mt-2 text-sm leading-6 text-slate-600">
+                Excel export, top menu, audit log, dan rekap harian sampai bulanan memudahkan evaluasi usaha.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     {{-- KATALOG MENU --}}
     <section id="katalog" class="py-12 sm:py-14">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -395,10 +441,28 @@
       </div>
     </section>
 
-    <footer class="mt-auto border-t bg-white">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
-        <div>&copy; {{ date('Y') }} n2N</div>
-        <div>n2N Sistem kasir & stok untuk cafe & resto</div>
+    <footer class="mt-auto border-t border-slate-200 bg-[linear-gradient(180deg,#ffffff,#f8fafc)]">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex items-center gap-3">
+            @if (!empty($settings?->logo_path))
+              <img src="{{ asset('storage/' . $settings->logo_path) }}" alt="Logo" class="h-11 w-11 rounded-2xl bg-blue-50 object-contain p-1.5">
+            @else
+              <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-sm font-bold text-white">
+                {{ strtoupper(substr(config('app.name','KC'),0,2)) }}
+              </div>
+            @endif
+            <div>
+              <div class="text-sm font-semibold text-slate-900">{{ $settings->restaurant_name ?? 'n2N Cafe Resto' }}</div>
+              <div class="text-xs text-slate-500">Sistem kasir, stok, resep, dan laporan untuk cafe & resto.</div>
+            </div>
+          </div>
+
+          <div class="grid gap-1 text-[11px] sm:text-xs text-slate-500 sm:text-right">
+            <div>&copy; {{ date('Y') }} n2N. Semua hak cipta dilindungi.</div>
+            <div>Dirancang untuk operasional yang rapi, cepat, dan mudah dipantau.</div>
+          </div>
+        </div>
       </div>
     </footer>
   </div>

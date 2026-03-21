@@ -29,12 +29,12 @@
     </style>
 </head>
 <body class="min-h-screen bg-slate-950 text-white">
-    <div id="tvInformationApp" class="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.25),transparent_32%),linear-gradient(135deg,#020617,#0f172a_45%,#172554_100%)]">
-        <header class="border-b border-white/10 bg-black/20 backdrop-blur">
+    <div id="tvInformationApp" class="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.10),transparent_18%),radial-gradient(circle_at_bottom_right,rgba(96,165,250,0.22),transparent_26%),linear-gradient(135deg,#0f172a_0%,#1d4ed8_50%,#2563eb_100%)]">
+        <header class="border-b border-white/10 bg-black/15 backdrop-blur">
             <div class="mx-auto flex max-w-[1600px] items-center justify-between px-6 py-4">
                 <div class="flex items-center gap-3">
                     @if (!empty($settings?->logo_path))
-                        <img src="{{ asset('storage/' . $settings->logo_path) }}" alt="Logo" class="h-12 w-12 rounded-2xl bg-white/10 object-contain p-1.5">
+                        <img src="{{ asset('storage/' . $settings->logo_path) }}" alt="Logo" class="h-12 w-12 rounded-2xl bg-white/10 object-contain p-1.5 shadow-inner">
                     @else
                         <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 font-bold">
                             {{ strtoupper(substr($settings->restaurant_name ?? config('app.name', 'n2N'), 0, 2)) }}
@@ -46,7 +46,7 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button type="button" id="tvFullscreenButton" class="rounded-xl border border-white/10 bg-blue-600/80 px-4 py-2 text-sm font-medium hover:bg-blue-500">
+                    <button type="button" id="tvFullscreenButton" class="rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/20">
                         Fullscreen
                     </button>
                     <a href="{{ route('landing') }}" class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm hover:bg-white/10">
@@ -57,10 +57,10 @@
         </header>
 
         <main class="mx-auto grid max-w-[1600px] gap-6 px-6 py-6 lg:grid-cols-[1.35fr_0.95fr]">
-            <section class="rounded-[28px] border border-white/10 bg-black/20 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.45)] backdrop-blur">
+            <section class="rounded-[28px] border border-white/10 bg-white/10 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.32)] backdrop-blur">
                 <div class="mb-4 flex items-center justify-between">
                     <div>
-                        <div class="text-xs uppercase tracking-[0.24em] text-blue-200/70">Now Showing</div>
+                        <div class="text-xs uppercase tracking-[0.24em] text-blue-100/75">Now Showing</div>
                         <h1 class="text-3xl font-semibold">Video Informasi</h1>
                     </div>
                     <div class="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-200">
@@ -68,7 +68,7 @@
                     </div>
                 </div>
 
-                <div class="overflow-hidden rounded-[24px] border border-white/10 bg-black">
+                <div class="overflow-hidden rounded-[24px] border border-white/10 bg-black/80">
                     @if (!empty($settings?->tv_video_path))
                         <video class="aspect-video w-full bg-black object-cover" controls autoplay muted loop playsinline>
                             <source src="{{ asset('storage/' . $settings->tv_video_path) }}">
@@ -85,16 +85,16 @@
                     @endif
                 </div>
 
-                <div class="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-blue-600/10 px-4 py-3">
+                <div class="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-white/10 px-4 py-3">
                     <div class="tv-marquee-track text-lg font-medium text-blue-50">
                         {{ $settings->tv_running_text ?: 'Selamat datang di resto kami • Promo terbaru tersedia hari ini • Terima kasih atas kunjungan Anda' }}
                     </div>
                 </div>
             </section>
 
-            <aside class="rounded-[28px] border border-white/10 bg-white/[0.06] p-5 shadow-[0_24px_70px_rgba(15,23,42,0.35)] backdrop-blur">
+            <aside class="rounded-[28px] border border-white/10 bg-white/10 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.28)] backdrop-blur">
                 <div class="mb-4">
-                    <div class="text-xs uppercase tracking-[0.24em] text-blue-200/70">Katalog</div>
+                    <div class="text-xs uppercase tracking-[0.24em] text-blue-100/75">Katalog</div>
                     <h2 class="text-3xl font-semibold">Menu & Harga</h2>
                     <div class="mt-1 text-sm text-slate-300">Daftar menu aktif yang tampil ke pelanggan.</div>
                 </div>
@@ -106,7 +106,7 @@
                         @endphp
                         <div class="tv-menu-scroll space-y-3 pr-1">
                             @foreach ($loopProducts as $product)
-                                <div class="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/15 p-3">
+                                <div class="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/15 p-3">
                                     <div class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-white/10">
                                         @if($product->image_path)
                                             <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}" class="h-full w-full object-cover">
