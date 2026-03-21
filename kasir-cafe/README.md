@@ -452,65 +452,98 @@ Lihat panduan cron:
 `docs/cron_backup.md`
 
 ## cara update mengikuti repo
-1. Masuk folder web root
+Gunakan urutan ini setiap kali server production mengikuti update dari GitHub.
+
+1. Masuk ke folder repo:
    ```bash
    cd /www/wwwroot/caferesto/N2n-cofe-resto
    ```
-   sesuaikan dengan folder kamu
-2. Ambil update dari GitHub dan samakan persis (recommended untuk production server)
+   Sesuaikan dengan folder server kamu.
+
+2. Ambil update dari GitHub dan samakan persis:
    ```bash
    git fetch origin
    git reset --hard origin/main
    ```
-3. Tangani file .user.ini (aaPanel sering bikin ini)
-Kalau muncul seperti kemarin (untracked / permission), abaikan secara lokal server:
+
+3. Abaikan file lokal server seperti `.user.ini` jika perlu:
    ```bash
    echo "kasir-cafe/public/.user.ini" >> .git/info/exclude
-   ```
-Cek status harus bersih:
-   ```bash
    git status
    ```
-4. Step Laravel setelah update code (WAJIB)
-masuk ke folder kasir-cafe
+
+4. Masuk ke folder aplikasi Laravel:
    ```bash
    cd kasir-cafe
    ```
-5. Install dependency (production)
+
+5. Install dependency backend:
    ```bash
    composer install --no-dev --optimize-autoloader
    ```
-6. Migration aman (tidak hapus data)
+
+6. Install dependency frontend dan build asset:
+   ```bash
+   npm install
+   npm run build
+   ```
+   Ini wajib jika ada perubahan:
+   - tampilan Blade
+   - Tailwind/CSS
+   - dark mode
+   - landing page
+   - login page
+   - TV Informasi
+
+7. Jalankan migration aman:
    ```bash
    php artisan migrate --force
    ```
-7. Cache (opsional tapi bagus untuk production)
-   ```bash
-   php artisan config:cache
-   php artisan route:cache
-   php artisan view:cache
-   ``` 
-8. Jika pakai queue (opsional)
-   ```bash
-   php artisan queue:restart
-   ```
-9. Permission kalau ada error storage/cache
-   ```bash
-   chmod -R 775 storage bootstrap/cache
-   ```
-10. Kalau setelah deploy perubahan tidak terlihat
-bersihkan cache sekali saja untuk testing
+
+8. Bersihkan lalu bangun ulang cache Laravel:
    ```bash
    php artisan optimize:clear
    php artisan config:cache
    php artisan route:cache
-   php artisan view:cache  
+   php artisan view:cache
    ```
-   Restart PHP dari aaPanel:
-   	•	aaPanel → App Store → PHP → pilih versi yang dipakai → Restart
-11. Catatan paling penting (biar data aman)
-✅ Gunakan:
-	•	php artisan migrate --force   
+
+9. Jika pakai queue:
+   ```bash
+   php artisan queue:restart
+   ```
+
+10. Pastikan permission storage/cache benar:
+   ```bash
+   chmod -R 775 storage bootstrap/cache
+   ```
+
+11. Jika tampilan masih tidak berubah:
+   - hard refresh browser
+   - coba incognito
+   - restart PHP dari aaPanel
+
+12. Ringkasan singkat deploy production:
+   ```bash
+   git fetch origin
+   git reset --hard origin/main
+   cd kasir-cafe
+   composer install --no-dev --optimize-autoloader
+   npm install
+   npm run build
+   php artisan migrate --force
+   php artisan optimize:clear
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache
+   php artisan queue:restart
+   chmod -R 775 storage bootstrap/cache
+   ```
+
+Catatan penting:
+- Aman gunakan `php artisan migrate --force`
+- Jangan gunakan `php artisan migrate:fresh` di production
+- Jika perubahan UI tidak muncul, penyebab paling sering adalah lupa `npm run build`
                           
 ## About Laravel
 Laravel adalah framework PHP untuk membangun aplikasi web. Dokumentasi: https://laravel.com/docs
