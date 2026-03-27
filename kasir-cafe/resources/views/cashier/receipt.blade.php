@@ -87,14 +87,33 @@
             left: 0;
             top: 0;
             width: 80mm;
+            display: block;
         }
         .receipt-copy {
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            background: #fff !important;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .receipt-copy:not(:last-child) {
             page-break-after: always;
             break-after: page;
+            margin-bottom: 0 !important;
+            padding-bottom: 2mm !important;
         }
         .receipt-copy:last-child {
             page-break-after: auto;
             break-after: auto;
+            padding-bottom: 4mm !important;
+        }
+        .receipt-80mm {
+            margin: 0 !important;
+            padding-top: 2mm !important;
+            padding-bottom: 2mm !important;
         }
     }
 
@@ -107,6 +126,7 @@
         border: 1px dashed #cbd5e1;
         border-radius: 12px;
         background: #fff;
+        overflow: hidden;
     }
     .receipt-80mm {
         width: 80mm;
