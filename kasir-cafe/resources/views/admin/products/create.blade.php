@@ -38,6 +38,16 @@
   </div>
 
   <div>
+    <label class="block text-sm text-gray-700 mb-1">Jenis Menu</label>
+    <select name="menu_type"
+            class="w-full rounded border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm">
+      <option value="{{ \App\Models\Product::TYPE_FOOD }}" @selected(old('menu_type', \App\Models\Product::TYPE_FOOD) === \App\Models\Product::TYPE_FOOD)>Makanan</option>
+      <option value="{{ \App\Models\Product::TYPE_DRINK }}" @selected(old('menu_type') === \App\Models\Product::TYPE_DRINK)>Minuman</option>
+    </select>
+    <p class="mt-1 text-xs text-gray-500">Jenis ini dipakai untuk memisahkan slip makanan dan slip minuman saat cetak nota.</p>
+  </div>
+
+  <div>
     <label class="block text-sm text-gray-700 mb-1">Gambar Menu (opsional)</label>
     <input type="file"
            name="image"

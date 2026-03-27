@@ -10,115 +10,57 @@
         </a>
         <button onclick="window.print()"
                 class="px-3 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">
-            Cetak
+            Cetak 3 Rangkap
         </button>
     </div>
 </div>
 
-<div class="bg-white border rounded-lg p-4">
-    <div id="receipt" class="receipt-80mm">
-        @php
-            $settings = \App\Models\Setting::first();
-        @endphp
-        <div class="text-center">
-            @if (!empty($settings?->logo_path))
-                <div class="flex justify-center mb-1">
-                    <img src="{{ asset('storage/' . $settings->logo_path) }}" alt="Logo" class="h-10 object-contain">
-                </div>
-            @endif
-            <div class="font-semibold">
-                {{ $settings->restaurant_name ?? 'N2N Cafe' }}
-            </div>
-            @if (!empty($settings?->restaurant_address))
-                <div class="text-[10px] text-gray-600">{{ $settings->restaurant_address }}</div>
-            @endif
-            @if (!empty($settings?->restaurant_phone))
-                <div class="text-[10px] text-gray-600">Telp: {{ $settings->restaurant_phone }}</div>
-            @endif
-            <div class="text-[11px] text-gray-600 mt-1">Struk Pembayaran</div>
-        </div>
-
-        <div class="mt-1 text-[11px] leading-tight">
-            <div>No. Nota: {{ $sale->receipt_no ?? ('#' . $sale->id) }}</div>
-            <div>Tanggal: {{ optional($sale->paid_at)->format('d/m/Y H:i') }}</div>
-            @if($sale->table_no || $sale->customer_name)
-                <div>Meja: {{ $sale->table_no ?? '-' }} | Tamu: {{ $sale->customer_name ?? '-' }}</div>
-            @endif
-            <div>Kasir: {{ optional($sale->cashier)->name ?? '-' }}</div>
-            <div>Metode: {{ strtoupper($sale->payment_method ?? '-') }}</div>
-        </div>
-
-        <div class="my-1 border-t border-dashed"></div>
-
-        <table class="w-full text-[11px] leading-tight receipt-table">
-            <colgroup>
-                <col style="width: 44%">
-                <col style="width: 14%">
-                <col style="width: 20%">
-                <col style="width: 22%">
-            </colgroup>
-            <thead>
-                <tr>
-                    <th class="text-left">Item</th>
-                    <th class="text-right">Qty</th>
-                    <th class="text-right">Harga</th>
-                    <th class="text-right">Sub</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($sale->lines as $l)
-                    <tr>
-                        <td class="pr-1 break-words">{{ $l->product->name }}</td>
-                        <td class="text-right">{{ rtrim(rtrim(number_format((float) $l->qty, 3, '.', ''), '0'), '.') }}</td>
-                        <td class="text-right">{{ number_format($l->price, 0, ',', '.') }}</td>
-                        <td class="text-right">{{ number_format($l->qty * $l->price, 0, ',', '.') }}</td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-
-        <div class="my-1 border-t border-dashed"></div>
-
 @php
-            $taxRate = (float) ($sale->tax_rate ?? config('pos.tax_rate', 0.10));
-            $discount = (float) ($sale->discount_amount ?? 0);
-            $taxBase = max(0, (float) $sale->total - $discount);
-            $taxAmount = (float) ($sale->tax_amount ?? 0);
-            $grand = (float) ($sale->grand_total ?? ($taxBase + $taxAmount));
-        @endphp
+    $settings = \App\Models\Setting::first();
+    $drinkLines = $sale->lines->filter(fn ($line) => $line->product?->menu_type === \App\Models\Product::TYPE_DRINK)->values();
+    $foodLines = $sale->lines->filter(fn ($line) => $line->product?->menu_type !== \App\Models\Product::TYPE_DRINK)->values();
+@endphp
 
-        <div class="text-[11px] space-y-0.5 leading-tight">
-            <div class="flex justify-between">
-                <span>Subtotal</span>
-                <span>{{ number_format($sale->total, 0, ',', '.') }}</span>
-            </div>
-            <div class="flex justify-between">
-                <span>Diskon</span>
-                <span>{{ number_format($discount, 0, ',', '.') }}</span>
-            </div>
-            @if ($taxRate > 0)
-                <div class="flex justify-between">
-                    <span>Pajak ({{ (int) ($taxRate * 100) }}%)</span>
-                    <span>{{ number_format($taxAmount, 0, ',', '.') }}</span>
+<div class="space-y-4">
+    <div class="rounded-lg border bg-blue-50/70 p-3 text-sm text-slate-700">
+        Nota sekarang dicetak dalam 3 lembar:
+        <span class="font-semibold">nota utama</span>,
+        <span class="font-semibold">slip minuman</span>,
+        dan
+        <span class="font-semibold">slip makanan</span>.
+    </div>
+
+    <div class="bg-white border rounded-lg p-4">
+        <div id="receipt-stack">
+            <div class="receipt-copy">
+                <div class="receipt-80mm">
+                    @include('cashier.partials.receipt-full', ['sale' => $sale, 'settings' => $settings])
                 </div>
-            @endif
-            <div class="flex justify-between font-semibold">
-                <span>Total</span>
-                <span>{{ number_format($grand, 0, ',', '.') }}</span>
             </div>
-            <div class="flex justify-between">
-                <span>Dibayar</span>
-                <span>{{ number_format($sale->paid_amount ?? 0, 0, ',', '.') }}</span>
-            </div>
-            <div class="flex justify-between">
-                <span>Kembalian</span>
-                <span>{{ number_format($sale->change_amount ?? 0, 0, ',', '.') }}</span>
-            </div>
-        </div>
 
-        <div class="my-1 border-t border-dashed"></div>
-        <div class="text-center text-[11px] text-gray-600">
-            Terima kasih
+            <div class="receipt-copy">
+                <div class="receipt-80mm">
+                    @include('cashier.partials.receipt-category', [
+                        'sale' => $sale,
+                        'settings' => $settings,
+                        'title' => 'Slip Minuman',
+                        'lines' => $drinkLines,
+                        'emptyMessage' => 'Tidak ada item minuman pada transaksi ini.',
+                    ])
+                </div>
+            </div>
+
+            <div class="receipt-copy">
+                <div class="receipt-80mm">
+                    @include('cashier.partials.receipt-category', [
+                        'sale' => $sale,
+                        'settings' => $settings,
+                        'title' => 'Slip Makanan',
+                        'lines' => $foodLines,
+                        'emptyMessage' => 'Tidak ada item makanan pada transaksi ini.',
+                    ])
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -135,23 +77,37 @@
             background: #fff !important;
             margin: 0 !important;
             padding: 0 !important;
-            width: 80mm !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
         body * { visibility: hidden; }
-        #receipt, #receipt * { visibility: visible; }
-        #receipt {
+        #receipt-stack, #receipt-stack * { visibility: visible; }
+        #receipt-stack {
             position: absolute;
             left: 0;
             top: 0;
-            margin: 0;
-            padding: 2mm 2.5mm 1.5mm 2.5mm;
-            box-sizing: border-box;
             width: 80mm;
+        }
+        .receipt-copy {
+            page-break-after: always;
+            break-after: page;
+        }
+        .receipt-copy:last-child {
+            page-break-after: auto;
+            break-after: auto;
         }
     }
 
+    #receipt-stack {
+        display: grid;
+        gap: 16px;
+        justify-content: start;
+    }
+    .receipt-copy {
+        border: 1px dashed #cbd5e1;
+        border-radius: 12px;
+        background: #fff;
+    }
     .receipt-80mm {
         width: 80mm;
         max-width: 80mm;
@@ -161,6 +117,7 @@
         font-size: 11px;
         line-height: 1.2;
         letter-spacing: 0;
+        font-weight: 700;
     }
     .receipt-80mm table {
         width: 100%;
@@ -173,6 +130,11 @@
         vertical-align: top;
         word-wrap: break-word;
         overflow-wrap: anywhere;
+    }
+    .receipt-mini-table th:nth-child(2),
+    .receipt-mini-table td:nth-child(2),
+    .receipt-mini-table td:nth-child(2) {
+        text-align: right;
     }
     .receipt-table th:nth-child(2),
     .receipt-table th:nth-child(3),

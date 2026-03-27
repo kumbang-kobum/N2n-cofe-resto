@@ -46,6 +46,7 @@
       <tr>
         <th class="p-2 text-left">Gambar</th>
         <th class="p-2 text-left">Nama</th>
+        <th class="p-2 text-center">Jenis</th>
         <th class="p-2 text-right">Harga Default</th>
         <th class="p-2 text-center">Aktif</th>
         <th class="p-2 text-right">Aksi</th>
@@ -66,6 +67,11 @@
             @endif
           </td>
           <td class="p-2">{{ $product->name }}</td>
+          <td class="p-2 text-center">
+            <span class="inline-flex px-2 py-1 rounded-full text-xs {{ $product->menu_type === \App\Models\Product::TYPE_DRINK ? 'bg-sky-100 text-sky-700' : 'bg-amber-100 text-amber-700' }}">
+              {{ $product->menu_type_label }}
+            </span>
+          </td>
           <td class="p-2 text-right">Rp {{ number_format($product->price_default,0,',','.') }}</td>
           <td class="p-2 text-center">
             @if($product->is_active)
@@ -95,7 +101,7 @@
         </tr>
       @empty
         <tr>
-          <td colspan="5" class="p-4 text-center text-gray-500">
+          <td colspan="6" class="p-4 text-center text-gray-500">
             Belum ada produk. Tambahkan produk pertama Anda.
           </td>
         </tr>

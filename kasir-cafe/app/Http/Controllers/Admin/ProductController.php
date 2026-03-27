@@ -35,6 +35,7 @@ class ProductController extends Controller
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:255'],
             'price_default' => ['required', 'numeric', 'min:0'],
+            'menu_type'     => ['required', 'in:' . Product::TYPE_FOOD . ',' . Product::TYPE_DRINK],
             'is_active'     => ['nullable', 'boolean'],
             'image'         => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
@@ -63,6 +64,7 @@ class ProductController extends Controller
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:255'],
             'price_default' => ['required', 'numeric', 'min:0'],
+            'menu_type'     => ['required', 'in:' . Product::TYPE_FOOD . ',' . Product::TYPE_DRINK],
             'is_active'     => ['nullable', 'boolean'],
             'image'         => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
