@@ -3,7 +3,7 @@
 @section('content')
     <h1 class="text-xl font-semibold mb-4">Edit Karyawan</h1>
 
-    <form method="POST" action="{{ route(request()->routeIs('manager.*') ? 'manager.employees.update' : 'admin.employees.update', $employee) }}" class="bg-white border rounded-lg p-4 space-y-3 max-w-2xl">
+    <form method="POST" action="{{ route(request()->routeIs('manager.*') ? 'manager.employees.update' : 'admin.employees.update', $employee) }}" enctype="multipart/form-data" class="bg-white border rounded-lg p-4 space-y-3 max-w-2xl">
         @csrf
         @method('PUT')
         @include('admin.employees.partials.form', ['employee' => $employee])

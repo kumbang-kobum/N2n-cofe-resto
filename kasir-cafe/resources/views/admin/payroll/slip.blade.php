@@ -72,6 +72,10 @@
                     <td class="p-1.5 text-right">Rp {{ number_format($payroll->deduction_amount, 0, ',', '.') }}</td>
                 </tr>
                 <tr class="border-b">
+                    <td class="p-1.5">Potongan Telat</td>
+                    <td class="p-1.5 text-right">Rp {{ number_format($payroll->late_deduction_amount, 0, ',', '.') }}</td>
+                </tr>
+                <tr class="border-b">
                     <td class="p-1.5">Potongan Makan</td>
                     <td class="p-1.5 text-right">Rp {{ number_format($payroll->meal_deduction_amount, 0, ',', '.') }}</td>
                 </tr>

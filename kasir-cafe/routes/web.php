@@ -18,11 +18,17 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\AttendanceReportController;
 use App\Http\Controllers\Admin\CashExpenseController;
 use App\Http\Controllers\Admin\FinanceReportController;
 use App\Http\Controllers\Admin\PayrollController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\EmployeeMealController;
+use App\Http\Controllers\Admin\AttendanceController;
+use App\Http\Controllers\Admin\AttendanceLateRuleController;
+use App\Http\Controllers\Admin\AttendanceScheduleController;
+use App\Http\Controllers\Admin\AttendanceShiftController;
+use App\Http\Controllers\Admin\LeaveRequestController;
 use App\Http\Controllers\Admin\AssetController;
 use App\Http\Controllers\Admin\AssetIncidentController;
 use App\Http\Controllers\Admin\AssetCategoryController;
@@ -47,6 +53,8 @@ Route::get('/', function () {
     return view('welcome', compact('products'));
 })->name('landing');
 Route::get('/tv-informasi', [PublicDisplayController::class, 'tvInformation'])->name('tv.information');
+Route::get('/attendance-kiosk', [AttendanceController::class, 'publicKiosk'])->name('attendance.public_kiosk');
+Route::post('/attendance-kiosk', [AttendanceController::class, 'kioskStore'])->name('attendance.public_kiosk.store');
 
 /*
 |--------------------------------------------------------------------------
@@ -62,6 +70,8 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
         Route::post('/manager/sales/{sale}/refund', [SaleRefundController::class, 'store'])->name('manager.refunds.store');
         Route::get('/admin/sales/{sale}/refund', [SaleRefundController::class, 'create'])->name('admin.refunds.create');
         Route::post('/admin/sales/{sale}/refund', [SaleRefundController::class, 'store'])->name('admin.refunds.store');
+        Route::get('/dashboard/attendance-kiosk', [AttendanceController::class, 'kiosk'])->name('attendance.kiosk');
+        Route::post('/dashboard/attendance-kiosk', [AttendanceController::class, 'kioskStore'])->name('attendance.kiosk.store');
     });
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -135,6 +145,21 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             // Pengguna
             Route::resource('users', UserController::class)->except(['show']);
             Route::resource('employees', EmployeeController::class)->except(['show']);
+            Route::resource('attendance-shifts', AttendanceShiftController::class)->except(['show'])->names('attendance_shifts');
+            Route::resource('attendance-late-rules', AttendanceLateRuleController::class)->except(['show'])->names('attendance_late_rules');
+            Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendances.index');
+            Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendances.store');
+            Route::get('/attendance/review', [AttendanceController::class, 'reviewQueue'])->name('attendances.review');
+            Route::post('/attendance/{attendance}/review', [AttendanceController::class, 'reviewUpdate'])->name('attendances.review_update');
+            Route::get('/attendance-schedules', [AttendanceScheduleController::class, 'index'])->name('attendance_schedules.index');
+            Route::post('/attendance-schedules', [AttendanceScheduleController::class, 'store'])->name('attendance_schedules.store');
+            Route::post('/attendance-schedules/bulk', [AttendanceScheduleController::class, 'bulkStore'])->name('attendance_schedules.bulk_store');
+            Route::post('/attendance-schedules/copy', [AttendanceScheduleController::class, 'copyRoster'])->name('attendance_schedules.copy');
+            Route::delete('/attendance-schedules/{attendance_schedule}', [AttendanceScheduleController::class, 'destroy'])->name('attendance_schedules.destroy');
+            Route::get('/leave-requests', [LeaveRequestController::class, 'index'])->name('leave_requests.index');
+            Route::post('/leave-requests', [LeaveRequestController::class, 'store'])->name('leave_requests.store');
+            Route::post('/leave-requests/{leave_request}/approve', [LeaveRequestController::class, 'approve'])->name('leave_requests.approve');
+            Route::post('/leave-requests/{leave_request}/reject', [LeaveRequestController::class, 'reject'])->name('leave_requests.reject');
 
             // Pengaturan resto
             Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
@@ -185,12 +210,15 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::get('/reports/audit-logs', [AuditLogController::class, 'index'])->name('reports.audit_logs');
             Route::get('/reports/finance', [FinanceReportController::class, 'index'])->name('reports.finance');
             Route::get('/reports/finance/export', [FinanceReportController::class, 'export'])->name('reports.finance.export');
+            Route::get('/reports/attendance', [AttendanceReportController::class, 'index'])->name('reports.attendance');
+            Route::get('/reports/attendance/export', [AttendanceReportController::class, 'export'])->name('reports.attendance.export');
             Route::get('/expenses', [CashExpenseController::class, 'index'])->name('expenses.index');
             Route::post('/expenses', [CashExpenseController::class, 'store'])->name('expenses.store');
             Route::delete('/expenses/{cashExpense}', [CashExpenseController::class, 'destroy'])->name('expenses.destroy');
             Route::post('/expenses/{cashExpense}/approve', [CashExpenseController::class, 'approve'])->name('expenses.approve');
             Route::post('/expenses/{cashExpense}/reject', [CashExpenseController::class, 'reject'])->name('expenses.reject');
             Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
+            Route::get('/payroll/attendance-export', [PayrollController::class, 'exportAttendanceRecap'])->name('payroll.attendance_export');
             Route::get('/payroll/meal-deduction-preview', [PayrollController::class, 'mealDeductionPreview'])->name('payroll.meal_deduction_preview');
             Route::post('/payroll', [PayrollController::class, 'store'])->name('payroll.store');
             Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve'])->name('payroll.approve');
@@ -215,6 +243,21 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             // Produk / Menu
             Route::resource('products', ProductController::class);
             Route::resource('employees', EmployeeController::class)->except(['show']);
+            Route::resource('attendance-shifts', AttendanceShiftController::class)->except(['show'])->names('attendance_shifts');
+            Route::resource('attendance-late-rules', AttendanceLateRuleController::class)->except(['show'])->names('attendance_late_rules');
+            Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendances.index');
+            Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendances.store');
+            Route::get('/attendance/review', [AttendanceController::class, 'reviewQueue'])->name('attendances.review');
+            Route::post('/attendance/{attendance}/review', [AttendanceController::class, 'reviewUpdate'])->name('attendances.review_update');
+            Route::get('/attendance-schedules', [AttendanceScheduleController::class, 'index'])->name('attendance_schedules.index');
+            Route::post('/attendance-schedules', [AttendanceScheduleController::class, 'store'])->name('attendance_schedules.store');
+            Route::post('/attendance-schedules/bulk', [AttendanceScheduleController::class, 'bulkStore'])->name('attendance_schedules.bulk_store');
+            Route::post('/attendance-schedules/copy', [AttendanceScheduleController::class, 'copyRoster'])->name('attendance_schedules.copy');
+            Route::delete('/attendance-schedules/{attendance_schedule}', [AttendanceScheduleController::class, 'destroy'])->name('attendance_schedules.destroy');
+            Route::get('/leave-requests', [LeaveRequestController::class, 'index'])->name('leave_requests.index');
+            Route::post('/leave-requests', [LeaveRequestController::class, 'store'])->name('leave_requests.store');
+            Route::post('/leave-requests/{leave_request}/approve', [LeaveRequestController::class, 'approve'])->name('leave_requests.approve');
+            Route::post('/leave-requests/{leave_request}/reject', [LeaveRequestController::class, 'reject'])->name('leave_requests.reject');
 
             // Resep / BOM
             Route::resource('recipes', RecipeController::class);
@@ -237,12 +280,15 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::get('/reports/audit-logs', [AuditLogController::class, 'index'])->name('reports.audit_logs');
             Route::get('/reports/finance', [FinanceReportController::class, 'index'])->name('reports.finance');
             Route::get('/reports/finance/export', [FinanceReportController::class, 'export'])->name('reports.finance.export');
+            Route::get('/reports/attendance', [AttendanceReportController::class, 'index'])->name('reports.attendance');
+            Route::get('/reports/attendance/export', [AttendanceReportController::class, 'export'])->name('reports.attendance.export');
             Route::get('/expenses', [CashExpenseController::class, 'index'])->name('expenses.index');
             Route::post('/expenses', [CashExpenseController::class, 'store'])->name('expenses.store');
             Route::delete('/expenses/{cashExpense}', [CashExpenseController::class, 'destroy'])->name('expenses.destroy');
             Route::post('/expenses/{cashExpense}/approve', [CashExpenseController::class, 'approve'])->name('expenses.approve');
             Route::post('/expenses/{cashExpense}/reject', [CashExpenseController::class, 'reject'])->name('expenses.reject');
             Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
+            Route::get('/payroll/attendance-export', [PayrollController::class, 'exportAttendanceRecap'])->name('payroll.attendance_export');
             Route::get('/payroll/meal-deduction-preview', [PayrollController::class, 'mealDeductionPreview'])->name('payroll.meal_deduction_preview');
             Route::post('/payroll', [PayrollController::class, 'store'])->name('payroll.store');
             Route::post('/payroll/{payroll}/approve', [PayrollController::class, 'approve'])->name('payroll.approve');

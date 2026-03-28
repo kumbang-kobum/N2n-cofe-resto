@@ -148,72 +148,168 @@ Catatan penting:
 5. **Inventaris Resto**
    - Catat aset, kondisi, lokasi/kategori, serta laporan kerusakan/pemusnahan.
 
-## Cara Install (Ambil dari GitHub)
+## Install Cepat dari GitHub
 1. Clone project:
    ```bash
    git clone https://github.com/kumbang-kobum/N2n-cofe-resto.git
    cd N2n-cofe-resto/kasir-cafe
    ```
-2. Copy `.env`:
+2. Copy file environment:
    ```bash
    cp .env.example .env
    ```
-3. Set database & key:
+3. Isi koneksi database di `.env`, lalu generate key:
    ```bash
    php artisan key:generate
    ```
 
 ## Cara Install (Development)
-1. Install dependency:
+1. Install dependency backend dan frontend:
    ```bash
    composer install
-   npm install && npm run build
+   npm install
+   npm run build
    ```
-2. Migrasi & seed:
+2. Inisialisasi aplikasi:
    ```bash
    php artisan migrate --seed
    php artisan storage:link
    ```
-3. Jalankan:
+3. Jalankan aplikasi:
    ```bash
    php artisan serve
    ```
-4. (Opsional) Bersihkan cache bila perubahan tidak tampil:
+4. Jika tampilan atau route belum ikut update:
    ```bash
    php artisan optimize:clear
+   php artisan config:clear
+   php artisan route:clear
+   php artisan view:clear
    ```
-5. permison upload :
+5. Jika ada masalah permission upload/cache di Linux:
    ```bash
-   chown -R www:www storage bootstrap/cache
+   chown -R www-data:www-data storage bootstrap/cache
    chmod -R 775 storage bootstrap/cache
    ```
+
 ## Cara Install (Server / Production)
-1. Upload kode ke server (Nginx/Apache + PHP + MySQL) atau `git clone` dari repo.
-2. Buat `.env` (copy dari `.env.example`) dan isi:
+1. Upload kode ke server atau clone langsung dari repo.
+2. Masuk ke folder aplikasi:
+   ```bash
+   cd /path-ke-project/N2n-cofe-resto/kasir-cafe
+   ```
+3. Siapkan `.env` dari `.env.example`, lalu isi minimal:
    - `APP_ENV=production`
    - `APP_DEBUG=false`
-   - `APP_URL=https://domain-client.com`
+   - `APP_URL=http://domain-atau-ip-kamu`
    - `DB_*` sesuai server
    - `LICENSE_MASTER_KEY=...`
-3. Install dependency:
+4. Install dependency:
    ```bash
    composer install --no-dev --optimize-autoloader
-   npm install && npm run build
+   npm install
+   npm run build
    ```
-4. Migrasi & storage:
+5. Inisialisasi Laravel:
    ```bash
+   php artisan key:generate
    php artisan migrate --force
    php artisan storage:link
    ```
-5. Cache config/route/view:
+6. Bangun cache production:
    ```bash
+   php artisan optimize:clear
    php artisan config:cache
    php artisan route:cache
    php artisan view:cache
    ```
-6. Pastikan permission:
-   - `storage/` dan `bootstrap/cache/` writable.
-7. (Opsional) Jalankan `php artisan optimize:clear` jika perubahan belum terlihat.
+7. Pastikan permission writable:
+   ```bash
+   chmod -R 775 storage bootstrap/cache
+   ```
+8. Jika memakai queue worker:
+   ```bash
+   php artisan queue:restart
+   ```
+
+## Cara Update Mengikuti Repo
+Gunakan alur ini setiap kali server production mengikuti update dari GitHub.
+
+1. Masuk ke folder repo utama:
+   ```bash
+   cd /www/wwwroot/caferesto/N2n-cofe-resto
+   ```
+   Sesuaikan dengan lokasi repo di server kamu.
+2. Ambil update dari GitHub dan samakan dengan branch utama:
+   ```bash
+   git fetch origin
+   git reset --hard origin/main
+   ```
+3. Jika server punya file lokal yang tidak perlu di-commit, abaikan di exclude:
+   ```bash
+   echo "kasir-cafe/public/.user.ini" >> .git/info/exclude
+   git status
+   ```
+4. Masuk ke folder aplikasi Laravel:
+   ```bash
+   cd kasir-cafe
+   ```
+5. Install dependency backend:
+   ```bash
+   composer install --no-dev --optimize-autoloader
+   ```
+6. Install dependency frontend lalu build asset:
+   ```bash
+   npm install
+   npm run build
+   ```
+   Langkah ini wajib jika ada perubahan Blade, Tailwind/CSS, landing page, login, dark mode, TV Informasi, atau halaman dashboard.
+7. Jalankan migration aman:
+   ```bash
+   php artisan migrate --force
+   ```
+8. Bersihkan lalu bangun ulang cache Laravel:
+   ```bash
+   php artisan optimize:clear
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache
+   ```
+9. Jika memakai queue:
+   ```bash
+   php artisan queue:restart
+   ```
+10. Pastikan permission storage/cache tetap benar:
+   ```bash
+   chmod -R 775 storage bootstrap/cache
+   ```
+11. Jika tampilan belum berubah:
+   - hard refresh browser
+   - coba mode incognito
+   - pastikan `public/build` sudah ter-update
+   - restart PHP/Apache/Nginx bila perlu
+
+### Ringkasan Update Production
+```bash
+git fetch origin
+git reset --hard origin/main
+cd kasir-cafe
+composer install --no-dev --optimize-autoloader
+npm install
+npm run build
+php artisan migrate --force
+php artisan optimize:clear
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan queue:restart
+chmod -R 775 storage bootstrap/cache
+```
+
+Catatan penting:
+- Aman menggunakan `php artisan migrate --force` di production.
+- Jangan gunakan `php artisan migrate:fresh` di production.
+- Jika perubahan UI tidak muncul, penyebab paling sering adalah lupa `npm run build`.
 
 ## Deployment Otomatis (Server)
 1. Pastikan `.env` sudah benar (`APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, `DB_*`, `LICENSE_MASTER_KEY`).
@@ -221,6 +317,17 @@ Catatan penting:
    ```bash
    bash scripts/deploy.sh
    ```
+3. Setelah deploy, tetap cek:
+   ```bash
+   php artisan migrate --force
+   php artisan route:cache
+   php artisan view:cache
+   ```
+
+## UAT Absensi + Payroll
+- Checklist uji coba operasional tersedia di:
+  - `docs/uat_absensi_payroll_checklist.md`
+- Gunakan checklist ini sebelum fitur absensi dan payroll dipakai penuh di lapangan.
 
 ## Instalasi macOS (XAMPP) - Lengkap
 1. Install XAMPP for macOS, lalu start `Apache` dan `MySQL`.

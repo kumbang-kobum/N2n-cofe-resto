@@ -14,6 +14,8 @@ class Employee extends Model
         'name',
         'position',
         'department',
+        'default_shift_id',
+        'face_reference_path',
         'meal_allowance_monthly',
         'uses_app',
         'user_id',
@@ -35,5 +37,25 @@ class Employee extends Model
     public function meals()
     {
         return $this->hasMany(EmployeeMeal::class);
+    }
+
+    public function defaultShift()
+    {
+        return $this->belongsTo(AttendanceShift::class, 'default_shift_id');
+    }
+
+    public function schedules()
+    {
+        return $this->hasMany(AttendanceSchedule::class);
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function leaveRequests()
+    {
+        return $this->hasMany(LeaveRequest::class);
     }
 }

@@ -24,6 +24,7 @@
                     <th class="px-3 py-2">Nama</th>
                     <th class="px-3 py-2">Jabatan</th>
                     <th class="px-3 py-2">Departemen</th>
+                    <th class="px-3 py-2">Shift Default</th>
                     <th class="px-3 py-2">Jatah Makan</th>
                     <th class="px-3 py-2">Akun App</th>
                     <th class="px-3 py-2">Status</th>
@@ -37,6 +38,7 @@
                         <td class="px-3 py-2">{{ $employee->name }}</td>
                         <td class="px-3 py-2">{{ $employee->position ?: '-' }}</td>
                         <td class="px-3 py-2">{{ $employee->department ?: '-' }}</td>
+                        <td class="px-3 py-2">{{ $employee->defaultShift?->name ?: '-' }}</td>
                         <td class="px-3 py-2">
                             {{ is_null($employee->meal_allowance_monthly) ? 'Tidak dibatasi' : 'Rp ' . number_format($employee->meal_allowance_monthly, 0, ',', '.') . ' / bulan' }}
                         </td>
@@ -68,7 +70,7 @@
                     </tr>
                 @empty
                     <tr class="border-t">
-                        <td colspan="8" class="px-3 py-4 text-center text-sm text-gray-500">Belum ada data karyawan.</td>
+                        <td colspan="9" class="px-3 py-4 text-center text-sm text-gray-500">Belum ada data karyawan.</td>
                     </tr>
                 @endforelse
             </tbody>

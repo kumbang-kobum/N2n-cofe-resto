@@ -48,6 +48,10 @@
              class="inline-flex px-3 py-2 rounded border border-slate-200 text-slate-700 text-sm hover:bg-slate-50">
             Dark Mode
           </button>
+          <a href="{{ route('attendance.public_kiosk') }}"
+             class="hidden sm:inline-flex px-3 py-2 rounded border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm font-medium hover:bg-emerald-100">
+            Absensi Karyawan
+          </a>
           <a href="{{ route('tv.information') }}"
              class="hidden sm:inline-flex px-3 py-2 rounded border border-slate-200 text-slate-700 text-sm hover:bg-slate-50">
             TV Informasi
@@ -94,6 +98,10 @@
             <a href="{{ route('tv.information') }}"
                class="px-4 py-3 rounded-xl border border-blue-100/40 bg-white/5 text-sm text-blue-50 hover:bg-white/10">
               TV informasi
+            </a>
+            <a href="{{ route('attendance.public_kiosk') }}"
+               class="px-4 py-3 rounded-xl border border-emerald-200/60 bg-emerald-400/10 text-sm font-medium text-emerald-50 hover:bg-emerald-400/20">
+              Absensi Karyawan
             </a>
           </div>
 

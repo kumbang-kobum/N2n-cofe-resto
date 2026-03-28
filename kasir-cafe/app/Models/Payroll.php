@@ -17,6 +17,7 @@ class Payroll extends Model
         'overtime_amount',
         'bonus_amount',
         'deduction_amount',
+        'late_deduction_amount',
         'meal_deduction_amount',
         'net_amount',
         'status',
@@ -35,6 +36,7 @@ class Payroll extends Model
         'overtime_amount' => 'float',
         'bonus_amount' => 'float',
         'deduction_amount' => 'float',
+        'late_deduction_amount' => 'float',
         'meal_deduction_amount' => 'float',
         'net_amount' => 'float',
         'approved_at' => 'datetime',
@@ -68,16 +70,26 @@ class Payroll extends Model
 
     public function getTotalDeductionAmountAttribute(): float
     {
-        return (float) $this->deduction_amount + (float) $this->meal_deduction_amount;
+        return (float) $this->deduction_amount + (float) $this->late_deduction_amount + (float) $this->meal_deduction_amount;
     }
 
     public function getExpenseAmountAttribute(): float
     {
-        return (float) $this->base_salary + (float) $this->overtime_amount + (float) $this->bonus_amount - (float) $this->deduction_amount;
+        return (float) $this->base_salary
+            + (float) $this->overtime_amount
+            + (float) $this->bonus_amount
+            - (float) $this->deduction_amount
+            - (float) $this->late_deduction_amount
+            - (float) $this->meal_deduction_amount;
     }
 
     public function employeeMeals()
     {
         return $this->hasMany(EmployeeMeal::class);
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
     }
 }
