@@ -14,15 +14,13 @@ class AuditLogController extends Controller
         $to = $request->query('to', now()->toDateString());
         $action = $request->query('action', '');
 
-        $query = AuditLog::query()
-            ->whereDate('created_at', '>=', $from)
-            ->whereDate('created_at', '<=', $to);
+        $query = $this->filteredQuery($from, $to, $action);
 
-        if ($action !== '') {
-            $query->where('action', $action);
-        }
-
-        $logs = $query->orderByDesc('id')->paginate(50)->withQueryString();
+        $logs = $query
+            ->with(['actor', 'auditable'])
+            ->orderByDesc('id')
+            ->paginate(50)
+            ->withQueryString();
 
         $actions = AuditLog::query()
             ->select('action')
@@ -32,5 +30,38 @@ class AuditLogController extends Controller
             ->toArray();
 
         return view('admin.reports.audit_logs', compact('logs', 'from', 'to', 'action', 'actions'));
+    }
+
+    public function destroy(AuditLog $auditLog)
+    {
+        $auditLog->delete();
+
+        return back()->with('status', 'Audit log berhasil dihapus.');
+    }
+
+    public function destroyFiltered(Request $request)
+    {
+        $from = $request->input('from', now()->startOfMonth()->toDateString());
+        $to = $request->input('to', now()->toDateString());
+        $action = $request->input('action', '');
+
+        $deleted = $this->filteredQuery($from, $to, $action)->delete();
+
+        return back()->with('status', $deleted > 0
+            ? "Berhasil menghapus {$deleted} audit log."
+            : 'Tidak ada audit log yang dihapus.');
+    }
+
+    protected function filteredQuery(string $from, string $to, string $action)
+    {
+        $query = AuditLog::query()
+            ->whereDate('created_at', '>=', $from)
+            ->whereDate('created_at', '<=', $to);
+
+        if ($action !== '') {
+            $query->where('action', $action);
+        }
+
+        return $query;
     }
 }

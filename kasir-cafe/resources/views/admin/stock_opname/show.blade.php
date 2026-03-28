@@ -197,16 +197,24 @@
     <h2 class="font-semibold mb-2 text-sm">Audit Log</h2>
     <div class="text-xs">
         @forelse($opname->audits as $a)
-            <div class="border-t py-2">
-                <div class="font-medium">{{ $a->action }}</div>
-                <div class="text-gray-600">
-                    {{ $a->created_at->format('d M Y H:i') }}
-                    • Actor: {{ $a->actor_id ?? '-' }}
+            <div class="border-t py-3">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">{{ $a->actionLabel() }}</span>
+                    <span class="text-gray-500">{{ $a->created_at->format('d M Y H:i') }}</span>
+                    <span class="text-gray-500">•</span>
+                    <span class="text-gray-600">Pelaku: {{ $a->actorLabel() }}</span>
                 </div>
-                @if($a->meta)
-                    <pre class="text-[11px] bg-gray-50 p-2 rounded mt-1 overflow-x-auto">
-{{ json_encode($a->meta, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE) }}
-                    </pre>
+                <div class="mt-1 text-[11px] text-slate-700">{{ $a->summaryText() }}</div>
+                @php($metaRows = $a->formattedMeta())
+                @if($metaRows)
+                    <div class="mt-2 overflow-hidden rounded border border-slate-200">
+                        @foreach($metaRows as $row)
+                            <div class="grid gap-1 border-t px-3 py-2 first:border-t-0 md:grid-cols-[180px,1fr]">
+                                <div class="text-[11px] font-medium text-slate-500">{{ $row['label'] }}</div>
+                                <div class="text-[11px] text-slate-700 whitespace-pre-wrap break-words">{{ $row['value'] }}</div>
+                            </div>
+                        @endforeach
+                    </div>
                 @endif
             </div>
         @empty

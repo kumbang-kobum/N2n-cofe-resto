@@ -133,6 +133,7 @@ class StockOpnameController extends Controller
     public function show($id)
     {
         $opname = StockOpname::with([
+            'audits.actor',
             'lines.item.baseUnit',
             'audits' => fn ($q) => $q->orderBy('created_at')->orderBy('id'),
         ])->findOrFail($id);

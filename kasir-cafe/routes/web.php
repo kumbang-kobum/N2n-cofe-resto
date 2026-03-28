@@ -208,6 +208,8 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::get('/sales/{sale}/receipt', [PosController::class, 'receipt'])->name('sales.receipt');
             Route::get('/reports/stock-opname-diff', [ReportController::class, 'stockOpnameDiff'])->name('reports.opname_variance');
             Route::get('/reports/audit-logs', [AuditLogController::class, 'index'])->name('reports.audit_logs');
+            Route::delete('/reports/audit-logs/{auditLog}', [AuditLogController::class, 'destroy'])->name('reports.audit_logs.destroy');
+            Route::delete('/reports/audit-logs', [AuditLogController::class, 'destroyFiltered'])->name('reports.audit_logs.destroy_filtered');
             Route::get('/reports/finance', [FinanceReportController::class, 'index'])->name('reports.finance');
             Route::get('/reports/finance/export', [FinanceReportController::class, 'export'])->name('reports.finance.export');
             Route::get('/reports/attendance', [AttendanceReportController::class, 'index'])->name('reports.attendance');
