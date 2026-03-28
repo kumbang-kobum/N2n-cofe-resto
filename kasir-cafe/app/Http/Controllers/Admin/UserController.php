@@ -23,7 +23,7 @@ class UserController extends Controller
 
     public function create()
     {
-        $roles = ['admin', 'manager', 'cashier'];
+        $roles = ['admin', 'manager', 'cashier', 'petugas'];
         $permissionGroups = $this->permissionGroups();
         $roleDefaultPermissions = config('menu_permissions.defaults', []);
 
@@ -32,7 +32,7 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $roles = ['admin', 'manager', 'cashier'];
+        $roles = ['admin', 'manager', 'cashier', 'petugas'];
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -61,7 +61,7 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        $roles = ['admin', 'manager', 'cashier'];
+        $roles = ['admin', 'manager', 'cashier', 'petugas'];
         $currentRole = $user->getRoleNames()->first();
         $permissionGroups = $this->permissionGroups();
         $roleDefaultPermissions = config('menu_permissions.defaults', []);
@@ -79,7 +79,7 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        $roles = ['admin', 'manager', 'cashier'];
+        $roles = ['admin', 'manager', 'cashier', 'petugas'];
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],

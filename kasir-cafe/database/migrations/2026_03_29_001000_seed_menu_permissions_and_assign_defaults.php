@@ -19,6 +19,13 @@ return new class extends Migration
         $permissionNames = array_keys(config('menu_permissions.permissions', []));
         $now = now();
 
+        foreach (['admin', 'manager', 'cashier', 'petugas'] as $roleName) {
+            DB::table($rolesTable)->updateOrInsert(
+                ['name' => $roleName, 'guard_name' => $guardName],
+                ['created_at' => $now, 'updated_at' => $now],
+            );
+        }
+
         foreach ($permissionNames as $permissionName) {
             DB::table($permissionsTable)->updateOrInsert(
                 ['name' => $permissionName, 'guard_name' => $guardName],

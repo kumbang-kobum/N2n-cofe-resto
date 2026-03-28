@@ -156,5 +156,17 @@
                 </div>
             </div>
         @endrole
+
+        @role('petugas')
+            <div class="space-y-2">
+                <button type="button" class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-blue-100/75 transition hover:bg-white/5">
+                    <span>Petugas</span>
+                </button>
+                <div class="space-y-1">
+                    @can('access.attendance_kiosk')<a href="{{ route('attendance.kiosk') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('attendance.kiosk') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Kiosk Absensi</a>@endcan
+                    @can('access.profile')<a href="{{ route('profile.edit') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('profile.*') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Ubah Password</a>@endcan
+                </div>
+            </div>
+        @endrole
     </div>
 </div>

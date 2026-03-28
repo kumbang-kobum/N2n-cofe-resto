@@ -45,6 +45,7 @@ class BootstrapSeeder extends Seeder
         $adminRole   = Role::firstOrCreate(['name' => 'admin']);
         $managerRole = Role::firstOrCreate(['name' => 'manager']);
         $cashierRole = Role::firstOrCreate(['name' => 'cashier']);
+        $staffRole   = Role::firstOrCreate(['name' => 'petugas']);
 
         // === Users ===
         $admin = User::firstOrCreate(
@@ -64,5 +65,11 @@ class BootstrapSeeder extends Seeder
             ['name' => 'Manager', 'password' => Hash::make('password')]
         );
         $manager->syncRoles([$managerRole]);
+
+        $staff = User::firstOrCreate(
+            ['email' => 'petugas@demo.local'],
+            ['name' => 'Petugas', 'password' => Hash::make('password')]
+        );
+        $staff->syncRoles([$staffRole]);
     }
 }

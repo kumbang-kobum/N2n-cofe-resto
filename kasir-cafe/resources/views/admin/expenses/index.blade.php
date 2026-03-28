@@ -3,9 +3,9 @@
 @section('content')
     @php
         $storeRoute = route(request()->routeIs('cashier.*') ? 'cashier.expenses.store' : (request()->routeIs('manager.*') ? 'manager.expenses.store' : 'admin.expenses.store'));
-        $approveRouteName = request()->routeIs('manager.*') ? 'manager.expenses.approve' : 'admin.expenses.approve';
-        $rejectRouteName = request()->routeIs('manager.*') ? 'manager.expenses.reject' : 'admin.expenses.reject';
-        $destroyRouteName = request()->routeIs('manager.*') ? 'manager.expenses.destroy' : 'admin.expenses.destroy';
+        $approveRouteName = 'admin.expenses.approve';
+        $rejectRouteName = 'admin.expenses.reject';
+        $destroyRouteName = 'admin.expenses.destroy';
         $currentFundingSource = old('funding_source', $activePettyCashFund ? 'PETTY_CASH' : 'DIRECT_CASH');
         $canApprove = auth()->user()->hasRole('admin');
         $canChooseRequester = auth()->user()->hasRole('admin');

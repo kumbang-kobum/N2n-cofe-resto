@@ -99,6 +99,9 @@ return [
         'cashier' => [
             'access.pos','access.attendance_kiosk','access.employee_meals','access.sales_reports','access.expenses','access.settings','access.profile'
         ],
+        'petugas' => [
+            'access.attendance_kiosk','access.profile'
+        ],
     ],
 
     'route_patterns' => [

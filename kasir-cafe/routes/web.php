@@ -65,7 +65,7 @@ Route::post('/attendance-kiosk', [AttendanceController::class, 'kioskStore'])->n
 */
 Route::middleware(['auth', 'verified', 'license', 'menu.access'])->group(function () {
     // Refund (cashier/admin/manager)
-    Route::middleware('role:cashier|admin|manager')->group(function () {
+    Route::middleware('role:cashier|admin|manager|petugas')->group(function () {
         Route::get('/sales/{sale}/refund', [SaleRefundController::class, 'create'])->name('cashier.refunds.create');
         Route::post('/sales/{sale}/refund', [SaleRefundController::class, 'store'])->name('cashier.refunds.store');
         Route::get('/manager/sales/{sale}/refund', [SaleRefundController::class, 'create'])->name('manager.refunds.create');
@@ -109,6 +109,11 @@ Route::middleware(['auth', 'verified', 'license', 'menu.access'])->group(functio
         // Kasir -> langsung ke POS
         if ($user->hasRole('cashier')) {
             return redirect()->route('cashier.pos');
+        }
+
+        // Petugas -> fokus ke kiosk absensi
+        if ($user->hasRole('petugas')) {
+            return redirect()->route('attendance.kiosk');
         }
 
         // Fallback kalau ada role lain
@@ -293,9 +298,6 @@ Route::middleware(['auth', 'verified', 'license', 'menu.access'])->group(functio
             Route::get('/reports/attendance/export', [AttendanceReportController::class, 'export'])->name('reports.attendance.export');
             Route::get('/expenses', [CashExpenseController::class, 'index'])->name('expenses.index');
             Route::post('/expenses', [CashExpenseController::class, 'store'])->name('expenses.store');
-            Route::delete('/expenses/{cashExpense}', [CashExpenseController::class, 'destroy'])->name('expenses.destroy');
-            Route::post('/expenses/{cashExpense}/approve', [CashExpenseController::class, 'approve'])->name('expenses.approve');
-            Route::post('/expenses/{cashExpense}/reject', [CashExpenseController::class, 'reject'])->name('expenses.reject');
             Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
             Route::get('/payroll/attendance-export', [PayrollController::class, 'exportAttendanceRecap'])->name('payroll.attendance_export');
             Route::get('/payroll/meal-deduction-preview', [PayrollController::class, 'mealDeductionPreview'])->name('payroll.meal_deduction_preview');
@@ -342,14 +344,21 @@ Route::middleware(['auth', 'verified', 'license', 'menu.access'])->group(functio
                 ->name('reports.sales');
             Route::get('/reports/sales/export', [\App\Http\Controllers\Admin\ReportController::class, 'exportSalesForCashier'])
                 ->name('reports.sales.export');
-            Route::get('/reports/finance', [FinanceReportController::class, 'index'])->name('reports.finance');
-            Route::get('/reports/finance/export', [FinanceReportController::class, 'export'])->name('reports.finance.export');
             Route::get('/expenses', [CashExpenseController::class, 'index'])->name('expenses.index');
             Route::post('/expenses', [CashExpenseController::class, 'store'])->name('expenses.store');
             Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
             Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
             Route::get('/employee-meals', [EmployeeMealController::class, 'index'])->name('employee_meals.index');
             Route::post('/employee-meals', [EmployeeMealController::class, 'store'])->name('employee_meals.store');
+        });
+
+    Route::prefix('petugas')
+        ->as('petugas.')
+        ->middleware('role:petugas')
+        ->group(function () {
+            Route::get('/dashboard', function () {
+                return redirect()->route('attendance.kiosk');
+            })->name('dashboard');
         });
 });
 
