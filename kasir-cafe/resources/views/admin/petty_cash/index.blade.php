@@ -149,4 +149,49 @@
             </div>
         </div>
     </div>
+
+    @php
+        $categorySummary = $funds
+            ->flatMap(fn ($fund) => $fund->expenses ?? collect())
+            ->where('status', 'APPROVED')
+            ->groupBy(fn ($expense) => $expense->expenseCategory?->name ?: $expense->category ?: 'Tanpa Kategori')
+            ->map(function ($rows, $category) {
+                return [
+                    'category' => $category,
+                    'count' => (int) $rows->count(),
+                    'total' => (float) $rows->sum('amount'),
+                ];
+            })
+            ->sortByDesc('total')
+            ->values();
+    @endphp
+
+    @if($categorySummary->isNotEmpty())
+        <div class="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="mb-3">
+                <h2 class="text-base font-semibold text-slate-900">Ringkasan Pengeluaran per Kategori</h2>
+                <p class="text-sm text-slate-500">Hanya menghitung pengeluaran kas kecil yang sudah approved pada filter periode ini.</p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="border-b p-2 text-left">Kategori</th>
+                            <th class="border-b p-2 text-right">Jumlah Transaksi</th>
+                            <th class="border-b p-2 text-right">Total Approved</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($categorySummary as $row)
+                            <tr class="border-b border-slate-100">
+                                <td class="p-2 font-medium text-slate-900">{{ $row['category'] }}</td>
+                                <td class="p-2 text-right">{{ number_format($row['count'], 0, ',', '.') }}</td>
+                                <td class="p-2 text-right font-semibold text-slate-900">Rp {{ number_format($row['total'], 0, ',', '.') }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
 @endsection

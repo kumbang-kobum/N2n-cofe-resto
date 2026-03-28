@@ -20,7 +20,7 @@ class PettyCashFundController extends Controller
         $status = trim((string) $request->query('status', ''));
 
         $funds = $this->baseQuery($from, $to, $status)
-            ->with(['creator', 'closer'])
+            ->with(['creator', 'closer', 'expenses.expenseCategory'])
             ->withSum(['expenses as approved_used_total' => fn ($query) => $query->where('status', 'APPROVED')], 'amount')
             ->orderByDesc('period_start')
             ->orderByDesc('id')
@@ -114,10 +114,23 @@ class PettyCashFundController extends Controller
 
         $fundIds = $funds->pluck('id');
         $expenses = CashExpense::query()
-            ->with(['cashier', 'approver', 'pettyCashFund'])
+            ->with(['cashier', 'approver', 'pettyCashFund', 'expenseCategory'])
             ->whereIn('petty_cash_fund_id', $fundIds)
             ->orderBy('expense_at')
             ->get();
+
+        $categorySummaryRows = $expenses
+            ->where('status', 'APPROVED')
+            ->groupBy(fn ($expense) => $expense->expenseCategory?->name ?: $expense->category ?: 'Tanpa Kategori')
+            ->map(function ($rows, $category) {
+                return [
+                    'category' => $category,
+                    'total' => (float) $rows->sum('amount'),
+                    'count' => (int) $rows->count(),
+                ];
+            })
+            ->sortByDesc('total')
+            ->values();
 
         $spreadsheet = new Spreadsheet();
         $summarySheet = $spreadsheet->getActiveSheet();
@@ -179,7 +192,7 @@ class PettyCashFundController extends Controller
             $expenseSheet->fromArray([[
                 optional($expense->pettyCashFund)->name,
                 optional($expense->expense_at)->format('Y-m-d H:i:s'),
-                $expense->category,
+                $expense->expenseCategory?->name ?: $expense->category,
                 (float) $expense->amount,
                 $expense->status,
                 optional($expense->cashier)->name,
@@ -192,7 +205,25 @@ class PettyCashFundController extends Controller
             $row++;
         }
 
-        foreach ([$summarySheet, $expenseSheet] as $sheet) {
+        $categorySheet = $spreadsheet->createSheet();
+        $categorySheet->setTitle('Per Kategori');
+        $categorySheet->fromArray([[
+            'Kategori',
+            'Jumlah Transaksi',
+            'Total Approved',
+        ]], null, 'A1');
+
+        $row = 2;
+        foreach ($categorySummaryRows as $categoryRow) {
+            $categorySheet->fromArray([[
+                $categoryRow['category'],
+                $categoryRow['count'],
+                $categoryRow['total'],
+            ]], null, 'A' . $row);
+            $row++;
+        }
+
+        foreach ([$summarySheet, $expenseSheet, $categorySheet] as $sheet) {
             foreach (range('A', 'L') as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
@@ -200,6 +231,7 @@ class PettyCashFundController extends Controller
 
         $this->applyHeaderStyle($summarySheet, 'A1:L1');
         $this->applyHeaderStyle($expenseSheet, 'A1:K1');
+        $this->applyHeaderStyle($categorySheet, 'A1:C1');
 
         $filename = 'laporan_kas_kecil_' . $from . '_to_' . $to . '.xlsx';
 

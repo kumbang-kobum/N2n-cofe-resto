@@ -206,4 +206,34 @@
             </div>
         </div>
     @endif
+
+    @if(($expenseCategoryRows ?? collect())->isNotEmpty())
+        <div class="mt-5 bg-white border rounded-lg p-4">
+            <div class="font-semibold mb-3">Ringkasan Pengeluaran per Kategori</div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="text-left p-2 border-b">Kategori</th>
+                            <th class="text-right p-2 border-b">Jumlah Transaksi</th>
+                            <th class="text-right p-2 border-b">Kas Penjualan</th>
+                            <th class="text-right p-2 border-b">Kas Kecil</th>
+                            <th class="text-right p-2 border-b">Total Approved</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($expenseCategoryRows as $row)
+                            <tr class="border-b">
+                                <td class="p-2 font-medium">{{ $row['category'] }}</td>
+                                <td class="p-2 text-right">{{ number_format($row['count'], 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['direct_total'], 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['petty_cash_total'], 0, ',', '.') }}</td>
+                                <td class="p-2 text-right font-semibold">Rp {{ number_format($row['total'], 0, ',', '.') }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
 @endsection

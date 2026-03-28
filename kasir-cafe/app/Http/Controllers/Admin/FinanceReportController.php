@@ -70,6 +70,21 @@ class FinanceReportController extends Controller
         $employeeMeals = $employeeMealQuery->get();
         $directApprovedExpenses = $approvedExpenses->where('funding_source', 'DIRECT_CASH')->values();
         $pettyCashApprovedExpenses = $approvedExpenses->where('funding_source', 'PETTY_CASH')->values();
+        $expenseCategoryRows = $approvedExpenses
+            ->groupBy(fn ($expense) => $expense->expenseCategory?->name ?: $expense->category ?: 'Tanpa Kategori')
+            ->map(function ($rows, $category) {
+                $direct = $rows->where('funding_source', 'DIRECT_CASH')->sum('amount');
+                $petty = $rows->where('funding_source', 'PETTY_CASH')->sum('amount');
+                return [
+                    'category' => $category,
+                    'count' => (int) $rows->count(),
+                    'direct_total' => (float) $direct,
+                    'petty_cash_total' => (float) $petty,
+                    'total' => (float) $rows->sum('amount'),
+                ];
+            })
+            ->sortByDesc('total')
+            ->values();
         $pettyCashFunds = PettyCashFund::query()
             ->withSum(['expenses as approved_used_total' => fn ($query) => $query->where('status', 'APPROVED')], 'amount')
             ->whereDate('period_start', '<=', $to)
@@ -351,6 +366,7 @@ class FinanceReportController extends Controller
             'itemRows' => $itemRows->sortByDesc('paid_at')->values(),
             'menuAnalysisRows' => $menuAnalysisRows,
             'expenseRows' => $allExpenses->sortByDesc('expense_at')->values(),
+            'expenseCategoryRows' => $expenseCategoryRows,
             'pettyCashFunds' => $pettyCashFunds,
             'employeeMealRows' => $employeeMeals->sortByDesc('consumed_at')->values(),
             'payrollRows' => $payrolls->sortByDesc('paid_at')->values(),
@@ -521,7 +537,7 @@ class FinanceReportController extends Controller
         foreach ($data['expenseRows'] as $r) {
             $expenseSheet->fromArray([[
                 optional($r->expense_at)->format('Y-m-d H:i:s'),
-                $r->category,
+                $r->expenseCategory?->name ?: $r->category,
                 (float) $r->amount,
                 optional($r->cashier)->name,
                 ($r->funding_source ?? 'DIRECT_CASH') === 'PETTY_CASH' ? 'Kas Kecil' : 'Kas Penjualan',
@@ -565,6 +581,31 @@ class FinanceReportController extends Controller
                 (float) $r->excess_amount,
                 optional($r->payroll?->period_month)->format('Y-m'),
                 $r->note,
+            ]], null, 'A' . $row);
+            $row++;
+        }
+
+        $expenseCategorySheet = $spreadsheet->createSheet();
+        $expenseCategorySheet->setTitle('Kategori Pengeluaran');
+        $expenseCategorySheet->fromArray(
+            [[
+                'Kategori',
+                'Jumlah Transaksi',
+                'Kas Penjualan',
+                'Kas Kecil',
+                'Total Approved',
+            ]],
+            null,
+            'A1'
+        );
+        $row = 2;
+        foreach ($data['expenseCategoryRows'] as $r) {
+            $expenseCategorySheet->fromArray([[
+                $r['category'],
+                $r['count'],
+                $r['direct_total'],
+                $r['petty_cash_total'],
+                $r['total'],
             ]], null, 'A' . $row);
             $row++;
         }
@@ -666,7 +707,7 @@ class FinanceReportController extends Controller
             $row++;
         }
 
-        foreach ([$summarySheet, $trxSheet, $itemSheet, $expenseSheet, $mealSheet, $periodSheet, $menuSheet, $payrollSheet] as $sheet) {
+        foreach ([$summarySheet, $trxSheet, $itemSheet, $expenseSheet, $mealSheet, $expenseCategorySheet, $periodSheet, $menuSheet, $payrollSheet] as $sheet) {
             foreach (range('A', 'M') as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
@@ -678,6 +719,7 @@ class FinanceReportController extends Controller
         $this->applyHeaderStyle($itemSheet, 'A1:M1');
         $this->applyHeaderStyle($expenseSheet, 'A1:K1');
         $this->applyHeaderStyle($mealSheet, 'A1:I1');
+        $this->applyHeaderStyle($expenseCategorySheet, 'A1:E1');
         $this->applyHeaderStyle($periodSheet, 'A1:M1');
         $this->applyHeaderStyle($menuSheet, 'A1:J1');
         $this->applyHeaderStyle($payrollSheet, 'A1:L1');

@@ -70,7 +70,17 @@
                 </div>
                 <div>
                     <label class="mb-1 block text-xs font-medium text-slate-600">Kategori</label>
-                    <input type="text" name="category" value="{{ old('category') }}" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="Contoh: Belanja sayur, parkir, gas, ATK" required>
+                    <select name="expense_category_id" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                        <option value="">Pilih kategori pengeluaran</option>
+                        @foreach($expenseCategories as $category)
+                            <option value="{{ $category->id }}" @selected((int) old('expense_category_id') === $category->id)>{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                    <div class="mt-1 text-xs text-slate-500">Pilih kategori dari master agar laporan lebih konsisten.</div>
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-600">Kategori Manual (opsional)</label>
+                    <input type="text" name="category" value="{{ old('category') }}" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="Dipakai hanya jika kategori belum ada di master">
                 </div>
                 <div>
                     <label class="mb-1 block text-xs font-medium text-slate-600">Nominal (Rp)</label>

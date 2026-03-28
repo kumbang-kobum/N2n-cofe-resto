@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\CashExpense;
+use App\Models\ExpenseCategory;
 use App\Models\PettyCashFund;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -29,7 +30,7 @@ class CashExpenseController extends Controller
         }
 
         $query = CashExpense::query()
-            ->with(['cashier', 'approver', 'pettyCashFund'])
+            ->with(['cashier', 'approver', 'pettyCashFund', 'expenseCategory'])
             ->whereDate('expense_at', '>=', $from)
             ->whereDate('expense_at', '<=', $to);
 
@@ -75,6 +76,10 @@ class CashExpenseController extends Controller
 
         $openPettyCashFunds = $pettyCashFunds->where('status', 'OPEN')->values();
         $activePettyCashFund = $openPettyCashFunds->first();
+        $expenseCategories = ExpenseCategory::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         return view('admin.expenses.index', compact(
             'expenses',
@@ -90,6 +95,7 @@ class CashExpenseController extends Controller
             'pettyCashFunds',
             'openPettyCashFunds',
             'activePettyCashFund',
+            'expenseCategories',
         ));
     }
 
@@ -97,7 +103,8 @@ class CashExpenseController extends Controller
     {
         $validated = $request->validate([
             'expense_at' => ['required', 'date'],
-            'category' => ['required', 'string', 'max:100'],
+            'expense_category_id' => ['nullable', 'exists:expense_categories,id'],
+            'category' => ['nullable', 'string', 'max:100'],
             'amount' => ['required', 'numeric', 'min:1'],
             'funding_source' => ['required', 'in:DIRECT_CASH,PETTY_CASH'],
             'note' => ['nullable', 'string', 'max:1000'],
@@ -108,6 +115,19 @@ class CashExpenseController extends Controller
             'receipt.mimes' => 'Bukti belanja hanya mendukung JPG, PNG, WebP, atau PDF.',
             'receipt.max' => 'Ukuran bukti belanja terlalu besar. Maksimal 10 MB.',
         ]);
+
+        $selectedCategory = null;
+        if (! empty($validated['expense_category_id'])) {
+            $selectedCategory = ExpenseCategory::find($validated['expense_category_id']);
+        }
+
+        $categoryName = $selectedCategory?->name ?? trim((string) ($validated['category'] ?? ''));
+
+        if ($categoryName === '') {
+            return back()
+                ->withErrors(['expense_category_id' => 'Pilih kategori pengeluaran atau isi kategori manual.'])
+                ->withInput();
+        }
 
         $requesterId = auth()->user()->hasAnyRole(['cashier', 'manager'])
             ? auth()->id()
@@ -145,7 +165,8 @@ class CashExpenseController extends Controller
 
         $expense = CashExpense::create([
             'expense_at' => $validated['expense_at'],
-            'category' => $validated['category'],
+            'category' => $categoryName,
+            'expense_category_id' => $selectedCategory?->id,
             'amount' => $validated['amount'],
             'funding_source' => $fundingSource,
             'note' => $validated['note'] ?? null,
@@ -158,6 +179,7 @@ class CashExpenseController extends Controller
         AuditLog::log(auth()->id(), 'CASH_EXPENSE_CREATED', $expense, [
             'expense_at' => $expense->expense_at?->format('Y-m-d H:i:s'),
             'category' => $expense->category,
+            'expense_category_id' => $expense->expense_category_id,
             'amount' => $expense->amount,
             'funding_source' => $expense->funding_source,
             'requester_id' => $expense->cashier_id,

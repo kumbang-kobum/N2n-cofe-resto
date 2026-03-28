@@ -12,6 +12,7 @@ class CashExpense extends Model
     protected $fillable = [
         'expense_at',
         'category',
+        'expense_category_id',
         'amount',
         'funding_source',
         'note',
@@ -43,5 +44,10 @@ class CashExpense extends Model
     public function pettyCashFund()
     {
         return $this->belongsTo(PettyCashFund::class);
+    }
+
+    public function expenseCategory()
+    {
+        return $this->belongsTo(ExpenseCategory::class);
     }
 }

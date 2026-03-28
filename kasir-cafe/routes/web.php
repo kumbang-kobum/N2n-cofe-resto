@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\PettyCashFundController;
 use App\Http\Controllers\Admin\PayrollController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\EmployeeMealController;
+use App\Http\Controllers\Admin\ExpenseCategoryController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\AttendanceLateRuleController;
 use App\Http\Controllers\Admin\AttendanceScheduleController;
@@ -142,6 +143,7 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             // Stok bahan (item) & satuan
             Route::resource('items', \App\Http\Controllers\Admin\ItemController::class);
             Route::resource('units', \App\Http\Controllers\Admin\UnitController::class);
+            Route::resource('expense-categories', ExpenseCategoryController::class)->except(['show'])->names('expense_categories');
 
             // Pengguna
             Route::resource('users', UserController::class)->except(['show']);
