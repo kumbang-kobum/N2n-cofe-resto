@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CashExpense;
 use App\Models\Item;
 use App\Models\ItemBatch;
 use App\Models\Sale;
@@ -28,6 +29,31 @@ class DashboardController extends Controller
             'profit' => (float) $sales->sum('profit_gross'),
             'trx'    => (int) $sales->count(),
         ];
+
+        $pendingExpenseAlerts = [
+            'pending_total' => (int) CashExpense::query()
+                ->where('status', 'PENDING')
+                ->count(),
+            'pending_amount_total' => (float) CashExpense::query()
+                ->where('status', 'PENDING')
+                ->sum('amount'),
+            'over_limit_count' => (int) CashExpense::query()
+                ->where('status', 'PENDING')
+                ->where('exceeds_approval_limit', true)
+                ->count(),
+            'over_limit_amount_total' => (float) CashExpense::query()
+                ->where('status', 'PENDING')
+                ->where('exceeds_approval_limit', true)
+                ->sum('amount'),
+        ];
+
+        $overLimitExpenseItems = CashExpense::query()
+            ->with(['cashier', 'expenseCategory'])
+            ->where('status', 'PENDING')
+            ->where('exceeds_approval_limit', true)
+            ->orderByDesc('expense_at')
+            ->take(5)
+            ->get();
 
         $topProducts = SaleLine::query()
             ->select([
@@ -80,6 +106,8 @@ class DashboardController extends Controller
 
         return view('admin.dashboard.index', compact(
             'summary',
+            'pendingExpenseAlerts',
+            'overLimitExpenseItems',
             'from',
             'to',
             'lowStock',

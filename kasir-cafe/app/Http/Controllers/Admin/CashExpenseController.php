@@ -24,6 +24,7 @@ class CashExpenseController extends Controller
         $fundingSource = trim((string) $request->query('funding_source', ''));
         $pettyCashFundId = $request->query('petty_cash_fund_id');
         $pettyCashFundId = $pettyCashFundId !== null && $pettyCashFundId !== '' ? (int) $pettyCashFundId : null;
+        $limitStatus = trim((string) $request->query('limit_status', ''));
 
         if (auth()->user()->hasAnyRole(['cashier', 'manager'])) {
             $cashierId = auth()->id();
@@ -55,6 +56,10 @@ class CashExpenseController extends Controller
 
         if ($pettyCashFundId) {
             $query->where('petty_cash_fund_id', $pettyCashFundId);
+        }
+
+        if (in_array($limitStatus, ['EXCEEDED', 'WITHIN_LIMIT'], true)) {
+            $query->where('exceeds_approval_limit', $limitStatus === 'EXCEEDED');
         }
 
         $expenses = (clone $query)
@@ -96,6 +101,7 @@ class CashExpenseController extends Controller
             'openPettyCashFunds',
             'activePettyCashFund',
             'expenseCategories',
+            'limitStatus',
         ));
     }
 
@@ -128,6 +134,11 @@ class CashExpenseController extends Controller
                 ->withErrors(['expense_category_id' => 'Pilih kategori pengeluaran atau isi kategori manual.'])
                 ->withInput();
         }
+
+        $approvalLimitSnapshot = $selectedCategory?->approval_limit_amount;
+        $exceedsApprovalLimit = $approvalLimitSnapshot !== null
+            ? (float) $validated['amount'] > (float) $approvalLimitSnapshot
+            : false;
 
         $requesterId = auth()->user()->hasAnyRole(['cashier', 'manager'])
             ? auth()->id()
@@ -167,6 +178,8 @@ class CashExpenseController extends Controller
             'expense_at' => $validated['expense_at'],
             'category' => $categoryName,
             'expense_category_id' => $selectedCategory?->id,
+            'approval_limit_amount_snapshot' => $approvalLimitSnapshot,
+            'exceeds_approval_limit' => $exceedsApprovalLimit,
             'amount' => $validated['amount'],
             'funding_source' => $fundingSource,
             'note' => $validated['note'] ?? null,
@@ -180,6 +193,8 @@ class CashExpenseController extends Controller
             'expense_at' => $expense->expense_at?->format('Y-m-d H:i:s'),
             'category' => $expense->category,
             'expense_category_id' => $expense->expense_category_id,
+            'approval_limit_amount_snapshot' => $expense->approval_limit_amount_snapshot,
+            'exceeds_approval_limit' => $expense->exceeds_approval_limit,
             'amount' => $expense->amount,
             'funding_source' => $expense->funding_source,
             'requester_id' => $expense->cashier_id,
@@ -194,8 +209,14 @@ class CashExpenseController extends Controller
     {
         abort_unless(auth()->user()->hasRole('admin'), 403);
 
+        $approvalNoteRules = $cashExpense->exceeds_approval_limit
+            ? ['required', 'string', 'max:500']
+            : ['nullable', 'string', 'max:500'];
+
         $validated = $request->validate([
-            'approval_note' => ['nullable', 'string', 'max:500'],
+            'approval_note' => $approvalNoteRules,
+        ], [
+            'approval_note.required' => 'Catatan approval wajib diisi untuk pengajuan yang melebihi limit kategori.',
         ]);
 
         $cashExpense->update([
@@ -220,8 +241,14 @@ class CashExpenseController extends Controller
     {
         abort_unless(auth()->user()->hasRole('admin'), 403);
 
+        $approvalNoteRules = $cashExpense->exceeds_approval_limit
+            ? ['required', 'string', 'max:500']
+            : ['nullable', 'string', 'max:500'];
+
         $validated = $request->validate([
-            'approval_note' => ['nullable', 'string', 'max:500'],
+            'approval_note' => $approvalNoteRules,
+        ], [
+            'approval_note.required' => 'Catatan approval wajib diisi untuk pengajuan yang melebihi limit kategori.',
         ]);
 
         $cashExpense->update([

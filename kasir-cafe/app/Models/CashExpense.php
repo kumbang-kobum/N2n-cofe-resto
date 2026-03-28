@@ -13,6 +13,8 @@ class CashExpense extends Model
         'expense_at',
         'category',
         'expense_category_id',
+        'approval_limit_amount_snapshot',
+        'exceeds_approval_limit',
         'amount',
         'funding_source',
         'note',
@@ -28,6 +30,8 @@ class CashExpense extends Model
     protected $casts = [
         'expense_at' => 'datetime',
         'amount' => 'float',
+        'approval_limit_amount_snapshot' => 'float',
+        'exceeds_approval_limit' => 'boolean',
         'approved_at' => 'datetime',
     ];
 

@@ -13,10 +13,12 @@ class ExpenseCategory extends Model
     protected $fillable = [
         'name',
         'description',
+        'approval_limit_amount',
         'is_active',
     ];
 
     protected $casts = [
+        'approval_limit_amount' => 'float',
         'is_active' => 'boolean',
     ];
 

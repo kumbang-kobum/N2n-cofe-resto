@@ -98,12 +98,20 @@
                                 <form method="POST" action="{{ route('admin.petty_cash.close', $fund) }}" class="flex flex-wrap items-end gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
                                     @csrf
                                     <div>
+                                        <label class="mb-1 block text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">Saldo Sistem</label>
+                                        <input type="text" value="Rp {{ number_format($remaining, 0, ',', '.') }}" class="w-40 rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600" readonly>
+                                    </div>
+                                    <div>
+                                        <label class="mb-1 block text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">Uang Fisik Tersisa</label>
+                                        <input type="number" min="0" step="1" name="counted_cash_amount" value="{{ max(0, (int) round($remaining)) }}" class="w-40 rounded-lg border border-slate-200 px-3 py-2 text-sm" required>
+                                    </div>
+                                    <div>
                                         <label class="mb-1 block text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">Sisa Dikembalikan</label>
                                         <input type="number" min="0" step="1" name="returned_amount" value="{{ max(0, (int) round($remaining)) }}" class="w-40 rounded-lg border border-slate-200 px-3 py-2 text-sm" required>
                                     </div>
                                     <div>
-                                        <label class="mb-1 block text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">Catatan Penutupan</label>
-                                        <input type="text" name="note" class="w-56 rounded-lg border border-slate-200 px-3 py-2 text-sm" placeholder="Opsional">
+                                        <label class="mb-1 block text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">Catatan Rekonsiliasi</label>
+                                        <input type="text" name="note" class="w-56 rounded-lg border border-slate-200 px-3 py-2 text-sm" placeholder="Contoh: uang fisik sesuai / selisih kecil karena pembulatan">
                                     </div>
                                     <button class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700">
                                         Tutup Kas Kecil
@@ -131,9 +139,34 @@
                             </div>
                         </div>
 
-                        @if($fund->note)
+                        @if($fund->status === 'CLOSED')
+                            <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                    <div class="text-xs text-slate-500">Uang Fisik Saat Tutup</div>
+                                    <div class="mt-1 text-base font-semibold text-slate-900">Rp {{ number_format($fund->counted_cash_amount ?? 0, 0, ',', '.') }}</div>
+                                </div>
+                                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                    <div class="text-xs text-slate-500">Selisih Rekonsiliasi</div>
+                                    <div class="mt-1 text-base font-semibold {{ ($fund->difference_amount ?? 0) == 0 ? 'text-emerald-700' : 'text-rose-700' }}">
+                                        Rp {{ number_format($fund->difference_amount ?? 0, 0, ',', '.') }}
+                                    </div>
+                                </div>
+                                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                    <div class="text-xs text-slate-500">Ditutup Oleh</div>
+                                    <div class="mt-1 text-base font-semibold text-slate-900">{{ optional($fund->closer)->name ?? '-' }}</div>
+                                    <div class="mt-1 text-xs text-slate-500">{{ optional($fund->closed_at)->format('d/m/Y H:i') }}</div>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if($fund->note || $fund->reconciliation_note)
                             <div class="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-                                {{ $fund->note }}
+                                @if($fund->note)
+                                    <div><span class="font-medium text-slate-700">Catatan Dana:</span> {{ $fund->note }}</div>
+                                @endif
+                                @if($fund->reconciliation_note)
+                                    <div class="{{ $fund->note ? 'mt-1' : '' }}"><span class="font-medium text-slate-700">Catatan Rekonsiliasi:</span> {{ $fund->reconciliation_note }}</div>
+                                @endif
                             </div>
                         @endif
                     </div>

@@ -63,6 +63,7 @@ class PettyCashFundController extends Controller
     {
         $validated = $request->validate([
             'returned_amount' => ['required', 'numeric', 'min:0'],
+            'counted_cash_amount' => ['required', 'numeric', 'min:0'],
             'note' => ['nullable', 'string', 'max:1000'],
         ]);
 
@@ -77,23 +78,35 @@ class PettyCashFundController extends Controller
                 ->withInput();
         }
 
-        $note = trim(implode("\n", array_filter([
-            $pettyCashFund->note,
-            $validated['note'] ?? null,
-        ])));
+        if ((float) $validated['returned_amount'] > (float) $validated['counted_cash_amount']) {
+            return back()
+                ->withErrors(['returned_amount' => 'Nilai pengembalian tidak boleh melebihi uang fisik yang dihitung.'])
+                ->withInput();
+        }
+
+        $note = trim((string) ($pettyCashFund->note ?? ''));
+        $expectedClosingBalance = max(0, $pettyCashFund->opening_balance - $pettyCashFund->approved_used_total);
+        $differenceAmount = (float) $validated['counted_cash_amount'] - $expectedClosingBalance;
 
         $pettyCashFund->update([
             'returned_amount' => $validated['returned_amount'],
             'note' => $note !== '' ? $note : null,
+            'counted_cash_amount' => $validated['counted_cash_amount'],
+            'difference_amount' => $differenceAmount,
+            'reconciliation_note' => $validated['note'] ?? null,
             'status' => 'CLOSED',
             'closed_by' => auth()->id(),
             'closed_at' => now(),
         ]);
 
         AuditLog::log(auth()->id(), 'PETTY_CASH_CLOSED', $pettyCashFund, [
+            'expected_closing_balance' => $expectedClosingBalance,
+            'counted_cash_amount' => $pettyCashFund->counted_cash_amount,
             'returned_amount' => $pettyCashFund->returned_amount,
             'approved_used_total' => $pettyCashFund->approved_used_total,
+            'difference_amount' => $pettyCashFund->difference_amount,
             'remaining_balance' => $pettyCashFund->remaining_balance,
+            'reconciliation_note' => $pettyCashFund->reconciliation_note,
         ]);
 
         return back()->with('status', 'Kas kecil berhasil ditutup.');
@@ -142,12 +155,15 @@ class PettyCashFundController extends Controller
             'Status',
             'Dana Awal',
             'Terpakai Approved',
+            'Uang Fisik',
             'Dikembalikan',
+            'Selisih',
             'Saldo',
             'Dibuat Oleh',
             'Ditutup Oleh',
             'Ditutup Pada',
             'Catatan',
+            'Catatan Rekonsiliasi',
         ]], null, 'A1');
 
         $row = 2;
@@ -161,12 +177,15 @@ class PettyCashFundController extends Controller
                 $fund->status,
                 (float) $fund->opening_balance,
                 $used,
+                (float) ($fund->counted_cash_amount ?? 0),
                 (float) $fund->returned_amount,
+                (float) ($fund->difference_amount ?? 0),
                 $remaining,
                 optional($fund->creator)->name,
                 optional($fund->closer)->name,
                 optional($fund->closed_at)->format('Y-m-d H:i:s'),
                 $fund->note,
+                $fund->reconciliation_note,
             ]], null, 'A' . $row);
             $row++;
         }
@@ -224,12 +243,12 @@ class PettyCashFundController extends Controller
         }
 
         foreach ([$summarySheet, $expenseSheet, $categorySheet] as $sheet) {
-            foreach (range('A', 'L') as $column) {
+            foreach (range('A', 'O') as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
         }
 
-        $this->applyHeaderStyle($summarySheet, 'A1:L1');
+        $this->applyHeaderStyle($summarySheet, 'A1:O1');
         $this->applyHeaderStyle($expenseSheet, 'A1:K1');
         $this->applyHeaderStyle($categorySheet, 'A1:C1');
 

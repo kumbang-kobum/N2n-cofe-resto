@@ -17,8 +17,11 @@ class PettyCashFund extends Model
         'period_end',
         'opening_balance',
         'returned_amount',
+        'counted_cash_amount',
+        'difference_amount',
         'status',
         'note',
+        'reconciliation_note',
         'created_by',
         'closed_by',
         'closed_at',
@@ -29,6 +32,8 @@ class PettyCashFund extends Model
         'period_end' => 'date',
         'opening_balance' => 'float',
         'returned_amount' => 'float',
+        'counted_cash_amount' => 'float',
+        'difference_amount' => 'float',
         'closed_at' => 'datetime',
     ];
 

@@ -19,6 +19,13 @@
       @error('description')<div class="text-red-600 text-sm mt-1">{{ $message }}</div>@enderror
     </div>
 
+    <div>
+      <label class="block text-sm font-medium mb-1">Limit Approval (Rp)</label>
+      <input type="number" min="0" step="1" name="approval_limit_amount" value="{{ old('approval_limit_amount') }}" class="w-full border rounded px-3 py-2" placeholder="Kosongkan jika tanpa batas">
+      <div class="mt-1 text-xs text-slate-500">Jika nominal pengajuan melebihi limit ini, sistem akan memberi tanda khusus saat approval admin.</div>
+      @error('approval_limit_amount')<div class="text-red-600 text-sm mt-1">{{ $message }}</div>@enderror
+    </div>
+
     <label class="flex items-center gap-2 text-sm">
       <input type="checkbox" name="is_active" value="1" @checked(old('is_active', true))>
       Aktif

@@ -43,6 +43,95 @@
     </article>
   </section>
 
+  <section class="grid grid-cols-1 gap-4 xl:grid-cols-12">
+    <div class="panel-section border-rose-200 bg-[linear-gradient(135deg,rgba(255,241,242,0.92),rgba(255,255,255,1))] xl:col-span-4">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <div class="section-kicker text-rose-600">Approval Alert</div>
+          <h2 class="mt-2 text-xl font-semibold tracking-tight text-slate-950">Pengeluaran Melebihi Limit</h2>
+          <p class="mt-2 text-sm leading-6 text-slate-600">
+            Pengajuan operasional yang masih pending dan butuh perhatian admin karena nominalnya melewati batas kategori.
+          </p>
+        </div>
+        <a href="{{ route('admin.expenses.index', ['status' => 'PENDING', 'limit_status' => 'EXCEEDED']) }}"
+           class="dashboard-badge border-rose-200 bg-white text-rose-700">
+          Buka daftar
+        </a>
+      </div>
+
+      <div class="mt-5 grid grid-cols-2 gap-3">
+        <div class="rounded-2xl border border-rose-200 bg-white/80 p-4">
+          <div class="text-xs font-semibold uppercase tracking-[0.16em] text-rose-500">Pending</div>
+          <div class="mt-2 text-3xl font-semibold text-slate-950">{{ number_format($pendingExpenseAlerts['over_limit_count'] ?? 0, 0, ',', '.') }}</div>
+          <div class="mt-1 text-xs text-slate-500">Pengajuan melewati limit</div>
+        </div>
+        <div class="rounded-2xl border border-rose-200 bg-white/80 p-4">
+          <div class="text-xs font-semibold uppercase tracking-[0.16em] text-rose-500">Nominal</div>
+          <div class="mt-2 text-lg font-semibold text-slate-950">Rp {{ number_format($pendingExpenseAlerts['over_limit_amount_total'] ?? 0, 0, ',', '.') }}</div>
+          <div class="mt-1 text-xs text-slate-500">Akumulasi yang perlu ditinjau</div>
+        </div>
+      </div>
+
+      <div class="mt-4 rounded-2xl border border-white/70 bg-white/80 p-4">
+        <div class="text-xs text-slate-500">Semua pengajuan pending</div>
+        <div class="mt-1 text-sm font-medium text-slate-800">
+          {{ number_format($pendingExpenseAlerts['pending_total'] ?? 0, 0, ',', '.') }} pengajuan ·
+          Rp {{ number_format($pendingExpenseAlerts['pending_amount_total'] ?? 0, 0, ',', '.') }}
+        </div>
+      </div>
+    </div>
+
+    <div class="table-shell xl:col-span-8">
+      <div class="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
+        <div>
+          <div class="section-title text-lg">Pending Over-Limit Terbaru</div>
+          <p class="muted-copy mt-1">Lima pengajuan terakhir yang melebihi limit approval kategori.</p>
+        </div>
+        <a href="{{ route('admin.expenses.index', ['status' => 'PENDING', 'limit_status' => 'EXCEEDED']) }}"
+           class="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50">
+          Lihat semua
+        </a>
+      </div>
+      <div class="overflow-auto">
+        <table class="min-w-full text-sm">
+          <thead class="table-head">
+            <tr>
+              <th class="px-4 py-3 text-left">Waktu</th>
+              <th class="px-4 py-3 text-left">Pengaju</th>
+              <th class="px-4 py-3 text-left">Kategori</th>
+              <th class="px-4 py-3 text-right">Limit</th>
+              <th class="px-4 py-3 text-right">Nominal</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @forelse($overLimitExpenseItems as $expense)
+              <tr class="hover:bg-slate-50/70">
+                <td class="px-4 py-3 text-slate-600">{{ optional($expense->expense_at)->format('d/m/Y H:i') }}</td>
+                <td class="px-4 py-3 font-medium text-slate-800">{{ optional($expense->cashier)->name ?? '-' }}</td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-slate-800">{{ $expense->expenseCategory?->name ?: $expense->category }}</div>
+                  @if($expense->note)
+                    <div class="mt-1 text-xs text-slate-500">{{ \Illuminate\Support\Str::limit($expense->note, 80) }}</div>
+                  @endif
+                </td>
+                <td class="px-4 py-3 text-right text-slate-500">
+                  Rp {{ number_format($expense->approval_limit_amount_snapshot ?? 0, 0, ',', '.') }}
+                </td>
+                <td class="px-4 py-3 text-right font-semibold text-rose-600">
+                  Rp {{ number_format($expense->amount, 0, ',', '.') }}
+                </td>
+              </tr>
+            @empty
+              <tr>
+                <td class="px-4 py-4 text-slate-500" colspan="5">Belum ada pengajuan pending yang melebihi limit. Ini kondisi yang sehat.</td>
+              </tr>
+            @endforelse
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <section class="grid grid-cols-1 gap-5 xl:grid-cols-12">
     <div class="panel-section xl:col-span-8">
       <div class="flex items-start justify-between gap-3 border-b border-slate-200 pb-4">

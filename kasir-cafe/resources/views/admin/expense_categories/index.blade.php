@@ -32,6 +32,7 @@
         <th class="px-3 py-2 text-left w-16">No</th>
         <th class="px-3 py-2 text-left">Nama</th>
         <th class="px-3 py-2 text-left">Deskripsi</th>
+        <th class="px-3 py-2 text-left">Limit Approval</th>
         <th class="px-3 py-2 text-left">Status</th>
         <th class="px-3 py-2 text-right w-32">Aksi</th>
       </tr>
@@ -42,6 +43,13 @@
           <td class="px-3 py-2">{{ $loop->iteration }}</td>
           <td class="px-3 py-2 font-medium">{{ $category->name }}</td>
           <td class="px-3 py-2 text-slate-600">{{ $category->description ?: '-' }}</td>
+          <td class="px-3 py-2">
+            @if($category->approval_limit_amount !== null)
+              Rp {{ number_format($category->approval_limit_amount, 0, ',', '.') }}
+            @else
+              <span class="text-slate-400">Tanpa batas</span>
+            @endif
+          </td>
           <td class="px-3 py-2">
             <span class="text-xs px-2 py-1 rounded {{ $category->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700' }}">
               {{ $category->is_active ? 'AKTIF' : 'NONAKTIF' }}
@@ -68,7 +76,7 @@
         </tr>
       @empty
         <tr>
-          <td colspan="5" class="px-3 py-4 text-center text-gray-500">
+          <td colspan="6" class="px-3 py-4 text-center text-gray-500">
             Belum ada kategori pengeluaran.
           </td>
         </tr>

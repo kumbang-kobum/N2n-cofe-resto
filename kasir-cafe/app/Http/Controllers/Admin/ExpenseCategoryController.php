@@ -25,12 +25,14 @@ class ExpenseCategoryController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100', 'unique:expense_categories,name'],
             'description' => ['nullable', 'string', 'max:1000'],
+            'approval_limit_amount' => ['nullable', 'numeric', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
         ExpenseCategory::create([
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
+            'approval_limit_amount' => $data['approval_limit_amount'] ?? null,
             'is_active' => $request->boolean('is_active', true),
         ]);
 
@@ -47,12 +49,14 @@ class ExpenseCategoryController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100', 'unique:expense_categories,name,' . $expenseCategory->id],
             'description' => ['nullable', 'string', 'max:1000'],
+            'approval_limit_amount' => ['nullable', 'numeric', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
         $expenseCategory->update([
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
+            'approval_limit_amount' => $data['approval_limit_amount'] ?? null,
             'is_active' => $request->boolean('is_active'),
         ]);
 

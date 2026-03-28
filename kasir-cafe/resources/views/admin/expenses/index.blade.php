@@ -202,6 +202,14 @@
                         @endforeach
                     </select>
                 </div>
+                <div>
+                    <label class="mb-1 block text-xs text-slate-600">Kontrol Limit</label>
+                    <select name="limit_status" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                        <option value="">Semua</option>
+                        <option value="EXCEEDED" @selected(($limitStatus ?? '') === 'EXCEEDED')>Melebihi Limit</option>
+                        <option value="WITHIN_LIMIT" @selected(($limitStatus ?? '') === 'WITHIN_LIMIT')>Dalam Limit</option>
+                    </select>
+                </div>
                 <div class="{{ $canChooseRequester ? 'md:col-span-5' : 'md:col-span-2' }}">
                     <label class="mb-1 block text-xs text-slate-600">Cari</label>
                     <input type="text" name="q" value="{{ $search }}" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="Kategori / catatan">
@@ -244,6 +252,20 @@
                                     </span>
                                 </td>
                                 <td class="p-2">
+                                    <div class="flex flex-col gap-1">
+                                        @if($expense->exceeds_approval_limit)
+                                            <span class="rounded-full bg-rose-100 px-2 py-1 text-[11px] font-semibold text-rose-700">
+                                                Melebihi limit
+                                                @if($expense->approval_limit_amount_snapshot !== null)
+                                                    · Rp {{ number_format($expense->approval_limit_amount_snapshot, 0, ',', '.') }}
+                                                @endif
+                                            </span>
+                                        @elseif($expense->approval_limit_amount_snapshot !== null)
+                                            <span class="rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-semibold text-emerald-700">
+                                                Dalam limit · Rp {{ number_format($expense->approval_limit_amount_snapshot, 0, ',', '.') }}
+                                            </span>
+                                        @endif
+                                    </div>
                                     <span class="rounded-full px-2 py-1 text-xs font-medium {{ $expense->status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' : ($expense->status === 'REJECTED' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700') }}">
                                         {{ $expense->status }}
                                     </span>
@@ -272,23 +294,44 @@
                                 <td class="p-2 text-right font-semibold text-slate-900">Rp {{ number_format($expense->amount, 0, ',', '.') }}</td>
                                 <td class="p-2 text-center">
                                     @if($canApprove)
-                                        <div class="flex flex-col items-center gap-2">
+                                        <div class="flex flex-col items-stretch gap-2">
+                                            @if($expense->exceeds_approval_limit)
+                                                <div class="rounded-lg border border-rose-200 bg-rose-50 p-2 text-left">
+                                                    <div class="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-rose-700">Catatan Wajib</div>
+                                                    <div class="text-[11px] text-rose-600">Karena pengajuan ini melewati limit, admin wajib mengisi catatan saat approve atau reject.</div>
+                                                </div>
+                                            @endif
+
                                             @if($expense->status !== 'APPROVED')
-                                                <form method="POST" action="{{ route($approveRouteName, $expense) }}">
+                                                <form method="POST" action="{{ route($approveRouteName, $expense) }}" class="space-y-2">
                                                     @csrf
-                                                    <button class="text-xs font-medium text-emerald-600 hover:underline">Approve</button>
+                                                    <textarea
+                                                        name="approval_note"
+                                                        rows="{{ $expense->exceeds_approval_limit ? 3 : 2 }}"
+                                                        class="w-full rounded-lg border border-slate-200 px-2 py-2 text-xs"
+                                                        placeholder="{{ $expense->exceeds_approval_limit ? 'Wajib isi alasan approval untuk nominal di atas limit' : 'Catatan approval (opsional)' }}"
+                                                    >{{ old('approval_note') }}</textarea>
+                                                    <button class="w-full rounded-lg bg-emerald-600 px-2 py-2 text-xs font-semibold text-white hover:bg-emerald-700">Approve</button>
                                                 </form>
                                             @endif
+
                                             @if($expense->status !== 'REJECTED')
-                                                <form method="POST" action="{{ route($rejectRouteName, $expense) }}">
+                                                <form method="POST" action="{{ route($rejectRouteName, $expense) }}" class="space-y-2">
                                                     @csrf
-                                                    <button class="text-xs font-medium text-amber-600 hover:underline">Reject</button>
+                                                    <textarea
+                                                        name="approval_note"
+                                                        rows="{{ $expense->exceeds_approval_limit ? 3 : 2 }}"
+                                                        class="w-full rounded-lg border border-slate-200 px-2 py-2 text-xs"
+                                                        placeholder="{{ $expense->exceeds_approval_limit ? 'Wajib isi alasan penolakan untuk nominal di atas limit' : 'Catatan reject (opsional)' }}"
+                                                    >{{ old('approval_note') }}</textarea>
+                                                    <button class="w-full rounded-lg bg-amber-500 px-2 py-2 text-xs font-semibold text-white hover:bg-amber-600">Reject</button>
                                                 </form>
                                             @endif
+
                                             <form method="POST" action="{{ route($destroyRouteName, $expense) }}" onsubmit="return confirm('Hapus pengajuan pengeluaran ini?')">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button class="text-xs font-medium text-rose-600 hover:underline">Hapus</button>
+                                                <button class="w-full rounded-lg border border-rose-200 px-2 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50">Hapus</button>
                                             </form>
                                         </div>
                                     @else
