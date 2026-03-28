@@ -56,6 +56,21 @@ Dukung pengembangan aplikasi ini melalui Saweria:
   </tr>
 </table>
 
+
+## Screenshot Per Menu
+Gunakan bagian ini sebagai panduan cepat onboarding tim untuk mengenali area utama aplikasi.
+
+| Menu / Area | Preview | Keterangan Singkat |
+|---|---|---|
+| Dashboard | <img src="../screenshot/Screenshot%202026-02-10%20at%2011.51.05.png" width="220" /> | Ringkasan omzet, COGS, transaksi, dan menu terlaris. |
+| Produk / Menu | <img src="../screenshot/Screenshot%202026-02-10%20at%2011.51.21.png" width="220" /> | Kelola daftar produk, harga jual, status aktif, dan kategori menu. |
+| Stok Bahan | <img src="../screenshot/Screenshot%202026-02-10%20at%2011.51.33.png" width="220" /> | Master bahan, stok aktif, satuan dasar, dan nilai stok. |
+| Penerimaan Stok | <img src="../screenshot/Screenshot%202026-02-10%20at%2011.51.42.png" width="220" /> | Input pembelian batch baru agar cost dan expired tercatat rapi. |
+| Resep / BOM | <img src="../screenshot/Screenshot%202026-02-10%20at%2011.51.50.png" width="220" /> | Menentukan komposisi bahan per porsi untuk potong stok otomatis. |
+| POS Kasir | <img src="../screenshot/Screenshot%202026-02-10%20at%2011.52.01.png" width="220" /> | Layar transaksi cepat untuk dine-in, takeaway, open bill, dan pembayaran. |
+| Laporan Keuangan | <img src="../screenshot/Screenshot%202026-02-10%20at%2011.52.07.png" width="220" /> | Rekap omzet, pajak, refund, HPP, laba, pengeluaran, dan payroll. |
+| Payroll & Absensi | <img src="../screenshot/Screenshot%202026-02-10%20at%2011.52.13.png" width="220" /> | Penggajian petugas, rekap absensi, potongan telat, dan slip gaji. |
+
 Sistem kasir & stok bahan untuk cafe/resto dengan fitur:
 - POS kasir + struk thermal 80mm
 - Stok bahan dengan FEFO + batch expiry
@@ -414,6 +429,27 @@ server {
 - Checklist UAT operasional: `docs/uat_absensi_payroll_checklist.md`
 - Panduan penggunaan lengkap: `docs/Panduan_Penggunaan_Sistem_n2N.pdf`
 - Panduan kasir singkat: `docs/Panduan_Kasir_1_Halaman.pdf`
+
+### Troubleshooting Absensi
+- `Kamera tidak muncul di kiosk`:
+  - pastikan browser diberi izin akses kamera
+  - gunakan `http`/`https` yang sama secara konsisten
+  - coba refresh halaman atau buka ulang kiosk di tab baru
+- `Selfie gagal tersimpan`:
+  - cek permission folder `storage` dan jalankan `php artisan storage:link`
+  - pastikan ukuran upload PHP tidak terlalu kecil jika foto atau file pendukung gagal masuk
+- `Status masih Perlu Review`:
+  - cek apakah foto referensi wajah di master karyawan sudah ada dan jelas
+  - review manual dari menu `Review Wajah Absensi` jika skor verifikasi rendah
+- `Potongan telat tidak muncul di payroll`:
+  - pastikan absensi ada di periode yang sama dengan payroll
+  - cek rule keterlambatan, status absensi, dan preview payroll sebelum simpan
+- `Tanggal roster tidak bisa diubah`:
+  - kemungkinan ada `cuti`, `sakit`, atau `izin` yang sudah `APPROVED`
+  - cek menu leave agar tidak terjadi bentrok jadwal
+- `Export Excel kosong atau tidak sesuai filter`:
+  - pastikan periode dan karyawan sudah dipilih sebelum klik export
+  - refresh halaman jika filter baru saja diubah
 
 
 ## Instalasi macOS (XAMPP) - Lengkap
