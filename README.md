@@ -329,6 +329,47 @@ Catatan penting:
   - `docs/uat_absensi_payroll_checklist.md`
 - Gunakan checklist ini sebelum fitur absensi dan payroll dipakai penuh di lapangan.
 
+## Absensi & Payroll
+
+### Modul yang Sudah Tersedia
+- `Master Shift`: jam masuk, jam pulang, toleransi telat, aturan dasar lembur.
+- `Rule Keterlambatan`: nominal potongan telat bisa diatur manual sesuai kebijakan perusahaan.
+- `Roster Bulanan`: jadwal kerja model kalender bulanan, lengkap dengan bulk action dan copy roster minggu/bulan sebelumnya.
+- `Kiosk Absensi`: absensi tanpa login untuk karyawan dari tablet atau layar khusus.
+- `Selfie & Verifikasi Ringan`: selfie masuk/pulang, skor verifikasi, dan review manual oleh admin/manager.
+- `Izin / Cuti / Sakit`: tanggal approved otomatis terkunci di roster dan ikut masuk ke rekap payroll.
+- `Payroll`: preview potongan telat, potongan makan, rekap absensi bulanan, dan slip gaji.
+
+### Alur Pakai yang Disarankan
+1. Isi `Master Shift` dan `Rule Keterlambatan` terlebih dahulu.
+2. Set `Shift Default` dan, jika dipakai, `Foto Referensi Wajah` di `Master Karyawan`.
+3. Susun jadwal di `Roster Bulanan Shift`.
+4. Karyawan melakukan `Clock In` dan `Clock Out` dari `Absensi Karyawan` / kiosk.
+5. Admin atau manager review selfie yang statusnya `Perlu Review`.
+6. Cek `Rekap Absensi Bulanan` sebelum membuat payroll.
+7. Buat payroll setelah preview potongan telat, potongan makan, dan rekap hadir sudah sesuai.
+
+### Menu Penting untuk Tim
+- `Operasional > Absensi Karyawan`: daftar absensi harian, selfie, dan status verifikasi.
+- `Operasional > Roster Bulanan Shift`: menyusun jadwal kerja dan hari libur.
+- `Operasional > Review Wajah Absensi`: review selfie yang masih perlu verifikasi manual.
+- `Operasional > Izin / Cuti / Sakit`: pengajuan dan approval leave.
+- `Laporan > Rekap Absensi Bulanan`: ringkasan per karyawan dan export Excel.
+- `Payroll / Penggajian Petugas`: preview potongan dan pembuatan slip gaji.
+
+### Checklist Operasional Sebelum Payroll
+- Pastikan semua absensi masuk/pulang pada periode tersebut sudah lengkap.
+- Pastikan status `Perlu Review` sudah diselesaikan oleh admin/manager.
+- Pastikan izin, cuti, dan sakit yang valid sudah `APPROVED`.
+- Pastikan potongan telat dan potongan makan pada preview payroll sudah sesuai kebijakan.
+- Export rekap absensi bulanan jika perlu arsip atau audit internal.
+
+### Dokumen Pendukung
+- Checklist UAT operasional: `docs/uat_absensi_payroll_checklist.md`
+- Panduan penggunaan lengkap: `docs/Panduan_Penggunaan_Sistem_n2N.pdf`
+- Panduan kasir singkat: `docs/Panduan_Kasir_1_Halaman.pdf`
+
+
 ## Instalasi macOS (XAMPP) - Lengkap
 1. Install XAMPP for macOS, lalu start `Apache` dan `MySQL`.
 2. Taruh project di:
