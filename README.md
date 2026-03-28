@@ -561,6 +561,127 @@ scripts\windows\stop_pos.bat
 bash scripts/smoke_pos.sh
 ```
 
+## Pengaturan Batas Upload File
+Jika upload video TV Informasi, foto, atau file lain gagal karena ukuran terlalu besar, sesuaikan batas upload di PHP dan web server.
+
+### PHP
+Cari file `php.ini` yang benar-benar dipakai server, lalu sesuaikan minimal:
+
+```ini
+upload_max_filesize = 100M
+post_max_size = 120M
+max_execution_time = 300
+max_input_time = 300
+memory_limit = 256M
+```
+
+Setelah diubah:
+- restart PHP-FPM / Apache / Nginx
+- atau restart service lokal seperti XAMPP, Valet, Herd, atau `php artisan serve`
+
+Cek nilai aktif dengan:
+```bash
+php -i | grep -E "upload_max_filesize|post_max_size|max_execution_time|max_input_time|memory_limit"
+```
+
+### Nginx
+Jika memakai Nginx, tambahkan atau sesuaikan:
+
+```nginx
+client_max_body_size 120M;
+```
+
+Lalu reload Nginx.
+
+### Apache
+Jika memakai Apache dan ada pembatasan body request, pastikan tidak terlalu kecil:
+
+```apache
+LimitRequestBody 0
+```
+
+### Laravel
+Validasi di aplikasi juga harus cukup besar. Setelah ubah `.env` atau config server, jalankan:
+
+```bash
+php artisan optimize:clear
+php artisan config:cache
+php artisan view:cache
+```
+
+### Catatan Praktis
+- File kecil berhasil tetapi file besar gagal: biasanya limit ada di PHP atau web server.
+- Jika pakai PHP terpisah dari XAMPP/Homebrew, pastikan kamu mengubah `php.ini` yang dipakai web server, bukan hanya PHP CLI.
+- Untuk upload video TV Informasi, pastikan folder `storage` writable dan `php artisan storage:link` sudah dijalankan.
+
+### aaPanel (Upload File Besar)
+Jika aplikasi di-deploy di aaPanel dan upload foto/video besar sering gagal dengan `500`, cek semua lapisan berikut:
+
+1. **PHP Settings di aaPanel**
+   - buka `App Store` / `Installed` → pilih versi PHP yang dipakai → `Setting`
+   - sesuaikan minimal:
+     - `upload_max_filesize = 100M`
+     - `post_max_size = 120M`
+     - `max_execution_time = 300`
+     - `max_input_time = 300`
+     - `memory_limit = 256M`
+2. **Restart PHP**
+   - setelah ubah setting, restart PHP-FPM atau service PHP dari aaPanel
+3. **Web Server**
+   - jika memakai **Nginx**, tambahkan:
+     ```nginx
+     client_max_body_size 120M;
+     proxy_read_timeout 300;
+     fastcgi_read_timeout 300;
+     ```
+   - jika memakai **Apache**, pastikan tidak ada limit body request yang terlalu kecil:
+     ```apache
+     LimitRequestBody 0
+     Timeout 300
+     ```
+4. **Permission Laravel**
+   ```bash
+   chmod -R 775 storage bootstrap/cache
+   php artisan storage:link
+   ```
+5. **Setelah ubah config server/Laravel**
+   ```bash
+   php artisan optimize:clear
+   php artisan config:cache
+   php artisan view:cache
+   ```
+6. **Cek log saat tetap gagal**
+   - Laravel: `storage/logs/laravel.log`
+   - aaPanel web log: `/www/wwwlogs/`
+
+### Troubleshooting Error 500 Saat Stok Opname Keseluruhan
+Jika stok opname seluruh bahan sering gagal dengan `500`, penyebab paling umum adalah proses terlalu berat untuk satu request.
+
+Yang perlu dicek:
+- jumlah item/batch terlalu banyak dalam satu simpan
+- `max_execution_time` terlalu kecil
+- `memory_limit` terlalu kecil
+- timeout Nginx/Apache/PHP-FPM terlalu pendek
+- log Laravel menunjukkan query atau proses update terlalu besar
+
+Langkah penanganan yang disarankan:
+1. Naikkan batas PHP dan timeout server seperti bagian aaPanel di atas.
+2. Jalankan cache clear setelah perubahan:
+   ```bash
+   php artisan optimize:clear
+   ```
+3. Jika item sangat banyak, lakukan opname per kategori atau bertahap, jangan semua item sekaligus.
+4. Pastikan server tidak kehabisan RAM saat menyimpan opname besar.
+5. Cek log error untuk tahu titik gagalnya:
+   ```bash
+   tail -n 100 storage/logs/laravel.log
+   ```
+6. Jika error masih berulang di data besar, arah perbaikannya adalah ubah proses opname menjadi per-batch/chunk atau lewat queue agar tidak menumpuk dalam satu request web.
+
+Rekomendasi operasional saat ini:
+- untuk stok sedikit/sedang: opname penuh masih aman
+- untuk stok besar: lakukan opname bertahap per kelompok bahan sampai nanti prosesnya dipecah lebih ringan di aplikasi
+
 ## Backup & Restore DB
 Backup:
 ```bash

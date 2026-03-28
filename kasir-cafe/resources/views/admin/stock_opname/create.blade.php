@@ -25,6 +25,11 @@
     </div>
 @endif
 
+<div class="mb-4 rounded border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+    Untuk opname seluruh bahan dengan data sangat banyak, sistem sekarang sudah dibuat lebih ringan.
+    Namun jika item atau batch sangat besar, tetap disarankan opname bertahap per kategori agar proses simpan lebih stabil.
+</div>
+
 <form method="POST" action="{{ route('admin.stock_opname.store') }}">
     @csrf
 
@@ -82,12 +87,7 @@
 
                     @forelse($items as $idx => $item)
                         @php
-                            // stok sistem base (sekadar info di form, boleh simple)
-                            $systemQtyBase = \App\Models\ItemBatch::query()
-                                ->where('item_id', $item->id)
-                                ->where('status', 'ACTIVE')
-                                ->sum('qty_on_hand_base');
-
+                            $systemQtyBase = (float) ($systemQtyMap[$item->id] ?? 0);
                             $oldLine = $oldLines[$idx] ?? [];
                         @endphp
                         <tr class="border-t opname-row" data-name="{{ \Illuminate\Support\Str::lower($item->name) }}">

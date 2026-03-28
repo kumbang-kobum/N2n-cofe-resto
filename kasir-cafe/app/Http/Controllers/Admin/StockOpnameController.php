@@ -15,6 +15,7 @@ use App\Services\FefoAllocator;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class StockOpnameController extends Controller
 {
@@ -44,12 +45,15 @@ class StockOpnameController extends Controller
     {
         $items = Item::with('baseUnit')->orderBy('name')->get();
         $units = Unit::orderBy('symbol')->get();
+        $systemQtyMap = $this->activeStockMap($items->pluck('id')->all());
 
-        return view('admin.stock_opname.create', compact('items', 'units'));
+        return view('admin.stock_opname.create', compact('items', 'units', 'systemQtyMap'));
     }
 
     public function store(Request $request)
     {
+        @set_time_limit(300);
+
         $request->validate([
             'counted_at' => ['required', 'date'],
             'note'       => ['nullable', 'string'],
@@ -82,7 +86,14 @@ class StockOpnameController extends Controller
             }
         }
 
-        $opname = DB::transaction(function () use ($request) {
+        $itemIds = collect($selectedLines)->pluck('item_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
+        $unitIds = collect($selectedLines)->pluck('unit_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
+
+        $items = Item::with('baseUnit')->whereIn('id', $itemIds)->get()->keyBy('id');
+        $units = Unit::whereIn('id', $unitIds)->get()->keyBy('id');
+        $systemQtyMap = $this->activeStockMap($itemIds);
+
+        $opname = DB::transaction(function () use ($request, $selectedLines, $items, $units, $systemQtyMap) {
 
             /** @var \App\Models\StockOpname $opname */
             $opname = StockOpname::create([
@@ -93,54 +104,17 @@ class StockOpnameController extends Controller
                 'created_by'  => auth()->id(),
             ]);
 
-            $linesToInsert = [];
+            $linesToInsert = $this->buildOpnameLines(
+                $selectedLines,
+                $items->all(),
+                $units->all(),
+                $systemQtyMap,
+                $opname->id,
+            );
 
-            $rawLines = $request->input('lines', []);
-            $selectedLines = array_values(array_filter($rawLines, function ($line) {
-                return ! empty($line['include']);
-            }));
-
-            foreach ($selectedLines as $line) {
-                // item & unit input
-                $item = Item::with('baseUnit')->findOrFail($line['item_id']);
-                $unit = Unit::findOrFail($line['unit_id']);
-
-                // konversi qty input ke base
-                $factor       = $unit->to_base_factor ?? 1;
-                $physicalBase = (float) $line['physical_qty'] * $factor;
-
-                // stok sistem (base) per item
-                $systemBase = (float) ItemBatch::query()
-                    ->where('item_id', $item->id)
-                    ->where('status', 'ACTIVE')
-                    ->sum('qty_on_hand_base');
-
-                $diffBase = $physicalBase - $systemBase;
-
-                // === COST BASE (TIDAK BOLEH NULL) ===
-                // default 0
-                $unitCostBase = 0;
-
-                if (isset($line['unit_cost']) && $line['unit_cost'] !== '') {
-                    $inputCost    = (float) $line['unit_cost'];   // harga per unit input
-                    $unitCostBase = $factor > 0 ? $inputCost / $factor : 0; // harga per base
-                }
-
-                $linesToInsert[] = [
-                    'stock_opname_id'   => $opname->id,
-                    'item_id'           => $item->id,
-                    'system_qty_base'   => $systemBase,
-                    'physical_qty_base' => $physicalBase,
-                    'diff_qty_base'     => $diffBase,
-                    'input_unit_id'     => $unit->id,
-                    'expired_at'        => $line['expired_at'] ?? null,
-                    'unit_cost_base'    => $unitCostBase,   // <-- selalu angka, minimal 0
-                    'created_at'        => now(),
-                    'updated_at'        => now(),
-                ];
+            foreach (array_chunk($linesToInsert, 250) as $chunk) {
+                StockOpnameLine::insert($chunk);
             }
-
-            StockOpnameLine::insert($linesToInsert);
 
             AuditLog::log(auth()->id(), 'STOCK_OPNAME_CREATED', $opname, [
                 'code'       => $opname->code,
@@ -178,6 +152,8 @@ class StockOpnameController extends Controller
 
     public function update(Request $request, $id)
     {
+        @set_time_limit(300);
+
         /** @var StockOpname $opname */
         $opname = StockOpname::with(['lines.item'])->findOrFail($id);
 
@@ -199,18 +175,17 @@ class StockOpnameController extends Controller
             $opname->note = $request->note;
             $opname->save();
 
+            $linesById = $opname->lines->keyBy('id');
+            $systemQtyMap = $this->activeStockMap($opname->lines->pluck('item_id')->unique()->all());
+
             foreach ($request->lines as $row) {
                 /** @var \App\Models\StockOpnameLine $line */
-                $line = $opname->lines->firstWhere('id', (int) $row['id']);
+                $line = $linesById->get((int) $row['id']);
                 if (! $line) {
                     continue;
                 }
 
-                // hitung ulang stok sistem (base) dari batch aktif
-                $systemQtyBase = (float) ItemBatch::query()
-                    ->where('item_id', $line->item_id)
-                    ->where('status', 'ACTIVE')
-                    ->sum('qty_on_hand_base');
+                $systemQtyBase = (float) ($systemQtyMap[$line->item_id] ?? 0);
 
                 $physicalQtyBase = (float) $row['physical_qty_base'];
                 $diff = $physicalQtyBase - $systemQtyBase;
@@ -249,9 +224,15 @@ class StockOpnameController extends Controller
 
     public function post($id)
 {
+    @set_time_limit(300);
+
     $allocator = app(FefoAllocator::class);
 
     return DB::transaction(function () use ($id, $allocator) {
+        $actorId = auth()->id();
+        $stockMovesToInsert = [];
+        $auditLogsToInsert = [];
+        $now = now();
 
         /** @var StockOpname $opname */
         $opname = StockOpname::with(['lines.item'])
@@ -291,7 +272,7 @@ class StockOpnameController extends Controller
                     'status'           => 'ACTIVE',
                 ]);
 
-                StockMove::create([
+                $stockMovesToInsert[] = [
                     'moved_at'   => $opname->counted_at,
                     'item_id'    => $item->id,
                     'batch_id'   => $batch->id,
@@ -299,11 +280,13 @@ class StockOpnameController extends Controller
                     'type'       => 'ADJUSTMENT',   // enum di migration
                     'ref_type'   => 'stock_opname',
                     'ref_id'     => $opname->id,
-                    'created_by' => auth()->id(),
+                    'created_by' => $actorId,
                     'note'       => $opname->code,
-                ]);
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
 
-                AuditLog::log(auth()->id(), 'STOCK_ADJUSTMENT', $batch, [
+                $auditLogsToInsert[] = $this->makeAuditLogRow($actorId, 'STOCK_ADJUSTMENT', $batch, [
                     'item_id' => $item->id,
                     'item_name' => $item->name,
                     'qty_base' => (float) $diff,
@@ -311,7 +294,7 @@ class StockOpnameController extends Controller
                     'reason' => 'stock_opname_plus',
                     'opname_id' => $opname->id,
                     'opname_code' => $opname->code,
-                ]);
+                ], $now);
             }
 
             // ===== SELISIH MINUS -> FEFO KELUAR BATCH =====
@@ -342,7 +325,7 @@ class StockOpnameController extends Controller
                     $batch->save();
 
                     // catat pergerakan stok keluar
-                    StockMove::create([
+                    $stockMovesToInsert[] = [
                         'moved_at'   => $opname->counted_at,
                         'item_id'    => $item->id,
                         'batch_id'   => $batch->id,
@@ -350,30 +333,40 @@ class StockOpnameController extends Controller
                         'type'       => 'ADJUSTMENT',  // enum di migration
                         'ref_type'   => 'stock_opname',
                         'ref_id'     => $opname->id,
-                        'created_by' => auth()->id(),
+                        'created_by' => $actorId,
                         'note'       => $opname->code,
-                    ]);
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
 
-                    AuditLog::log(auth()->id(), 'STOCK_ADJUSTMENT', $batch, [
+                    $auditLogsToInsert[] = $this->makeAuditLogRow($actorId, 'STOCK_ADJUSTMENT', $batch, [
                         'item_id' => $item->id,
                         'item_name' => $item->name,
                         'qty_base' => -$take,
                         'reason' => 'stock_opname_minus',
                         'opname_id' => $opname->id,
                         'opname_code' => $opname->code,
-                    ]);
+                    ], $now);
                 }
             }
         }
 
+        foreach (array_chunk($stockMovesToInsert, 250) as $chunk) {
+            StockMove::insert($chunk);
+        }
+
         $opname->status    = 'POSTED';
-        $opname->posted_by = auth()->id();
+        $opname->posted_by = $actorId;
         $opname->posted_at = now();
         $opname->save();
 
-        AuditLog::log(auth()->id(), 'STOCK_OPNAME_POSTED', $opname, [
+        $auditLogsToInsert[] = $this->makeAuditLogRow($actorId, 'STOCK_OPNAME_POSTED', $opname, [
             'code' => $opname->code,
-        ]);
+        ], $now);
+
+        foreach (array_chunk($auditLogsToInsert, 250) as $chunk) {
+            AuditLog::insert($chunk);
+        }
 
         return redirect()->route('admin.stock_opname.show', $opname->id)
             ->with('status', 'Stock opname berhasil diposting.');
@@ -413,5 +406,90 @@ class StockOpnameController extends Controller
             ->setPaper('a4', 'portrait');
 
         return $pdf->stream("StockOpname-{$opname->code}.pdf");
+    }
+
+    /**
+     * @param  array<int>  $itemIds
+     * @return array<int, float>
+     */
+    protected function activeStockMap(array $itemIds): array
+    {
+        if (empty($itemIds)) {
+            return [];
+        }
+
+        return ItemBatch::query()
+            ->select('item_id', DB::raw('SUM(qty_on_hand_base) as total_qty_base'))
+            ->whereIn('item_id', $itemIds)
+            ->where('status', 'ACTIVE')
+            ->groupBy('item_id')
+            ->pluck('total_qty_base', 'item_id')
+            ->map(fn ($value) => (float) $value)
+            ->all();
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $selectedLines
+     * @param  array<int, \App\Models\Item>  $items
+     * @param  array<int, \App\Models\Unit>  $units
+     * @param  array<int, float>  $systemQtyMap
+     * @return array<int, array<string, mixed>>
+     */
+    protected function buildOpnameLines(array $selectedLines, array $items, array $units, array $systemQtyMap, int $opnameId): array
+    {
+        $linesToInsert = [];
+        $now = now();
+
+        foreach ($selectedLines as $line) {
+            $itemId = (int) $line['item_id'];
+            $unitId = (int) $line['unit_id'];
+            $item = $items[$itemId] ?? null;
+            $unit = $units[$unitId] ?? null;
+
+            if (! $item || ! $unit) {
+                throw ValidationException::withMessages([
+                    'lines' => ['Ada item atau satuan opname yang tidak valid. Silakan refresh halaman dan coba lagi.'],
+                ]);
+            }
+
+            $factor = (float) ($unit->to_base_factor ?? 1);
+            $physicalBase = (float) $line['physical_qty'] * $factor;
+            $systemBase = (float) ($systemQtyMap[$itemId] ?? 0);
+            $diffBase = $physicalBase - $systemBase;
+
+            $unitCostBase = 0.0;
+            if (isset($line['unit_cost']) && $line['unit_cost'] !== '') {
+                $inputCost = (float) $line['unit_cost'];
+                $unitCostBase = $factor > 0 ? $inputCost / $factor : 0;
+            }
+
+            $linesToInsert[] = [
+                'stock_opname_id'   => $opnameId,
+                'item_id'           => $itemId,
+                'system_qty_base'   => $systemBase,
+                'physical_qty_base' => $physicalBase,
+                'diff_qty_base'     => $diffBase,
+                'input_unit_id'     => $unitId,
+                'expired_at'        => $line['expired_at'] ?? null,
+                'unit_cost_base'    => $unitCostBase,
+                'created_at'        => $now,
+                'updated_at'        => $now,
+            ];
+        }
+
+        return $linesToInsert;
+    }
+
+    protected function makeAuditLogRow(?int $actorId, string $action, $auditable, array $meta, $timestamp): array
+    {
+        return [
+            'actor_id' => $actorId,
+            'action' => $action,
+            'auditable_type' => get_class($auditable),
+            'auditable_id' => $auditable->getKey(),
+            'meta' => $meta ? json_encode($meta, JSON_UNESCAPED_UNICODE) : null,
+            'created_at' => $timestamp,
+            'updated_at' => $timestamp,
+        ];
     }
 }
