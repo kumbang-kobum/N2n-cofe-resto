@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\CashExpense;
+use App\Models\PettyCashFund;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class CashExpenseController extends Controller
 {
@@ -18,13 +20,16 @@ class CashExpenseController extends Controller
         $cashierId = $request->query('cashier_id');
         $cashierId = $cashierId !== null && $cashierId !== '' ? (int) $cashierId : null;
         $status = trim((string) $request->query('status', ''));
+        $fundingSource = trim((string) $request->query('funding_source', ''));
+        $pettyCashFundId = $request->query('petty_cash_fund_id');
+        $pettyCashFundId = $pettyCashFundId !== null && $pettyCashFundId !== '' ? (int) $pettyCashFundId : null;
 
-        if (auth()->user()->hasRole('cashier')) {
+        if (auth()->user()->hasAnyRole(['cashier', 'manager'])) {
             $cashierId = auth()->id();
         }
 
         $query = CashExpense::query()
-            ->with(['cashier', 'approver'])
+            ->with(['cashier', 'approver', 'pettyCashFund'])
             ->whereDate('expense_at', '>=', $from)
             ->whereDate('expense_at', '<=', $to);
 
@@ -43,6 +48,14 @@ class CashExpenseController extends Controller
             $query->where('status', $status);
         }
 
+        if (in_array($fundingSource, ['DIRECT_CASH', 'PETTY_CASH'], true)) {
+            $query->where('funding_source', $fundingSource);
+        }
+
+        if ($pettyCashFundId) {
+            $query->where('petty_cash_fund_id', $pettyCashFundId);
+        }
+
         $expenses = (clone $query)
             ->orderByDesc('expense_at')
             ->paginate(20)
@@ -50,7 +63,18 @@ class CashExpenseController extends Controller
 
         $totalAmount = (float) (clone $query)->sum('amount');
 
-        $cashiers = User::role('cashier')->orderBy('name')->get();
+        $requesters = User::query()
+            ->whereHas('roles', fn ($query) => $query->whereIn('name', ['cashier', 'manager']))
+            ->orderBy('name')
+            ->get();
+
+        $pettyCashFunds = PettyCashFund::query()
+            ->withSum(['expenses as approved_used_total' => fn ($query) => $query->where('status', 'APPROVED')], 'amount')
+            ->orderByDesc('period_start')
+            ->get();
+
+        $openPettyCashFunds = $pettyCashFunds->where('status', 'OPEN')->values();
+        $activePettyCashFund = $openPettyCashFunds->first();
 
         return view('admin.expenses.index', compact(
             'expenses',
@@ -58,9 +82,14 @@ class CashExpenseController extends Controller
             'from',
             'to',
             'search',
-            'cashiers',
+            'requesters',
             'cashierId',
             'status',
+            'fundingSource',
+            'pettyCashFundId',
+            'pettyCashFunds',
+            'openPettyCashFunds',
+            'activePettyCashFund',
         ));
     }
 
@@ -70,20 +99,59 @@ class CashExpenseController extends Controller
             'expense_at' => ['required', 'date'],
             'category' => ['required', 'string', 'max:100'],
             'amount' => ['required', 'numeric', 'min:1'],
+            'funding_source' => ['required', 'in:DIRECT_CASH,PETTY_CASH'],
             'note' => ['nullable', 'string', 'max:1000'],
             'cashier_id' => ['nullable', 'exists:users,id'],
+            'petty_cash_fund_id' => ['nullable', 'exists:petty_cash_funds,id'],
+            'receipt' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:10240'],
+        ], [
+            'receipt.mimes' => 'Bukti belanja hanya mendukung JPG, PNG, WebP, atau PDF.',
+            'receipt.max' => 'Ukuran bukti belanja terlalu besar. Maksimal 10 MB.',
         ]);
 
-        $cashierId = auth()->user()->hasRole('cashier')
+        $requesterId = auth()->user()->hasAnyRole(['cashier', 'manager'])
             ? auth()->id()
             : (int) ($validated['cashier_id'] ?? auth()->id());
+
+        $fundingSource = $validated['funding_source'];
+        $pettyCashFundId = null;
+
+        if ($fundingSource === 'PETTY_CASH') {
+            $fund = null;
+
+            if (! empty($validated['petty_cash_fund_id'])) {
+                $fund = PettyCashFund::find($validated['petty_cash_fund_id']);
+            }
+
+            if (! $fund) {
+                $fund = PettyCashFund::query()
+                    ->where('status', 'OPEN')
+                    ->orderByDesc('period_start')
+                    ->first();
+            }
+
+            if (! $fund || $fund->status !== 'OPEN') {
+                return back()
+                    ->withErrors(['petty_cash_fund_id' => 'Tidak ada kas kecil aktif yang bisa dipakai.'])
+                    ->withInput();
+            }
+
+            $pettyCashFundId = $fund->id;
+        }
+
+        $receiptPath = $request->hasFile('receipt')
+            ? $request->file('receipt')->store('expense-receipts', 'public')
+            : null;
 
         $expense = CashExpense::create([
             'expense_at' => $validated['expense_at'],
             'category' => $validated['category'],
             'amount' => $validated['amount'],
+            'funding_source' => $fundingSource,
             'note' => $validated['note'] ?? null,
-            'cashier_id' => $cashierId,
+            'cashier_id' => $requesterId,
+            'petty_cash_fund_id' => $pettyCashFundId,
+            'receipt_path' => $receiptPath,
             'status' => 'PENDING',
         ]);
 
@@ -91,15 +159,18 @@ class CashExpenseController extends Controller
             'expense_at' => $expense->expense_at?->format('Y-m-d H:i:s'),
             'category' => $expense->category,
             'amount' => $expense->amount,
-            'cashier_id' => $expense->cashier_id,
+            'funding_source' => $expense->funding_source,
+            'requester_id' => $expense->cashier_id,
+            'petty_cash_fund_id' => $expense->petty_cash_fund_id,
+            'receipt_uploaded' => (bool) $expense->receipt_path,
         ]);
 
-        return back()->with('status', 'Pengeluaran kas berhasil ditambahkan.');
+        return back()->with('status', 'Pengajuan pengeluaran berhasil dikirim dan menunggu approval admin.');
     }
 
     public function approve(Request $request, CashExpense $cashExpense)
     {
-        abort_unless(auth()->user()->hasAnyRole(['admin', 'manager']), 403);
+        abort_unless(auth()->user()->hasRole('admin'), 403);
 
         $validated = $request->validate([
             'approval_note' => ['nullable', 'string', 'max:500'],
@@ -115,7 +186,9 @@ class CashExpenseController extends Controller
         AuditLog::log(auth()->id(), 'CASH_EXPENSE_APPROVED', $cashExpense, [
             'status' => 'APPROVED',
             'amount' => $cashExpense->amount,
-            'cashier_id' => $cashExpense->cashier_id,
+            'requester_id' => $cashExpense->cashier_id,
+            'funding_source' => $cashExpense->funding_source,
+            'petty_cash_fund_id' => $cashExpense->petty_cash_fund_id,
         ]);
 
         return back()->with('status', 'Pengeluaran berhasil di-approve.');
@@ -123,7 +196,7 @@ class CashExpenseController extends Controller
 
     public function reject(Request $request, CashExpense $cashExpense)
     {
-        abort_unless(auth()->user()->hasAnyRole(['admin', 'manager']), 403);
+        abort_unless(auth()->user()->hasRole('admin'), 403);
 
         $validated = $request->validate([
             'approval_note' => ['nullable', 'string', 'max:500'],
@@ -139,7 +212,9 @@ class CashExpenseController extends Controller
         AuditLog::log(auth()->id(), 'CASH_EXPENSE_REJECTED', $cashExpense, [
             'status' => 'REJECTED',
             'amount' => $cashExpense->amount,
-            'cashier_id' => $cashExpense->cashier_id,
+            'requester_id' => $cashExpense->cashier_id,
+            'funding_source' => $cashExpense->funding_source,
+            'petty_cash_fund_id' => $cashExpense->petty_cash_fund_id,
         ]);
 
         return back()->with('status', 'Pengeluaran ditolak.');
@@ -147,14 +222,20 @@ class CashExpenseController extends Controller
 
     public function destroy(CashExpense $cashExpense)
     {
-        abort_unless(auth()->user()->hasAnyRole(['admin', 'manager']), 403);
+        abort_unless(auth()->user()->hasRole('admin'), 403);
 
         AuditLog::log(auth()->id(), 'CASH_EXPENSE_DELETED', $cashExpense, [
             'expense_at' => $cashExpense->expense_at?->format('Y-m-d H:i:s'),
             'category' => $cashExpense->category,
             'amount' => $cashExpense->amount,
-            'cashier_id' => $cashExpense->cashier_id,
+            'requester_id' => $cashExpense->cashier_id,
+            'funding_source' => $cashExpense->funding_source,
+            'petty_cash_fund_id' => $cashExpense->petty_cash_fund_id,
         ]);
+
+        if ($cashExpense->receipt_path) {
+            Storage::disk('public')->delete($cashExpense->receipt_path);
+        }
 
         $cashExpense->delete();
 

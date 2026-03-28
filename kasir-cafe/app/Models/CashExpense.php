@@ -13,12 +13,15 @@ class CashExpense extends Model
         'expense_at',
         'category',
         'amount',
+        'funding_source',
         'note',
         'cashier_id',
+        'petty_cash_fund_id',
         'status',
         'approved_by',
         'approved_at',
         'approval_note',
+        'receipt_path',
     ];
 
     protected $casts = [
@@ -35,5 +38,10 @@ class CashExpense extends Model
     public function approver()
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function pettyCashFund()
+    {
+        return $this->belongsTo(PettyCashFund::class);
     }
 }

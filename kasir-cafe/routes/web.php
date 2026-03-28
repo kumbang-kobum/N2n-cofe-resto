@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\AttendanceReportController;
 use App\Http\Controllers\Admin\CashExpenseController;
 use App\Http\Controllers\Admin\FinanceReportController;
+use App\Http\Controllers\Admin\PettyCashFundController;
 use App\Http\Controllers\Admin\PayrollController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\EmployeeMealController;
@@ -219,6 +220,10 @@ Route::middleware(['auth', 'verified', 'license'])->group(function () {
             Route::delete('/expenses/{cashExpense}', [CashExpenseController::class, 'destroy'])->name('expenses.destroy');
             Route::post('/expenses/{cashExpense}/approve', [CashExpenseController::class, 'approve'])->name('expenses.approve');
             Route::post('/expenses/{cashExpense}/reject', [CashExpenseController::class, 'reject'])->name('expenses.reject');
+            Route::get('/petty-cash', [PettyCashFundController::class, 'index'])->name('petty_cash.index');
+            Route::get('/petty-cash/export', [PettyCashFundController::class, 'export'])->name('petty_cash.export');
+            Route::post('/petty-cash', [PettyCashFundController::class, 'store'])->name('petty_cash.store');
+            Route::post('/petty-cash/{pettyCashFund}/close', [PettyCashFundController::class, 'close'])->name('petty_cash.close');
             Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
             Route::get('/payroll/attendance-export', [PayrollController::class, 'exportAttendanceRecap'])->name('payroll.attendance_export');
             Route::get('/payroll/meal-deduction-preview', [PayrollController::class, 'mealDeductionPreview'])->name('payroll.meal_deduction_preview');
