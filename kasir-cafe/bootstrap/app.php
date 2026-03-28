@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'license' => \App\Http\Middleware\EnsureLicenseValid::class,
+            'menu.access' => \App\Http\Middleware\EnsureMenuAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

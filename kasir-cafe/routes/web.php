@@ -63,7 +63,7 @@ Route::post('/attendance-kiosk', [AttendanceController::class, 'kioskStore'])->n
 | Area yang butuh login
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'verified', 'license'])->group(function () {
+Route::middleware(['auth', 'verified', 'license', 'menu.access'])->group(function () {
     // Refund (cashier/admin/manager)
     Route::middleware('role:cashier|admin|manager')->group(function () {
         Route::get('/sales/{sale}/refund', [SaleRefundController::class, 'create'])->name('cashier.refunds.create');

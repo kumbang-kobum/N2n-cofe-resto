@@ -7,13 +7,14 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Spatie\Permission\PermissionRegistrar;
 
 class UserController extends Controller
 {
     public function index()
     {
         $users = User::query()
-            ->with('roles')
+            ->with(['roles', 'permissions'])
             ->orderBy('name')
             ->paginate(20);
 
@@ -23,8 +24,10 @@ class UserController extends Controller
     public function create()
     {
         $roles = ['admin', 'manager', 'cashier'];
+        $permissionGroups = $this->permissionGroups();
+        $roleDefaultPermissions = config('menu_permissions.defaults', []);
 
-        return view('admin.users.create', compact('roles'));
+        return view('admin.users.create', compact('roles', 'permissionGroups', 'roleDefaultPermissions'));
     }
 
     public function store(Request $request)
@@ -36,6 +39,9 @@ class UserController extends Controller
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
             'role' => ['required', Rule::in($roles)],
+            'permissions_present' => ['nullable', 'boolean'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string', Rule::in($this->availablePermissions())],
         ]);
 
         $user = User::create([
@@ -45,6 +51,8 @@ class UserController extends Controller
         ]);
 
         $user->syncRoles([$data['role']]);
+        $user->syncPermissions($this->resolvePermissions($request, $data['role']));
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         return redirect()
             ->route('admin.users.index')
@@ -55,8 +63,18 @@ class UserController extends Controller
     {
         $roles = ['admin', 'manager', 'cashier'];
         $currentRole = $user->getRoleNames()->first();
+        $permissionGroups = $this->permissionGroups();
+        $roleDefaultPermissions = config('menu_permissions.defaults', []);
+        $selectedPermissions = $user->permissions->pluck('name')->all();
 
-        return view('admin.users.edit', compact('user', 'roles', 'currentRole'));
+        return view('admin.users.edit', compact(
+            'user',
+            'roles',
+            'currentRole',
+            'permissionGroups',
+            'roleDefaultPermissions',
+            'selectedPermissions',
+        ));
     }
 
     public function update(Request $request, User $user)
@@ -67,6 +85,9 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'role' => ['required', Rule::in($roles)],
+            'permissions_present' => ['nullable', 'boolean'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string', Rule::in($this->availablePermissions())],
         ]);
 
         $user->update([
@@ -75,6 +96,8 @@ class UserController extends Controller
         ]);
 
         $user->syncRoles([$data['role']]);
+        $user->syncPermissions($this->resolvePermissions($request, $data['role']));
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         return redirect()
             ->route('admin.users.index')
@@ -94,5 +117,35 @@ class UserController extends Controller
         return redirect()
             ->route('admin.users.index')
             ->with('status', 'Pengguna berhasil dihapus.');
+    }
+
+    protected function availablePermissions(): array
+    {
+        return array_keys(config('menu_permissions.permissions', []));
+    }
+
+    protected function permissionGroups(): array
+    {
+        $definitions = config('menu_permissions.permissions', []);
+
+        return collect(config('menu_permissions.groups', []))
+            ->map(function (array $permissionNames) use ($definitions) {
+                return collect($permissionNames)
+                    ->map(fn (string $permissionName) => array_merge(
+                        ['name' => $permissionName],
+                        $definitions[$permissionName] ?? ['label' => $permissionName, 'description' => ''],
+                    ))
+                    ->all();
+            })
+            ->all();
+    }
+
+    protected function resolvePermissions(Request $request, string $role): array
+    {
+        if ($request->boolean('permissions_present')) {
+            return array_values(array_unique($request->input('permissions', [])));
+        }
+
+        return config("menu_permissions.defaults.{$role}", []);
     }
 }

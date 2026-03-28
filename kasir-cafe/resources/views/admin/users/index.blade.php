@@ -26,6 +26,7 @@
         <th class="px-3 py-2">Nama</th>
         <th class="px-3 py-2">Email</th>
         <th class="px-3 py-2">Role</th>
+        <th class="px-3 py-2">Hak Akses Menu</th>
         <th class="px-3 py-2 text-right">Aksi</th>
       </tr>
     </thead>
@@ -38,6 +39,11 @@
             @php $role = $u->getRoleNames()->first() ?? '-'; @endphp
             <span class="rounded bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
               {{ strtoupper($role) }}
+            </span>
+          </td>
+          <td class="px-3 py-2">
+            <span class="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
+              {{ $u->permissions->count() }} menu
             </span>
           </td>
           <td class="px-3 py-2 text-right">
@@ -55,7 +61,7 @@
         </tr>
       @empty
         <tr class="border-t">
-          <td colspan="4" class="px-3 py-4 text-center text-sm text-gray-500">
+          <td colspan="5" class="px-3 py-4 text-center text-sm text-gray-500">
             Belum ada pengguna.
           </td>
         </tr>
