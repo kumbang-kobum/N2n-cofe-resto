@@ -1,47 +1,60 @@
 @extends('layouts.dashboard')
 
 @section('content')
-<div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-  <div>
-    <h1 class="text-xl font-semibold">Expired Disposal</h1>
-    <div class="text-sm text-gray-600">Batch expired yang masih punya stok (base unit).</div>
-  </div>
+<h1 class="text-xl font-semibold mb-4">Expired Disposal</h1>
 
-  <form class="flex gap-2">
-    <input name="q" value="{{ $q }}" class="rounded border p-2 text-sm" placeholder="Cari bahan...">
-    <button class="px-3 py-2 rounded bg-gray-900 text-white text-sm">Cari</button>
-  </form>
+<div class="mb-4 flex items-center justify-between gap-2">
+  <div class="text-sm text-gray-600">
+    Batch expired yang masih punya stok aktif dan siap dibuang dari sistem.
+  </div>
+  <div class="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
+    {{ $expiredBatches->total() }} batch
+  </div>
 </div>
 
-<div class="bg-white border rounded-lg overflow-hidden">
-  <div class="overflow-x-auto">
+<form method="GET" class="mb-4">
+  <div class="flex items-center gap-2">
+    <input name="q"
+           value="{{ $q }}"
+           class="w-full max-w-sm rounded border px-3 py-2 text-sm"
+           placeholder="Cari bahan...">
+    <button class="rounded bg-slate-700 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">Cari</button>
+    @if(!empty($q))
+      <a href="{{ route('admin.expired.index') }}" class="rounded border px-3 py-2 text-sm hover:bg-gray-50">Reset</a>
+    @endif
+  </div>
+</form>
+
+<div class="rounded-lg border bg-white">
+  <div class="overflow-x-auto overflow-y-auto max-h-[65vh]">
     <table class="w-full text-sm">
-      <thead class="bg-gray-50">
+      <thead class="bg-gray-50 text-xs uppercase text-gray-500">
         <tr>
-          <th class="text-left p-3">Bahan</th>
-          <th class="text-left p-3">Expired</th>
-          <th class="text-right p-3">Qty (base)</th>
-          <th class="text-right p-3">Cost/base</th>
-          <th class="text-right p-3">Aksi</th>
+          <th class="text-left px-3 py-2 sticky top-0 z-10 bg-gray-50">Bahan</th>
+          <th class="text-left px-3 py-2 sticky top-0 z-10 bg-gray-50">Expired</th>
+          <th class="text-right px-3 py-2 sticky top-0 z-10 bg-gray-50">Qty (base)</th>
+          <th class="text-right px-3 py-2 sticky top-0 z-10 bg-gray-50">Cost / base</th>
+          <th class="text-right px-3 py-2 sticky top-0 z-10 bg-gray-50">Nilai Batch</th>
+          <th class="text-right px-3 py-2 sticky top-0 z-10 bg-gray-50">Aksi</th>
         </tr>
       </thead>
       <tbody>
-        @forelse($expiredBatches as $b)
+        @forelse($expiredBatches as $batch)
           <tr class="border-t">
-            <td class="p-3">
-              <div class="font-medium">{{ $b->item->name }}</div>
-              <div class="text-xs text-gray-500">Batch #{{ $b->id }}</div>
+            <td class="px-3 py-2">
+              <div class="font-medium text-slate-800">{{ $batch->item->name }}</div>
+              <div class="text-xs text-gray-500">Batch #{{ $batch->id }}</div>
             </td>
-            <td class="p-3">{{ \Carbon\Carbon::parse($b->expired_at)->format('d M Y') }}</td>
-            <td class="p-3 text-right">{{ number_format($b->qty_on_hand_base, 3, ',', '.') }}</td>
-            <td class="p-3 text-right">{{ number_format($b->unit_cost_base, 4, ',', '.') }}</td>
-            <td class="p-3 text-right">
-              <form method="POST" action="{{ route('admin.expired.dispose', $b->id) }}" class="inline-flex items-center gap-2">
+            <td class="px-3 py-2">{{ \Carbon\Carbon::parse($batch->expired_at)->format('d M Y') }}</td>
+            <td class="px-3 py-2 text-right">{{ number_format((float) $batch->qty_on_hand_base, 3, ',', '.') }}</td>
+            <td class="px-3 py-2 text-right">Rp {{ number_format((float) $batch->unit_cost_base, 4, ',', '.') }}</td>
+            <td class="px-3 py-2 text-right">Rp {{ number_format((float) $batch->qty_on_hand_base * (float) $batch->unit_cost_base, 2, ',', '.') }}</td>
+            <td class="px-3 py-2 text-right">
+              <form method="POST" action="{{ route('admin.expired.dispose', $batch->id) }}" class="inline-flex items-center gap-2">
                 @csrf
-                <input name="note" class="hidden md:block rounded border p-2 text-xs" placeholder="Catatan (opsional)">
-                <button
-                  onclick="return confirm('Buang batch expired ini? Stok akan menjadi 0 dan tercatat di ledger.')"
-                  class="px-3 py-2 rounded bg-red-600 text-white text-sm hover:bg-red-700">
+                <input name="note" class="hidden rounded border px-2 py-1 text-xs lg:block" placeholder="Catatan (opsional)">
+                <button onclick="return confirm('Buang batch expired ini? Stok akan menjadi 0 dan tercatat di ledger.')"
+                        class="rounded bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700">
                   Buang
                 </button>
               </form>
@@ -49,7 +62,7 @@
           </tr>
         @empty
           <tr class="border-t">
-            <td class="p-3 text-gray-600" colspan="5">Tidak ada batch expired yang memiliki stok.</td>
+            <td colspan="6" class="px-3 py-4 text-center text-sm text-gray-500">Tidak ada batch expired yang memiliki stok.</td>
           </tr>
         @endforelse
       </tbody>

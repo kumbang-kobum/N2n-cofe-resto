@@ -16,13 +16,22 @@ use Illuminate\Support\Facades\DB;
 
 class ReceivingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $q = trim((string) $request->query('q', ''));
+
         $purchases = Purchase::with('lines.item', 'lines.unit')
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($inner) use ($q) {
+                    $inner->where('supplier_name', 'like', '%' . $q . '%')
+                        ->orWhere('id', $q)
+                        ->orWhereHas('lines.item', fn ($lineQuery) => $lineQuery->where('name', 'like', '%' . $q . '%'));
+                });
+            })
             ->orderByDesc('received_at')
             ->get();
 
-        return view('admin.receivings.index', compact('purchases'));
+        return view('admin.receivings.index', compact('purchases', 'q'));
     }
 
     public function create()

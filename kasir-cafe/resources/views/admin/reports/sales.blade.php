@@ -1,6 +1,16 @@
 @extends('layouts.dashboard')
 
 @section('content')
+    @php
+        $salesRoute = request()->routeIs('cashier.*')
+            ? 'cashier.reports.sales'
+            : (request()->routeIs('manager.*') ? 'manager.reports.sales' : 'admin.reports.sales');
+
+        $salesExportRoute = request()->routeIs('cashier.*')
+            ? 'cashier.reports.sales.export'
+            : (request()->routeIs('manager.*') ? 'manager.reports.sales.export' : 'admin.reports.sales.export');
+    @endphp
+
     <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
         <div>
             <h1 class="text-xl font-semibold">Laporan Penjualan</h1>
@@ -12,38 +22,32 @@
             </p>
         </div>
         <div>
-            <a href="{{ route(request()->routeIs('cashier.*') ? 'cashier.reports.sales.export' : (request()->routeIs('manager.*') ? 'manager.reports.sales.export' : 'admin.reports.sales.export'), request()->query()) }}"
+            <a href="{{ route($salesExportRoute, request()->query()) }}"
                class="px-3 py-2 rounded bg-green-600 text-white text-sm font-medium hover:bg-green-700">
                 Export Excel
             </a>
         </div>
     </div>
 
-    {{-- Filter Periode --}}
     <div class="bg-white border rounded-lg p-4 mb-4">
-        <form
-            method="GET"
-            action="{{ route(request()->routeIs('cashier.*') ? 'cashier.reports.sales' : 'admin.reports.sales') }}"
-            class="flex flex-wrap items-end gap-3"
-        >
+        <form method="GET" action="{{ route($salesRoute) }}" class="flex flex-wrap items-end gap-3">
             <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">Dari Tanggal</label>
-                <input
-                    type="date"
-                    name="from"
-                    value="{{ $from }}"
-                    class="border rounded px-3 py-2 text-sm"
-                >
+                <input type="date" name="from" value="{{ $from }}" class="border rounded px-3 py-2 text-sm">
             </div>
 
             <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">Sampai Tanggal</label>
-                <input
-                    type="date"
-                    name="to"
-                    value="{{ $to }}"
-                    class="border rounded px-3 py-2 text-sm"
-                >
+                <input type="date" name="to" value="{{ $to }}" class="border rounded px-3 py-2 text-sm">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Cari Nota</label>
+                <input type="text"
+                       name="receipt_no"
+                       value="{{ $receiptNo ?? '' }}"
+                       placeholder="Contoh: INV-2026-001"
+                       class="border rounded px-3 py-2 text-sm min-w-[220px]">
             </div>
 
             @if (!request()->routeIs('cashier.*'))
@@ -61,65 +65,49 @@
             @endif
 
             <div>
-                <button
-                    type="submit"
-                    class="px-4 py-2 rounded bg-blue-600 text-white text-sm font-medium"
-                >
+                <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white text-sm font-medium">
                     Tampilkan
                 </button>
             </div>
+
+            @if(($receiptNo ?? '') !== '' || request()->filled('cashier_id'))
+                <div>
+                    <a href="{{ route($salesRoute, ['from' => $from, 'to' => $to]) }}" class="px-4 py-2 rounded border text-sm font-medium hover:bg-gray-50">
+                        Reset Filter Tambahan
+                    </a>
+                </div>
+            @endif
         </form>
     </div>
 
-    {{-- Ringkasan Utama --}}
     <div class="grid grid-cols-1 md:grid-cols-7 gap-4 mb-4">
         <div class="bg-white border rounded-lg p-4">
             <div class="text-xs text-gray-500 mb-1">Subtotal</div>
-            <div class="text-lg font-semibold">
-                Rp {{ number_format($summary['subtotal'] ?? 0, 0, ',', '.') }}
-            </div>
+            <div class="text-lg font-semibold">Rp {{ number_format($summary['subtotal'] ?? 0, 0, ',', '.') }}</div>
         </div>
-
         <div class="bg-white border rounded-lg p-4">
             <div class="text-xs text-gray-500 mb-1">Diskon</div>
-            <div class="text-lg font-semibold">
-                Rp {{ number_format($summary['discount'] ?? 0, 0, ',', '.') }}
-            </div>
+            <div class="text-lg font-semibold">Rp {{ number_format($summary['discount'] ?? 0, 0, ',', '.') }}</div>
         </div>
-
         <div class="bg-white border rounded-lg p-4">
             <div class="text-xs text-gray-500 mb-1">Pajak</div>
-            <div class="text-lg font-semibold">
-                Rp {{ number_format($summary['tax'] ?? 0, 0, ',', '.') }}
-            </div>
+            <div class="text-lg font-semibold">Rp {{ number_format($summary['tax'] ?? 0, 0, ',', '.') }}</div>
         </div>
-
         <div class="bg-white border rounded-lg p-4">
             <div class="text-xs text-gray-500 mb-1">Refund</div>
-            <div class="text-lg font-semibold">
-                Rp {{ number_format($summary['refund'] ?? 0, 0, ',', '.') }}
-            </div>
+            <div class="text-lg font-semibold">Rp {{ number_format($summary['refund'] ?? 0, 0, ',', '.') }}</div>
         </div>
-
         <div class="bg-white border rounded-lg p-4">
             <div class="text-xs text-gray-500 mb-1">Omzet</div>
-            <div class="text-lg font-semibold">
-                Rp {{ number_format($summary['omzet'] ?? 0, 0, ',', '.') }}
-            </div>
+            <div class="text-lg font-semibold">Rp {{ number_format($summary['omzet'] ?? 0, 0, ',', '.') }}</div>
         </div>
-
         <div class="bg-white border rounded-lg p-4">
             <div class="text-xs text-gray-500 mb-1">COGS (HPP)</div>
-            <div class="text-lg font-semibold">
-                Rp {{ number_format($summary['cogs'] ?? 0, 0, ',', '.') }}
-            </div>
+            <div class="text-lg font-semibold">Rp {{ number_format($summary['cogs'] ?? 0, 0, ',', '.') }}</div>
         </div>
-
         <div class="bg-white border rounded-lg p-4">
             <div class="text-xs text-gray-500 mb-1">Laba Kotor</div>
-            <div class="text-lg font-semibold">
-                Rp {{ number_format($summary['profit'] ?? 0, 0, ',', '.') }}
-            </div>
+            <div class="text-lg font-semibold">Rp {{ number_format($summary['profit'] ?? 0, 0, ',', '.') }}</div>
         </div>
     </div>
 
@@ -130,108 +118,78 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div class="bg-white border rounded-lg p-4">
             <div class="text-xs text-gray-500 mb-1">Total CASH</div>
-            <div class="text-lg font-semibold">
-                Rp {{ number_format($perPayment['CASH'] ?? 0, 0, ',', '.') }}
-            </div>
+            <div class="text-lg font-semibold">Rp {{ number_format($perPayment['CASH'] ?? 0, 0, ',', '.') }}</div>
         </div>
-
         <div class="bg-white border rounded-lg p-4">
             <div class="text-xs text-gray-500 mb-1">Total QRIS</div>
-            <div class="text-lg font-semibold">
-                Rp {{ number_format($perPayment['QRIS'] ?? 0, 0, ',', '.') }}
-            </div>
+            <div class="text-lg font-semibold">Rp {{ number_format($perPayment['QRIS'] ?? 0, 0, ',', '.') }}</div>
         </div>
-
         <div class="bg-white border rounded-lg p-4">
             <div class="text-xs text-gray-500 mb-1">Total DEBIT</div>
-            <div class="text-lg font-semibold">
-                Rp {{ number_format($perPayment['DEBIT'] ?? 0, 0, ',', '.') }}
-            </div>
+            <div class="text-lg font-semibold">Rp {{ number_format($perPayment['DEBIT'] ?? 0, 0, ',', '.') }}</div>
         </div>
     </div>
 
-    {{-- Tabel Detail Transaksi --}}
-    <div class="bg-white border rounded-lg p-4">
-        <div class="flex items-center justify-between mb-3">
-            <div class="font-semibold">Detail Transaksi</div>
-            <div class="text-xs text-gray-500">
-                {{ count($sales) }} transaksi
+    <div class="bg-white border rounded-lg">
+        <div class="flex items-center justify-between border-b px-4 py-3">
+            <div>
+                <div class="font-semibold">Detail Transaksi</div>
+                <div class="text-xs text-gray-500">Gunakan pencarian nota agar audit transaksi lebih cepat tanpa scroll panjang.</div>
             </div>
+            <div class="text-xs text-gray-500">{{ count($sales) }} transaksi</div>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto overflow-y-auto max-h-[65vh]">
             <table class="w-full text-sm">
-                <thead class="bg-gray-50">
+                <thead class="bg-gray-50 text-xs uppercase text-gray-500">
                     <tr>
-                        <th class="text-left p-2 border-b">Tanggal</th>
-                        <th class="text-left p-2 border-b">ID</th>
-                        <th class="text-left p-2 border-b">No. Nota</th>
-                        <th class="text-left p-2 border-b">Kasir</th>
-                        <th class="text-left p-2 border-b">Metode</th>
-                        <th class="text-right p-2 border-b">Subtotal</th>
-                        <th class="text-right p-2 border-b">Diskon</th>
-                        <th class="text-right p-2 border-b">Pajak</th>
-                        <th class="text-right p-2 border-b">Total</th>
-                        <th class="text-right p-2 border-b">Refund</th>
-                        <th class="text-right p-2 border-b">COGS</th>
-                        <th class="text-right p-2 border-b">Laba</th>
-                        <th class="text-center p-2 border-b">Aksi</th>
+                        <th class="text-left px-3 py-2 border-b sticky top-0 z-10 bg-gray-50">Tanggal</th>
+                        <th class="text-left px-3 py-2 border-b sticky top-0 z-10 bg-gray-50">ID</th>
+                        <th class="text-left px-3 py-2 border-b sticky top-0 z-10 bg-gray-50">No. Nota</th>
+                        <th class="text-left px-3 py-2 border-b sticky top-0 z-10 bg-gray-50">Kasir</th>
+                        <th class="text-left px-3 py-2 border-b sticky top-0 z-10 bg-gray-50">Metode</th>
+                        <th class="text-right px-3 py-2 border-b sticky top-0 z-10 bg-gray-50">Subtotal</th>
+                        <th class="text-right px-3 py-2 border-b sticky top-0 z-10 bg-gray-50">Diskon</th>
+                        <th class="text-right px-3 py-2 border-b sticky top-0 z-10 bg-gray-50">Pajak</th>
+                        <th class="text-right px-3 py-2 border-b sticky top-0 z-10 bg-gray-50">Total</th>
+                        <th class="text-right px-3 py-2 border-b sticky top-0 z-10 bg-gray-50">Refund</th>
+                        <th class="text-right px-3 py-2 border-b sticky top-0 z-10 bg-gray-50">COGS</th>
+                        <th class="text-right px-3 py-2 border-b sticky top-0 z-10 bg-gray-50">Laba</th>
+                        <th class="text-center px-3 py-2 border-b sticky top-0 z-10 bg-gray-50">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($sales as $s)
                         <tr class="border-b">
-                            <td class="p-2 align-top">
-                                {{ \Illuminate\Support\Carbon::parse($s->paid_at)->format('d/m/Y H:i') }}
-                            </td>
-                            <td class="p-2 align-top">
-                                #{{ $s->id }}
-                            </td>
-                            <td class="p-2 align-top">
+                            <td class="px-3 py-2 align-top whitespace-nowrap">{{ \Illuminate\Support\Carbon::parse($s->paid_at)->format('d/m/Y H:i') }}</td>
+                            <td class="px-3 py-2 align-top whitespace-nowrap">#{{ $s->id }}</td>
+                            <td class="px-3 py-2 align-top whitespace-nowrap">
                                 @php
                                     $receiptRoute = request()->routeIs('cashier.*')
                                         ? 'cashier.pos.receipt'
                                         : (request()->routeIs('manager.*') ? 'manager.sales.receipt' : 'admin.sales.receipt');
                                 @endphp
-                                <a href="{{ route($receiptRoute, $s->id) }}" class="text-blue-600 hover:underline">
+                                <a href="{{ route($receiptRoute, $s->id) }}" class="font-medium text-blue-600 hover:underline">
                                     {{ $s->receipt_no ?? '-' }}
                                 </a>
                             </td>
-                            <td class="p-2 align-top">
-                                {{ optional($s->cashier)->name ?? '-' }}
-                            </td>
-                            <td class="p-2 align-top">
-                                {{ strtoupper($s->payment_method ?? '-') }}
-                            </td>
-                            <td class="p-2 text-right align-top">
-                                Rp {{ number_format($s->total, 0, ',', '.') }}
-                            </td>
-                            <td class="p-2 text-right align-top">
-                                Rp {{ number_format($s->discount_amount ?? 0, 0, ',', '.') }}
-                            </td>
-                            <td class="p-2 text-right align-top">
-                                Rp {{ number_format($s->tax_amount ?? 0, 0, ',', '.') }}
-                            </td>
-                            <td class="p-2 text-right align-top">
-                                Rp {{ number_format($s->grand_total ?? ($s->total - ($s->discount_amount ?? 0) + ($s->tax_amount ?? 0)), 0, ',', '.') }}
-                            </td>
-                            <td class="p-2 text-right align-top">
-                                Rp {{ number_format($s->refund_total ?? 0, 0, ',', '.') }}
-                            </td>
-                            <td class="p-2 text-right align-top">
-                                Rp {{ number_format($s->cogs_total ?? 0, 0, ',', '.') }}
-                            </td>
-                            <td class="p-2 text-right align-top">
-                                Rp {{ number_format($s->profit_gross ?? 0, 0, ',', '.') }}
-                            </td>
-                            <td class="p-2 text-center align-top">
+                            <td class="px-3 py-2 align-top">{{ optional($s->cashier)->name ?? '-' }}</td>
+                            <td class="px-3 py-2 align-top">{{ strtoupper($s->payment_method ?? '-') }}</td>
+                            <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->total, 0, ',', '.') }}</td>
+                            <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->discount_amount ?? 0, 0, ',', '.') }}</td>
+                            <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->tax_amount ?? 0, 0, ',', '.') }}</td>
+                            <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->grand_total ?? ($s->total - ($s->discount_amount ?? 0) + ($s->tax_amount ?? 0)), 0, ',', '.') }}</td>
+                            <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->refund_total ?? 0, 0, ',', '.') }}</td>
+                            <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->cogs_total ?? 0, 0, ',', '.') }}</td>
+                            <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->profit_gross ?? 0, 0, ',', '.') }}</td>
+                            <td class="px-3 py-2 text-center align-top">
                                 <a href="{{ route(request()->routeIs('cashier.*') ? 'cashier.refunds.create' : (request()->routeIs('manager.*') ? 'manager.refunds.create' : 'admin.refunds.create'), $s) }}"
-                                   class="text-xs text-blue-600 hover:underline">Refund</a>
+                                   class="text-xs font-medium text-blue-600 hover:underline">Refund</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="13" class="p-4 text-center text-gray-500">
+                            <td colspan="13" class="px-3 py-4 text-center text-gray-500">
                                 Belum ada transaksi pada periode ini.
                             </td>
                         </tr>

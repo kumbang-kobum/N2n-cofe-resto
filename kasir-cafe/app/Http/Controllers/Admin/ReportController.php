@@ -26,6 +26,7 @@ class ReportController extends Controller
     {
         $from = $request->query('from', now()->startOfMonth()->toDateString());
         $to   = $request->query('to', now()->toDateString());
+        $receiptNo = trim((string) $request->query('receipt_no', ''));
 
         $query = Sale::query()
             ->with('cashier')
@@ -35,6 +36,10 @@ class ReportController extends Controller
 
         if ($cashierId) {
             $query->where('cashier_id', $cashierId);
+        }
+
+        if ($receiptNo !== '') {
+            $query->where('receipt_no', 'like', '%' . $receiptNo . '%');
         }
 
         $sales = $query->orderByDesc('paid_at')->get();
@@ -61,7 +66,7 @@ class ReportController extends Controller
             $summary['per_payment'][$method] += (float) ($s->grand_total ?: $fallbackTotal);
         }
 
-        return [$sales, $summary, $from, $to];
+        return [$sales, $summary, $from, $to, $receiptNo];
     }
 
     protected function exportSalesExcel($sales, string $from, string $to)
@@ -137,12 +142,12 @@ class ReportController extends Controller
         $cashierId = $request->query('cashier_id');
         $cashierId = $cashierId !== null && $cashierId !== '' ? (int) $cashierId : null;
 
-        [$sales, $summary, $from, $to] = $this->buildSalesData($request, $cashierId);
+        [$sales, $summary, $from, $to, $receiptNo] = $this->buildSalesData($request, $cashierId);
 
         $cashiers = User::role('cashier')->orderBy('name')->get();
         $selectedCashier = $cashierId;
 
-        return view('admin.reports.sales', compact('sales', 'summary', 'from', 'to', 'cashiers', 'selectedCashier'));
+        return view('admin.reports.sales', compact('sales', 'summary', 'from', 'to', 'cashiers', 'selectedCashier', 'receiptNo'));
     }
 
     public function exportSales(Request $request)
@@ -150,7 +155,7 @@ class ReportController extends Controller
         $cashierId = $request->query('cashier_id');
         $cashierId = $cashierId !== null && $cashierId !== '' ? (int) $cashierId : null;
 
-        [$sales, $summary, $from, $to] = $this->buildSalesData($request, $cashierId);
+        [$sales, $summary, $from, $to, $receiptNo] = $this->buildSalesData($request, $cashierId);
 
         return $this->exportSalesExcel($sales, $from, $to);
     }
@@ -160,14 +165,14 @@ class ReportController extends Controller
      */
     public function salesForCashier(Request $request)
     {
-        [$sales, $summary, $from, $to] = $this->buildSalesData($request, auth()->id());
+        [$sales, $summary, $from, $to, $receiptNo] = $this->buildSalesData($request, auth()->id());
 
-        return view('admin.reports.sales', compact('sales', 'summary', 'from', 'to'));
+        return view('admin.reports.sales', compact('sales', 'summary', 'from', 'to', 'receiptNo'));
     }
 
     public function exportSalesForCashier(Request $request)
     {
-        [$sales, $summary, $from, $to] = $this->buildSalesData($request, auth()->id());
+        [$sales, $summary, $from, $to, $receiptNo] = $this->buildSalesData($request, auth()->id());
 
         return $this->exportSalesExcel($sales, $from, $to);
     }

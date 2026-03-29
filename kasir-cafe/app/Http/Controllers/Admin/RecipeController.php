@@ -13,10 +13,18 @@ use Illuminate\Support\Facades\DB;
 
 class RecipeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::orderBy('name')->get();
-        return view('admin.recipes.index', compact('products'));
+        $q = trim((string) $request->query('q', ''));
+
+        $products = Product::query()
+            ->with('recipe')
+            ->when($q !== '', fn ($query) => $query->where('name', 'like', '%' . $q . '%'))
+            ->orderBy('name')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.recipes.index', compact('products', 'q'));
     }
 
     public function edit(int $productId)

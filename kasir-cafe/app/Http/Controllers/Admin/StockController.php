@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\ItemBatch;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 class StockController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $q = trim((string) $request->query('q', ''));
+
         $batchStats = ItemBatch::query()
             ->selectRaw('item_id, SUM(qty_on_hand_base) as stock_base, SUM(qty_on_hand_base * unit_cost_base) as stock_value')
             ->where('status', 'ACTIVE')
@@ -18,8 +20,14 @@ class StockController extends Controller
             ->get()
             ->keyBy('item_id');
 
-        $items = Item::with('baseUnit')
-            ->where('is_active', true)
+        $itemsQuery = Item::with('baseUnit')
+            ->where('is_active', true);
+
+        if ($q !== '') {
+            $itemsQuery->where('name', 'like', '%' . $q . '%');
+        }
+
+        $items = $itemsQuery
             ->orderBy('name')
             ->get()
             ->map(function ($item) use ($batchStats) {
@@ -41,6 +49,6 @@ class StockController extends Controller
             ->limit(50)
             ->get();
 
-        return view('admin.stock.index', compact('items', 'batchesExpSoon'));
+        return view('admin.stock.index', compact('items', 'batchesExpSoon', 'q'));
     }
 }
