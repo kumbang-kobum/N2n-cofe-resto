@@ -9,6 +9,16 @@
         $salesExportRoute = request()->routeIs('cashier.*')
             ? 'cashier.reports.sales.export'
             : (request()->routeIs('manager.*') ? 'manager.reports.sales.export' : 'admin.reports.sales.export');
+
+        $receiptRoute = request()->routeIs('cashier.*')
+            ? 'cashier.pos.receipt'
+            : (request()->routeIs('manager.*') ? 'manager.sales.receipt' : 'admin.sales.receipt');
+
+        $refundCreateRoute = request()->routeIs('cashier.*')
+            ? 'cashier.refunds.create'
+            : (request()->routeIs('manager.*') ? 'manager.refunds.create' : 'admin.refunds.create');
+
+        $perPayment = $summary['per_payment'] ?? [];
     @endphp
 
     <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
@@ -99,8 +109,6 @@
         <div class="bg-white border rounded-lg p-4"><div class="text-xs text-gray-500 mb-1">Laba Kotor</div><div class="text-lg font-semibold">Rp {{ number_format($summary['profit'] ?? 0, 0, ',', '.') }}</div></div>
     </div>
 
-    @php($perPayment = $summary['per_payment'] ?? [])
-
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div class="bg-white border rounded-lg p-4"><div class="text-xs text-gray-500 mb-1">Total CASH</div><div class="text-lg font-semibold">Rp {{ number_format($perPayment['CASH'] ?? 0, 0, ',', '.') }}</div></div>
         <div class="bg-white border rounded-lg p-4"><div class="text-xs text-gray-500 mb-1">Total QRIS</div><div class="text-lg font-semibold">Rp {{ number_format($perPayment['QRIS'] ?? 0, 0, ',', '.') }}</div></div>
@@ -143,11 +151,6 @@
                             <td class="px-3 py-2 align-top whitespace-nowrap">{{ \Illuminate\Support\Carbon::parse($s->paid_at)->format('d/m/Y H:i') }}</td>
                             <td class="px-3 py-2 align-top whitespace-nowrap">#{{ $s->id }}</td>
                             <td class="px-3 py-2 align-top whitespace-nowrap">
-                                @php
-                                    $receiptRoute = request()->routeIs('cashier.*')
-                                        ? 'cashier.pos.receipt'
-                                        : (request()->routeIs('manager.*') ? 'manager.sales.receipt' : 'admin.sales.receipt');
-                                @endphp
                                 <a href="{{ route($receiptRoute, $s->id) }}" class="font-medium text-blue-600 hover:underline">
                                     {{ $s->receipt_no ?? '-' }}
                                 </a>
@@ -162,7 +165,7 @@
                             <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->cogs_total ?? 0, 0, ',', '.') }}</td>
                             <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->profit_gross ?? 0, 0, ',', '.') }}</td>
                             <td class="px-3 py-2 text-center align-top">
-                                <a href="{{ route(request()->routeIs('cashier.*') ? 'cashier.refunds.create' : (request()->routeIs('manager.*') ? 'manager.refunds.create' : 'admin.refunds.create'), $s) }}"
+                                <a href="{{ route($refundCreateRoute, $s) }}"
                                    class="text-xs font-medium text-blue-600 hover:underline">Refund</a>
                             </td>
                         </tr>

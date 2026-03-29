@@ -166,7 +166,7 @@ class AttendanceReportController extends Controller
         $spreadsheet = new Spreadsheet();
 
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Rekap Karyawan');
+        $sheet->setTitle('Rekap Absensi Karyawan');
         $headers = ['Periode', 'Karyawan', 'Record', 'Hadir', 'Telat', 'Belum Lengkap', 'Lembur (m)', 'Face Verified', 'Perlu Review', 'Cuti', 'Sakit', 'Izin', 'Pot. Telat'];
         foreach ($headers as $index => $header) {
             $sheet->setCellValue(chr(65 + $index) . '1', $header);
@@ -195,7 +195,7 @@ class AttendanceReportController extends Controller
         }
 
         $dailySheet = $spreadsheet->createSheet();
-        $dailySheet->setTitle('Rekap Harian');
+        $dailySheet->setTitle('Rekap Absensi Harian');
         $dailyHeaders = ['Tanggal', 'Record', 'Hadir', 'Telat', 'Belum Lengkap', 'Lembur (m)', 'Pot. Telat'];
         foreach ($dailyHeaders as $index => $header) {
             $dailySheet->setCellValue(chr(65 + $index) . '1', $header);

@@ -48,9 +48,7 @@
             <select name="action" class="w-full rounded border px-3 py-2 text-sm">
                 <option value="">Semua</option>
                 @foreach($actions as $a)
-                    <option value="{{ $a }}" @selected($action === $a)>{{ 
-                        Illuminate\Support\Str::of($a)->replace('_', ' ')->lower()->title() 
-                    }}</option>
+                    <option value="{{ $a }}" @selected($action === $a)>{{ Illuminate\Support\Str::of($a)->replace('_', ' ')->lower()->title() }}</option>
                 @endforeach
             </select>
         </div>
@@ -65,61 +63,69 @@
     </form>
 </div>
 
-<div class="space-y-3">
-    @forelse($logs as $log)
-        <div class="rounded-lg border bg-white p-4 shadow-sm">
-            <div class="flex flex-wrap items-start justify-between gap-3">
-                <div class="space-y-2">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <span class="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">{{ $log->actionLabel() }}</span>
-                        <span class="text-xs text-gray-500">{{ $log->created_at?->format('d/m/Y H:i:s') }}</span>
-                    </div>
-                    <div class="text-sm text-gray-700">
-                        {{ $log->summaryText() }}
-                    </div>
-                    <div class="text-sm text-gray-700">
-                        <span class="font-medium">Pelaku:</span> {{ $log->actorLabel() }}
-                    </div>
-                    <div class="text-sm text-gray-700">
-                        <span class="font-medium">Objek:</span> {{ $log->auditableLabel() }}
-                    </div>
-                </div>
-                @can('action.audit_logs.delete')
-                    <form method="POST" action="{{ route($destroyRoute, $log) }}" onsubmit="return confirm('Hapus audit log ini?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="inline-flex items-center rounded border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100">
-                            Hapus
-                        </button>
-                    </form>
-                @endcan
-            </div>
+<div class="rounded-lg border bg-white">
+    <div class="border-b px-4 py-3 flex items-center justify-between gap-2">
+        <div>
+            <div class="font-semibold">Riwayat Audit</div>
+            <div class="text-xs text-gray-500">Setiap log menampilkan pelaku, objek, waktu, dan detail perubahan.</div>
+        </div>
+        <div class="text-xs text-gray-500">{{ $logs->total() }} log</div>
+    </div>
 
-            @php($metaRows = $log->formattedMeta())
-            @if ($metaRows)
-                <div class="mt-4 overflow-hidden rounded-lg border border-slate-200">
-                    <div class="bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Detail Perubahan</div>
-                    <div class="divide-y divide-slate-100">
-                        @foreach($metaRows as $row)
-                            <div class="grid gap-1 px-3 py-2 md:grid-cols-[220px,1fr] md:gap-3">
-                                <div class="text-xs font-medium text-slate-500">{{ $row['label'] }}</div>
-                                <div class="text-sm text-slate-800 whitespace-pre-wrap break-words">{{ $row['value'] }}</div>
+    <div class="overflow-x-auto overflow-y-auto max-h-[70vh]">
+        <div class="divide-y divide-slate-100">
+            @forelse($logs as $log)
+                <div class="p-4">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div class="space-y-2">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">{{ $log->actionLabel() }}</span>
+                                <span class="text-xs text-gray-500">{{ optional($log->created_at)->format('d/m/Y H:i:s') }}</span>
                             </div>
-                        @endforeach
+                            <div class="text-sm text-gray-700">{{ $log->summaryText() }}</div>
+                            <div class="grid gap-1 text-sm text-gray-700 md:grid-cols-2 md:gap-4">
+                                <div><span class="font-medium">Pelaku:</span> {{ $log->actorLabel() }}</div>
+                                <div><span class="font-medium">Objek:</span> {{ $log->auditableLabel() }}</div>
+                            </div>
+                        </div>
+                        @can('action.audit_logs.delete')
+                            <form method="POST" action="{{ route($destroyRoute, $log) }}" onsubmit="return confirm('Hapus audit log ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="inline-flex items-center rounded border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-100">
+                                    Hapus
+                                </button>
+                            </form>
+                        @endcan
                     </div>
-                </div>
-            @else
-                <div class="mt-3 text-sm text-gray-500">Tidak ada detail tambahan.</div>
-            @endif
-        </div>
-    @empty
-        <div class="rounded-lg border bg-white p-8 text-center text-sm text-gray-500">
-            Belum ada audit log pada filter ini.
-        </div>
-    @endforelse
-</div>
 
-<div class="mt-4">
-    {{ $logs->links() }}
+                    @php
+                        $metaRows = $log->formattedMeta();
+                    @endphp
+                    @if ($metaRows)
+                        <div class="mt-4 overflow-hidden rounded-lg border border-slate-200">
+                            <div class="bg-slate-50 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Detail Perubahan</div>
+                            <div class="divide-y divide-slate-100">
+                                @foreach($metaRows as $row)
+                                    <div class="grid gap-1 px-3 py-2 md:grid-cols-[220px,1fr] md:gap-3">
+                                        <div class="text-xs font-medium text-slate-500">{{ $row['label'] }}</div>
+                                        <div class="text-sm text-slate-800 whitespace-pre-wrap break-words">{{ $row['value'] }}</div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @else
+                        <div class="mt-3 text-sm text-gray-500">Tidak ada detail tambahan.</div>
+                    @endif
+                </div>
+            @empty
+                <div class="p-8 text-center text-sm text-gray-500">Belum ada audit log pada filter ini.</div>
+            @endforelse
+        </div>
+    </div>
+
+    <div class="border-t p-3">
+        {{ $logs->links() }}
+    </div>
 </div>
 @endsection

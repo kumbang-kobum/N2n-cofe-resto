@@ -388,7 +388,7 @@ class FinanceReportController extends Controller
         $spreadsheet = new Spreadsheet();
 
         $summarySheet = $spreadsheet->getActiveSheet();
-        $summarySheet->setTitle('Executive Summary');
+        $summarySheet->setTitle('Ringkasan Keuangan');
         $summaryRows = [
             ['Periode', $data['from'] . ' s/d ' . $data['to']],
             ['Total Transaksi', (int) $data['summary']['trx_total']],
@@ -552,6 +552,64 @@ class FinanceReportController extends Controller
             $row++;
         }
 
+        $expenseCategorySheet = $spreadsheet->createSheet();
+        $expenseCategorySheet->setTitle('Kategori Pengeluaran');
+        $expenseCategorySheet->fromArray(
+            [[
+                'Kategori',
+                'Jumlah Transaksi',
+                'Kas Penjualan',
+                'Kas Kecil',
+                'Total Approved',
+            ]],
+            null,
+            'A1'
+        );
+        $row = 2;
+        foreach ($data['expenseCategoryRows'] as $r) {
+            $expenseCategorySheet->fromArray([[
+                $r['category'],
+                $r['count'],
+                $r['direct_total'],
+                $r['petty_cash_total'],
+                $r['total'],
+            ]], null, 'A' . $row);
+            $row++;
+        }
+
+        $pettyCashSheet = $spreadsheet->createSheet();
+        $pettyCashSheet->setTitle('Ringkasan Kas Kecil');
+        $pettyCashSheet->fromArray(
+            [[
+                'Periode Mulai',
+                'Periode Selesai',
+                'Nama Dana',
+                'Status',
+                'Dana Awal',
+                'Terpakai Approved',
+                'Dikembalikan',
+                'Saldo',
+            ]],
+            null,
+            'A1'
+        );
+        $row = 2;
+        foreach ($data['pettyCashFunds'] as $fund) {
+            $used = (float) ($fund->approved_used_total ?? 0);
+            $remaining = (float) $fund->opening_balance - $used - (float) $fund->returned_amount;
+            $pettyCashSheet->fromArray([[
+                optional($fund->period_start)->format('Y-m-d'),
+                optional($fund->period_end)->format('Y-m-d'),
+                $fund->name,
+                $fund->status,
+                (float) $fund->opening_balance,
+                $used,
+                (float) $fund->returned_amount,
+                $remaining,
+            ]], null, 'A' . $row);
+            $row++;
+        }
+
         $mealSheet = $spreadsheet->createSheet();
         $mealSheet->setTitle('Makan Karyawan');
         $mealSheet->fromArray(
@@ -581,31 +639,6 @@ class FinanceReportController extends Controller
                 (float) $r->excess_amount,
                 optional($r->payroll?->period_month)->format('Y-m'),
                 $r->note,
-            ]], null, 'A' . $row);
-            $row++;
-        }
-
-        $expenseCategorySheet = $spreadsheet->createSheet();
-        $expenseCategorySheet->setTitle('Kategori Pengeluaran');
-        $expenseCategorySheet->fromArray(
-            [[
-                'Kategori',
-                'Jumlah Transaksi',
-                'Kas Penjualan',
-                'Kas Kecil',
-                'Total Approved',
-            ]],
-            null,
-            'A1'
-        );
-        $row = 2;
-        foreach ($data['expenseCategoryRows'] as $r) {
-            $expenseCategorySheet->fromArray([[
-                $r['category'],
-                $r['count'],
-                $r['direct_total'],
-                $r['petty_cash_total'],
-                $r['total'],
             ]], null, 'A' . $row);
             $row++;
         }
@@ -682,7 +715,7 @@ class FinanceReportController extends Controller
         }
 
         $payrollSheet = $spreadsheet->createSheet();
-        $payrollSheet->setTitle('Payroll');
+        $payrollSheet->setTitle('Ringkasan Payroll');
         $payrollSheet->fromArray(
             [['Periode', 'Petugas', 'Gaji Pokok', 'Lembur', 'Bonus', 'Pot. Manual', 'Pot. Makan', 'Net', 'Status', 'Approver', 'Payer', 'Paid At']],
             null,
@@ -707,7 +740,7 @@ class FinanceReportController extends Controller
             $row++;
         }
 
-        foreach ([$summarySheet, $trxSheet, $itemSheet, $expenseSheet, $mealSheet, $expenseCategorySheet, $periodSheet, $menuSheet, $payrollSheet] as $sheet) {
+        foreach ([$summarySheet, $trxSheet, $itemSheet, $expenseSheet, $expenseCategorySheet, $pettyCashSheet, $mealSheet, $payrollSheet, $periodSheet, $menuSheet] as $sheet) {
             foreach (range('A', 'M') as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
@@ -717,12 +750,13 @@ class FinanceReportController extends Controller
         $this->applyHeaderStyle($summarySheet, 'A31:B31');
         $this->applyHeaderStyle($trxSheet, 'A1:L1');
         $this->applyHeaderStyle($itemSheet, 'A1:M1');
-        $this->applyHeaderStyle($expenseSheet, 'A1:K1');
-        $this->applyHeaderStyle($mealSheet, 'A1:I1');
+        $this->applyHeaderStyle($expenseSheet, 'A1:L1');
         $this->applyHeaderStyle($expenseCategorySheet, 'A1:E1');
+        $this->applyHeaderStyle($pettyCashSheet, 'A1:H1');
+        $this->applyHeaderStyle($mealSheet, 'A1:I1');
+        $this->applyHeaderStyle($payrollSheet, 'A1:L1');
         $this->applyHeaderStyle($periodSheet, 'A1:M1');
         $this->applyHeaderStyle($menuSheet, 'A1:J1');
-        $this->applyHeaderStyle($payrollSheet, 'A1:L1');
 
         $this->applyProfitColorBySign($summarySheet, 'B26'); // Laba Bersih Setelah Payroll
         $this->applyProfitColorBySign($trxSheet, 'K2:K9999'); // Laba Kotor transaksi

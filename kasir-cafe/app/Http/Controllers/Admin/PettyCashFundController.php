@@ -147,7 +147,7 @@ class PettyCashFundController extends Controller
 
         $spreadsheet = new Spreadsheet();
         $summarySheet = $spreadsheet->getActiveSheet();
-        $summarySheet->setTitle('Kas Kecil');
+        $summarySheet->setTitle('Ringkasan Kas Kecil');
         $summarySheet->fromArray([[
             'Nama Dana',
             'Periode Mulai',
@@ -191,7 +191,7 @@ class PettyCashFundController extends Controller
         }
 
         $expenseSheet = $spreadsheet->createSheet();
-        $expenseSheet->setTitle('Detail Pengeluaran');
+        $expenseSheet->setTitle('Pengeluaran Kas Kecil');
         $expenseSheet->fromArray([[
             'Nama Dana',
             'Waktu',
@@ -225,7 +225,7 @@ class PettyCashFundController extends Controller
         }
 
         $categorySheet = $spreadsheet->createSheet();
-        $categorySheet->setTitle('Per Kategori');
+        $categorySheet->setTitle('Kategori Pengeluaran');
         $categorySheet->fromArray([[
             'Kategori',
             'Jumlah Transaksi',

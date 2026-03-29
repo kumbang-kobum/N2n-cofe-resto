@@ -255,7 +255,7 @@ class PayrollController extends Controller
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Rekap Absensi');
+        $sheet->setTitle('Rekap Absensi Payroll');
 
         $headers = ['Periode', 'Karyawan', 'Record', 'Hadir', 'Telat', 'Belum Lengkap', 'Lembur (m)', 'Face Verified', 'Perlu Review', 'Cuti', 'Sakit', 'Izin', 'Pot. Telat'];
         foreach ($headers as $index => $header) {

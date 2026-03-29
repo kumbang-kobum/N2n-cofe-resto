@@ -79,7 +79,7 @@ class ReportController extends Controller
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Laporan Penjualan');
+        $sheet->setTitle('Detail Transaksi');
 
         $headers = [
             'Tanggal',
@@ -103,7 +103,7 @@ class ReportController extends Controller
         }
 
         $row = 2;
-        foreach ($summarySales as $s) {
+        foreach ($sales as $s) {
             $grand = $s->grand_total ?? ($s->total - ($s->discount_amount ?? 0) + ($s->tax_amount ?? 0));
 
             $sheet->setCellValue('A' . $row, optional($s->paid_at)->format('Y-m-d H:i:s'));

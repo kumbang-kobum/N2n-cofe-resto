@@ -77,7 +77,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php($oldLines = old('lines', []))
+                    @php
+                        $oldLines = old('lines', []);
+                    @endphp
 
                     @forelse($items as $idx => $item)
                         @php
