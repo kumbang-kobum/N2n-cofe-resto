@@ -50,6 +50,15 @@
                        class="border rounded px-3 py-2 text-sm min-w-[220px]">
             </div>
 
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Limit Data</label>
+                <select name="limit" class="border rounded px-3 py-2 text-sm">
+                    @foreach([25, 50, 100, 200] as $size)
+                        <option value="{{ $size }}" @selected((int) ($limit ?? 50) === $size)>{{ $size }} baris</option>
+                    @endforeach
+                </select>
+            </div>
+
             @if (!request()->routeIs('cashier.*'))
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1">Kasir</label>
@@ -70,7 +79,7 @@
                 </button>
             </div>
 
-            @if(($receiptNo ?? '') !== '' || request()->filled('cashier_id'))
+            @if(($receiptNo ?? '') !== '' || request()->filled('cashier_id') || request()->filled('limit'))
                 <div>
                     <a href="{{ route($salesRoute, ['from' => $from, 'to' => $to]) }}" class="px-4 py-2 rounded border text-sm font-medium hover:bg-gray-50">
                         Reset Filter Tambahan
@@ -81,62 +90,32 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-7 gap-4 mb-4">
-        <div class="bg-white border rounded-lg p-4">
-            <div class="text-xs text-gray-500 mb-1">Subtotal</div>
-            <div class="text-lg font-semibold">Rp {{ number_format($summary['subtotal'] ?? 0, 0, ',', '.') }}</div>
-        </div>
-        <div class="bg-white border rounded-lg p-4">
-            <div class="text-xs text-gray-500 mb-1">Diskon</div>
-            <div class="text-lg font-semibold">Rp {{ number_format($summary['discount'] ?? 0, 0, ',', '.') }}</div>
-        </div>
-        <div class="bg-white border rounded-lg p-4">
-            <div class="text-xs text-gray-500 mb-1">Pajak</div>
-            <div class="text-lg font-semibold">Rp {{ number_format($summary['tax'] ?? 0, 0, ',', '.') }}</div>
-        </div>
-        <div class="bg-white border rounded-lg p-4">
-            <div class="text-xs text-gray-500 mb-1">Refund</div>
-            <div class="text-lg font-semibold">Rp {{ number_format($summary['refund'] ?? 0, 0, ',', '.') }}</div>
-        </div>
-        <div class="bg-white border rounded-lg p-4">
-            <div class="text-xs text-gray-500 mb-1">Omzet</div>
-            <div class="text-lg font-semibold">Rp {{ number_format($summary['omzet'] ?? 0, 0, ',', '.') }}</div>
-        </div>
-        <div class="bg-white border rounded-lg p-4">
-            <div class="text-xs text-gray-500 mb-1">COGS (HPP)</div>
-            <div class="text-lg font-semibold">Rp {{ number_format($summary['cogs'] ?? 0, 0, ',', '.') }}</div>
-        </div>
-        <div class="bg-white border rounded-lg p-4">
-            <div class="text-xs text-gray-500 mb-1">Laba Kotor</div>
-            <div class="text-lg font-semibold">Rp {{ number_format($summary['profit'] ?? 0, 0, ',', '.') }}</div>
-        </div>
+        <div class="bg-white border rounded-lg p-4"><div class="text-xs text-gray-500 mb-1">Subtotal</div><div class="text-lg font-semibold">Rp {{ number_format($summary['subtotal'] ?? 0, 0, ',', '.') }}</div></div>
+        <div class="bg-white border rounded-lg p-4"><div class="text-xs text-gray-500 mb-1">Diskon</div><div class="text-lg font-semibold">Rp {{ number_format($summary['discount'] ?? 0, 0, ',', '.') }}</div></div>
+        <div class="bg-white border rounded-lg p-4"><div class="text-xs text-gray-500 mb-1">Pajak</div><div class="text-lg font-semibold">Rp {{ number_format($summary['tax'] ?? 0, 0, ',', '.') }}</div></div>
+        <div class="bg-white border rounded-lg p-4"><div class="text-xs text-gray-500 mb-1">Refund</div><div class="text-lg font-semibold">Rp {{ number_format($summary['refund'] ?? 0, 0, ',', '.') }}</div></div>
+        <div class="bg-white border rounded-lg p-4"><div class="text-xs text-gray-500 mb-1">Omzet</div><div class="text-lg font-semibold">Rp {{ number_format($summary['omzet'] ?? 0, 0, ',', '.') }}</div></div>
+        <div class="bg-white border rounded-lg p-4"><div class="text-xs text-gray-500 mb-1">COGS (HPP)</div><div class="text-lg font-semibold">Rp {{ number_format($summary['cogs'] ?? 0, 0, ',', '.') }}</div></div>
+        <div class="bg-white border rounded-lg p-4"><div class="text-xs text-gray-500 mb-1">Laba Kotor</div><div class="text-lg font-semibold">Rp {{ number_format($summary['profit'] ?? 0, 0, ',', '.') }}</div></div>
     </div>
 
-    @php
-        $perPayment = $summary['per_payment'] ?? [];
-    @endphp
+    @php($perPayment = $summary['per_payment'] ?? [])
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white border rounded-lg p-4">
-            <div class="text-xs text-gray-500 mb-1">Total CASH</div>
-            <div class="text-lg font-semibold">Rp {{ number_format($perPayment['CASH'] ?? 0, 0, ',', '.') }}</div>
-        </div>
-        <div class="bg-white border rounded-lg p-4">
-            <div class="text-xs text-gray-500 mb-1">Total QRIS</div>
-            <div class="text-lg font-semibold">Rp {{ number_format($perPayment['QRIS'] ?? 0, 0, ',', '.') }}</div>
-        </div>
-        <div class="bg-white border rounded-lg p-4">
-            <div class="text-xs text-gray-500 mb-1">Total DEBIT</div>
-            <div class="text-lg font-semibold">Rp {{ number_format($perPayment['DEBIT'] ?? 0, 0, ',', '.') }}</div>
-        </div>
+        <div class="bg-white border rounded-lg p-4"><div class="text-xs text-gray-500 mb-1">Total CASH</div><div class="text-lg font-semibold">Rp {{ number_format($perPayment['CASH'] ?? 0, 0, ',', '.') }}</div></div>
+        <div class="bg-white border rounded-lg p-4"><div class="text-xs text-gray-500 mb-1">Total QRIS</div><div class="text-lg font-semibold">Rp {{ number_format($perPayment['QRIS'] ?? 0, 0, ',', '.') }}</div></div>
+        <div class="bg-white border rounded-lg p-4"><div class="text-xs text-gray-500 mb-1">Total DEBIT</div><div class="text-lg font-semibold">Rp {{ number_format($perPayment['DEBIT'] ?? 0, 0, ',', '.') }}</div></div>
     </div>
 
     <div class="bg-white border rounded-lg">
-        <div class="flex items-center justify-between border-b px-4 py-3">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3">
             <div>
                 <div class="font-semibold">Detail Transaksi</div>
-                <div class="text-xs text-gray-500">Gunakan pencarian nota agar audit transaksi lebih cepat tanpa scroll panjang.</div>
+                <div class="text-xs text-gray-500">Tabel dibatasi default agar tetap cepat. Gunakan pencarian nota untuk audit yang lebih fokus.</div>
             </div>
-            <div class="text-xs text-gray-500">{{ count($sales) }} transaksi</div>
+            <div class="text-xs text-gray-500">
+                {{ method_exists($sales, 'total') ? $sales->total() : count($sales) }} transaksi
+            </div>
         </div>
 
         <div class="overflow-x-auto overflow-y-auto max-h-[65vh]">
@@ -197,5 +176,11 @@
                 </tbody>
             </table>
         </div>
+
+        @if(method_exists($sales, 'links'))
+            <div class="border-t px-4 py-3">
+                {{ $sales->links() }}
+            </div>
+        @endif
     </div>
 @endsection

@@ -37,7 +37,7 @@
         </form>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-5 xl:grid-cols-14 gap-3 mb-5">
+    <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-3 mb-5">
         <div class="bg-white border rounded-lg p-3"><div class="text-xs text-gray-500">Subtotal</div><div class="font-semibold">Rp {{ number_format($summary['subtotal'], 0, ',', '.') }}</div></div>
         <div class="bg-white border rounded-lg p-3"><div class="text-xs text-gray-500">Diskon</div><div class="font-semibold">Rp {{ number_format($summary['discount'], 0, ',', '.') }}</div></div>
         <div class="bg-white border rounded-lg p-3"><div class="text-xs text-gray-500">Pajak</div><div class="font-semibold">Rp {{ number_format($summary['tax'], 0, ',', '.') }}</div></div>
@@ -73,167 +73,165 @@
         </div>
     </div>
 
-    <div class="bg-white border rounded-lg p-4 mb-5">
-        <div class="font-semibold mb-3">Ringkasan Harian</div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="text-left p-2 border-b">Tanggal</th>
-                        <th class="text-right p-2 border-b">Omzet</th>
-                        <th class="text-right p-2 border-b">Refund</th>
-                        <th class="text-right p-2 border-b">COGS</th>
-                        <th class="text-right p-2 border-b">Laba Kotor</th>
-                        <th class="text-right p-2 border-b">Beban Op.</th>
-                        <th class="text-right p-2 border-b">Kas Penjualan</th>
-                        <th class="text-right p-2 border-b">Kas Kecil</th>
-                        <th class="text-right p-2 border-b">Beban Makan</th>
-                        <th class="text-right p-2 border-b">Payroll</th>
-                        <th class="text-right p-2 border-b">Laba Bersih</th>
-                        <th class="text-right p-2 border-b">Laba Setelah Payroll</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($dailyRows as $row)
-                        <tr class="border-b">
-                            <td class="p-2">{{ \Illuminate\Support\Carbon::parse($row['date'])->format('d/m/Y') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['omzet'], 0, ',', '.') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['refund'], 0, ',', '.') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['cogs'], 0, ',', '.') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['gross_profit'], 0, ',', '.') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['expense_total'], 0, ',', '.') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['direct_expense_total'] ?? 0, 0, ',', '.') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['petty_cash_expense_total'] ?? 0, 0, ',', '.') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['employee_meal_expense_total'] ?? 0, 0, ',', '.') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['payroll_total'] ?? 0, 0, ',', '.') }}</td>
-                            <td class="p-2 text-right font-medium {{ $row['net_profit'] >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
-                                Rp {{ number_format($row['net_profit'], 0, ',', '.') }}
-                            </td>
-                            <td class="p-2 text-right font-medium {{ ($row['net_after_payroll'] ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
-                                Rp {{ number_format($row['net_after_payroll'] ?? 0, 0, ',', '.') }}
-                            </td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="12" class="text-center p-4 text-gray-500">Belum ada data.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="bg-white border rounded-lg p-4">
-        <div class="font-semibold mb-3">Ringkasan Bulanan</div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="text-left p-2 border-b">Bulan</th>
-                        <th class="text-right p-2 border-b">Omzet</th>
-                        <th class="text-right p-2 border-b">Refund</th>
-                        <th class="text-right p-2 border-b">COGS</th>
-                        <th class="text-right p-2 border-b">Laba Kotor</th>
-                        <th class="text-right p-2 border-b">Beban Op.</th>
-                        <th class="text-right p-2 border-b">Kas Penjualan</th>
-                        <th class="text-right p-2 border-b">Kas Kecil</th>
-                        <th class="text-right p-2 border-b">Beban Makan</th>
-                        <th class="text-right p-2 border-b">Payroll</th>
-                        <th class="text-right p-2 border-b">Laba Bersih</th>
-                        <th class="text-right p-2 border-b">Laba Setelah Payroll</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($monthlyRows as $row)
-                        <tr class="border-b">
-                            <td class="p-2">{{ $row['month'] }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['omzet'], 0, ',', '.') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['refund'], 0, ',', '.') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['cogs'], 0, ',', '.') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['gross_profit'], 0, ',', '.') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['expense_total'], 0, ',', '.') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['direct_expense_total'] ?? 0, 0, ',', '.') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['petty_cash_expense_total'] ?? 0, 0, ',', '.') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['employee_meal_expense_total'] ?? 0, 0, ',', '.') }}</td>
-                            <td class="p-2 text-right">Rp {{ number_format($row['payroll_total'] ?? 0, 0, ',', '.') }}</td>
-                            <td class="p-2 text-right font-medium {{ $row['net_profit'] >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
-                                Rp {{ number_format($row['net_profit'], 0, ',', '.') }}
-                            </td>
-                            <td class="p-2 text-right font-medium {{ ($row['net_after_payroll'] ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
-                                Rp {{ number_format($row['net_after_payroll'] ?? 0, 0, ',', '.') }}
-                            </td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="12" class="text-center p-4 text-gray-500">Belum ada data.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    @if(($pettyCashFunds ?? collect())->isNotEmpty())
-        <div class="mt-5 bg-white border rounded-lg p-4">
-            <div class="font-semibold mb-3">Ringkasan Kas Kecil</div>
-            <div class="overflow-x-auto">
+    <div class="space-y-5">
+        <div class="rounded-lg border bg-white">
+            <div class="border-b px-4 py-3">
+                <div class="font-semibold">Ringkasan Harian</div>
+                <div class="text-xs text-gray-500">Pantau laba, pengeluaran, dan payroll per hari.</div>
+            </div>
+            <div class="overflow-x-auto overflow-y-auto max-h-[55vh]">
                 <table class="w-full text-sm">
-                    <thead class="bg-gray-50">
+                    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
                         <tr>
-                            <th class="text-left p-2 border-b">Periode</th>
-                            <th class="text-left p-2 border-b">Nama Dana</th>
-                            <th class="text-right p-2 border-b">Dana Awal</th>
-                            <th class="text-right p-2 border-b">Terpakai Approved</th>
-                            <th class="text-right p-2 border-b">Dikembalikan</th>
-                            <th class="text-right p-2 border-b">Saldo</th>
-                            <th class="text-left p-2 border-b">Status</th>
+                            <th class="text-left p-2 border-b sticky top-0 z-10 bg-gray-50">Tanggal</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Omzet</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Refund</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">COGS</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Laba Kotor</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Beban Op.</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Kas Penjualan</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Kas Kecil</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Beban Makan</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Payroll</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Laba Bersih</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Laba Setelah Payroll</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($pettyCashFunds as $fund)
-                            @php
-                                $used = (float) ($fund->approved_used_total ?? 0);
-                                $remaining = (float) $fund->opening_balance - $used - (float) $fund->returned_amount;
-                            @endphp
+                        @forelse($dailyRows as $row)
                             <tr class="border-b">
-                                <td class="p-2">{{ optional($fund->period_start)->format('d/m/Y') }} - {{ optional($fund->period_end)->format('d/m/Y') }}</td>
-                                <td class="p-2">{{ $fund->name }}</td>
-                                <td class="p-2 text-right">Rp {{ number_format($fund->opening_balance, 0, ',', '.') }}</td>
-                                <td class="p-2 text-right">Rp {{ number_format($used, 0, ',', '.') }}</td>
-                                <td class="p-2 text-right">Rp {{ number_format($fund->returned_amount, 0, ',', '.') }}</td>
-                                <td class="p-2 text-right font-medium {{ $remaining >= 0 ? 'text-emerald-600' : 'text-red-600' }}">Rp {{ number_format($remaining, 0, ',', '.') }}</td>
-                                <td class="p-2">{{ $fund->status }}</td>
+                                <td class="p-2">{{ \Illuminate\Support\Carbon::parse($row['date'])->format('d/m/Y') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['omzet'], 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['refund'], 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['cogs'], 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['gross_profit'], 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['expense_total'], 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['direct_expense_total'] ?? 0, 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['petty_cash_expense_total'] ?? 0, 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['employee_meal_expense_total'] ?? 0, 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['payroll_total'] ?? 0, 0, ',', '.') }}</td>
+                                <td class="p-2 text-right font-medium {{ $row['net_profit'] >= 0 ? 'text-emerald-600' : 'text-red-600' }}">Rp {{ number_format($row['net_profit'], 0, ',', '.') }}</td>
+                                <td class="p-2 text-right font-medium {{ ($row['net_after_payroll'] ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600' }}">Rp {{ number_format($row['net_after_payroll'] ?? 0, 0, ',', '.') }}</td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr><td colspan="12" class="text-center p-4 text-gray-500">Belum ada data.</td></tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
-    @endif
 
-    @if(($expenseCategoryRows ?? collect())->isNotEmpty())
-        <div class="mt-5 bg-white border rounded-lg p-4">
-            <div class="font-semibold mb-3">Ringkasan Pengeluaran per Kategori</div>
-            <div class="overflow-x-auto">
+        <div class="rounded-lg border bg-white">
+            <div class="border-b px-4 py-3">
+                <div class="font-semibold">Ringkasan Bulanan</div>
+                <div class="text-xs text-gray-500">Lihat performa bulanan dalam satu tampilan ringkas.</div>
+            </div>
+            <div class="overflow-x-auto overflow-y-auto max-h-[55vh]">
                 <table class="w-full text-sm">
-                    <thead class="bg-gray-50">
+                    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
                         <tr>
-                            <th class="text-left p-2 border-b">Kategori</th>
-                            <th class="text-right p-2 border-b">Jumlah Transaksi</th>
-                            <th class="text-right p-2 border-b">Kas Penjualan</th>
-                            <th class="text-right p-2 border-b">Kas Kecil</th>
-                            <th class="text-right p-2 border-b">Total Approved</th>
+                            <th class="text-left p-2 border-b sticky top-0 z-10 bg-gray-50">Bulan</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Omzet</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Refund</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">COGS</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Laba Kotor</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Beban Op.</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Kas Penjualan</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Kas Kecil</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Beban Makan</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Payroll</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Laba Bersih</th>
+                            <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Laba Setelah Payroll</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($expenseCategoryRows as $row)
+                        @forelse($monthlyRows as $row)
                             <tr class="border-b">
-                                <td class="p-2 font-medium">{{ $row['category'] }}</td>
-                                <td class="p-2 text-right">{{ number_format($row['count'], 0, ',', '.') }}</td>
-                                <td class="p-2 text-right">Rp {{ number_format($row['direct_total'], 0, ',', '.') }}</td>
-                                <td class="p-2 text-right">Rp {{ number_format($row['petty_cash_total'], 0, ',', '.') }}</td>
-                                <td class="p-2 text-right font-semibold">Rp {{ number_format($row['total'], 0, ',', '.') }}</td>
+                                <td class="p-2">{{ $row['month'] }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['omzet'], 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['refund'], 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['cogs'], 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['gross_profit'], 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['expense_total'], 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['direct_expense_total'] ?? 0, 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['petty_cash_expense_total'] ?? 0, 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['employee_meal_expense_total'] ?? 0, 0, ',', '.') }}</td>
+                                <td class="p-2 text-right">Rp {{ number_format($row['payroll_total'] ?? 0, 0, ',', '.') }}</td>
+                                <td class="p-2 text-right font-medium {{ $row['net_profit'] >= 0 ? 'text-emerald-600' : 'text-red-600' }}">Rp {{ number_format($row['net_profit'], 0, ',', '.') }}</td>
+                                <td class="p-2 text-right font-medium {{ ($row['net_after_payroll'] ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600' }}">Rp {{ number_format($row['net_after_payroll'] ?? 0, 0, ',', '.') }}</td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr><td colspan="12" class="text-center p-4 text-gray-500">Belum ada data.</td></tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
-    @endif
+
+        @if(($pettyCashFunds ?? collect())->isNotEmpty())
+            <div class="rounded-lg border bg-white">
+                <div class="border-b px-4 py-3"><div class="font-semibold">Ringkasan Kas Kecil</div></div>
+                <div class="overflow-x-auto overflow-y-auto max-h-[45vh]">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+                            <tr>
+                                <th class="text-left p-2 border-b sticky top-0 z-10 bg-gray-50">Periode</th>
+                                <th class="text-left p-2 border-b sticky top-0 z-10 bg-gray-50">Nama Dana</th>
+                                <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Dana Awal</th>
+                                <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Terpakai Approved</th>
+                                <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Dikembalikan</th>
+                                <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Saldo</th>
+                                <th class="text-left p-2 border-b sticky top-0 z-10 bg-gray-50">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($pettyCashFunds as $fund)
+                                @php($used = (float) ($fund->approved_used_total ?? 0))
+                                @php($remaining = (float) $fund->opening_balance - $used - (float) $fund->returned_amount)
+                                <tr class="border-b">
+                                    <td class="p-2">{{ optional($fund->period_start)->format('d/m/Y') }} - {{ optional($fund->period_end)->format('d/m/Y') }}</td>
+                                    <td class="p-2">{{ $fund->name }}</td>
+                                    <td class="p-2 text-right">Rp {{ number_format($fund->opening_balance, 0, ',', '.') }}</td>
+                                    <td class="p-2 text-right">Rp {{ number_format($used, 0, ',', '.') }}</td>
+                                    <td class="p-2 text-right">Rp {{ number_format($fund->returned_amount, 0, ',', '.') }}</td>
+                                    <td class="p-2 text-right font-medium {{ $remaining >= 0 ? 'text-emerald-600' : 'text-red-600' }}">Rp {{ number_format($remaining, 0, ',', '.') }}</td>
+                                    <td class="p-2">{{ $fund->status }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+
+        @if(($expenseCategoryRows ?? collect())->isNotEmpty())
+            <div class="rounded-lg border bg-white">
+                <div class="border-b px-4 py-3"><div class="font-semibold">Ringkasan Pengeluaran per Kategori</div></div>
+                <div class="overflow-x-auto overflow-y-auto max-h-[45vh]">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+                            <tr>
+                                <th class="text-left p-2 border-b sticky top-0 z-10 bg-gray-50">Kategori</th>
+                                <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Jumlah Transaksi</th>
+                                <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Kas Penjualan</th>
+                                <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Kas Kecil</th>
+                                <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Total Approved</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($expenseCategoryRows as $row)
+                                <tr class="border-b">
+                                    <td class="p-2 font-medium">{{ $row['category'] }}</td>
+                                    <td class="p-2 text-right">{{ number_format($row['count'], 0, ',', '.') }}</td>
+                                    <td class="p-2 text-right">Rp {{ number_format($row['direct_total'], 0, ',', '.') }}</td>
+                                    <td class="p-2 text-right">Rp {{ number_format($row['petty_cash_total'], 0, ',', '.') }}</td>
+                                    <td class="p-2 text-right font-semibold">Rp {{ number_format($row['total'], 0, ',', '.') }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+    </div>
 @endsection

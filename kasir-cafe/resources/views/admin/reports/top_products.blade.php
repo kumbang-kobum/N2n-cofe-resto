@@ -3,7 +3,7 @@
 @section('content')
     <div class="mb-4">
         <h1 class="text-xl font-semibold">Top 10 Penjualan Terbanyak</h1>
-        <p class="text-sm text-gray-600">Berdasarkan kuantitas menu terjual.</p>
+        <p class="text-sm text-gray-600">Berdasarkan kuantitas menu terjual pada periode yang dipilih.</p>
     </div>
 
     <div class="bg-white border rounded-lg p-4 mb-4">
@@ -20,24 +20,35 @@
         </form>
     </div>
 
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="bg-white border rounded-lg p-4"><div class="text-xs text-gray-500 mb-1">Periode</div><div class="text-sm font-semibold">{{ $from }} s/d {{ $to }}</div></div>
+        <div class="bg-white border rounded-lg p-4"><div class="text-xs text-gray-500 mb-1">Total Menu Dalam Ranking</div><div class="text-sm font-semibold">{{ $rows->count() }} menu</div></div>
+        <div class="bg-white border rounded-lg p-4"><div class="text-xs text-gray-500 mb-1">Total Qty Top 10</div><div class="text-sm font-semibold">{{ number_format((float) $rows->sum('qty_total'), 0, ',', '.') }}</div></div>
+    </div>
+
     <div class="bg-white border rounded-lg overflow-hidden">
-        <div class="p-4 border-b font-semibold">Periode {{ $from }} s/d {{ $to }}</div>
-        <div class="overflow-x-auto">
+        <div class="flex items-center justify-between border-b px-4 py-3">
+            <div>
+                <div class="font-semibold">Top Produk</div>
+                <div class="text-xs text-gray-500">Ringkasan menu terlaris, omzet, dan jumlah transaksi.</div>
+            </div>
+        </div>
+        <div class="overflow-x-auto overflow-y-auto max-h-[65vh]">
             <table class="w-full text-sm">
-                <thead class="bg-gray-50">
+                <thead class="bg-gray-50 text-xs uppercase text-gray-500">
                     <tr>
-                        <th class="text-left p-2 border-b">Ranking</th>
-                        <th class="text-left p-2 border-b">Menu</th>
-                        <th class="text-right p-2 border-b">Qty Terjual</th>
-                        <th class="text-right p-2 border-b">Omzet</th>
-                        <th class="text-right p-2 border-b">Jumlah Transaksi</th>
+                        <th class="text-left p-2 border-b sticky top-0 z-10 bg-gray-50">Ranking</th>
+                        <th class="text-left p-2 border-b sticky top-0 z-10 bg-gray-50">Menu</th>
+                        <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Qty Terjual</th>
+                        <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Omzet</th>
+                        <th class="text-right p-2 border-b sticky top-0 z-10 bg-gray-50">Jumlah Transaksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($rows as $i => $row)
                         <tr class="border-b">
-                            <td class="p-2">{{ $i + 1 }}</td>
-                            <td class="p-2">{{ $row->product_name }}</td>
+                            <td class="p-2 font-semibold">#{{ $i + 1 }}</td>
+                            <td class="p-2 font-medium text-slate-800">{{ $row->product_name }}</td>
                             <td class="p-2 text-right">{{ number_format((float) $row->qty_total, 0, ',', '.') }}</td>
                             <td class="p-2 text-right">Rp {{ number_format((float) $row->omzet_total, 0, ',', '.') }}</td>
                             <td class="p-2 text-right">{{ number_format((float) $row->trx_total, 0, ',', '.') }}</td>
