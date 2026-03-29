@@ -400,6 +400,19 @@ server {
   - `petugas`
 - Checklist ini juga mencakup uji custom permission dari menu `Pengguna & Hak Akses`.
 
+## UAT Operasional Nyata
+- Checklist uji lapangan tersedia di:
+  - `docs/uat_operasional_nyata_checklist.md`
+- Gunakan checklist ini setelah UAT teknis dan role selesai, sebelum go-live penuh.
+- Fokus checklist:
+  - POS
+  - stok & opname
+  - pengeluaran & kas kecil
+  - absensi & payroll
+  - laporan
+  - upload file
+  - responsivitas operasional
+
 ## Absensi & Payroll
 
 ### Modul yang Sudah Tersedia
@@ -438,6 +451,7 @@ server {
 ### Dokumen Pendukung
 - Checklist UAT operasional: `docs/uat_absensi_payroll_checklist.md`
 - Checklist UAT role & hak akses: `docs/uat_role_access_checklist.md`
+- Checklist UAT operasional nyata: `docs/uat_operasional_nyata_checklist.md`
 - Panduan penggunaan lengkap: `docs/Panduan_Penggunaan_Sistem_n2N.pdf`
 - Panduan kasir singkat: `docs/Panduan_Kasir_1_Halaman.pdf`
 
