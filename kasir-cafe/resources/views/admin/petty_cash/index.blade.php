@@ -94,6 +94,7 @@
                                     · Dibuat oleh {{ optional($fund->creator)->name ?? '-' }}
                                 </div>
                             </div>
+                            @can('action.petty_cash.close')
                             @if($fund->status === 'OPEN')
                                 <form method="POST" action="{{ route('admin.petty_cash.close', $fund) }}" class="flex flex-wrap items-end gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
                                     @csrf
@@ -118,6 +119,7 @@
                                     </button>
                                 </form>
                             @endif
+                            @endcan
                         </div>
 
                         <div class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">

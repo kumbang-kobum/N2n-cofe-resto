@@ -7,7 +7,7 @@
         $rejectRouteName = 'admin.expenses.reject';
         $destroyRouteName = 'admin.expenses.destroy';
         $currentFundingSource = old('funding_source', $activePettyCashFund ? 'PETTY_CASH' : 'DIRECT_CASH');
-        $canApprove = auth()->user()->hasRole('admin');
+        $canApprove = auth()->user()->can('action.expenses.approve') || auth()->user()->can('action.expenses.reject') || auth()->user()->can('action.expenses.delete');
         $canChooseRequester = auth()->user()->hasRole('admin');
     @endphp
 
@@ -302,6 +302,7 @@
                                                 </div>
                                             @endif
 
+                                            @can('action.expenses.approve')
                                             @if($expense->status !== 'APPROVED')
                                                 <form method="POST" action="{{ route($approveRouteName, $expense) }}" class="space-y-2">
                                                     @csrf
@@ -314,7 +315,9 @@
                                                     <button class="w-full rounded-lg bg-emerald-600 px-2 py-2 text-xs font-semibold text-white hover:bg-emerald-700">Approve</button>
                                                 </form>
                                             @endif
+                                            @endcan
 
+                                            @can('action.expenses.reject')
                                             @if($expense->status !== 'REJECTED')
                                                 <form method="POST" action="{{ route($rejectRouteName, $expense) }}" class="space-y-2">
                                                     @csrf
@@ -327,12 +330,15 @@
                                                     <button class="w-full rounded-lg bg-amber-500 px-2 py-2 text-xs font-semibold text-white hover:bg-amber-600">Reject</button>
                                                 </form>
                                             @endif
+                                            @endcan
 
+                                            @can('action.expenses.delete')
                                             <form method="POST" action="{{ route($destroyRouteName, $expense) }}" onsubmit="return confirm('Hapus pengajuan pengeluaran ini?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button class="w-full rounded-lg border border-rose-200 px-2 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50">Hapus</button>
                                             </form>
+                                            @endcan
                                         </div>
                                     @else
                                         <span class="text-xs text-slate-400">Menunggu admin</span>

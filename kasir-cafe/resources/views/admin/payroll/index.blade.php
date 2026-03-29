@@ -199,18 +199,23 @@
                                            class="text-xs text-indigo-600 hover:underline">
                                             Slip
                                         </a>
+                                        @can('action.payroll.approve')
                                         @if($payroll->status !== 'PAID')
                                             <form method="POST" action="{{ route(request()->routeIs('manager.*') ? 'manager.payroll.approve' : 'admin.payroll.approve', $payroll) }}">
                                                 @csrf
                                                 <button class="text-xs text-blue-600 hover:underline">Approve</button>
                                             </form>
                                         @endif
+                                        @endcan
+                                        @can('action.payroll.mark_paid')
                                         @if($payroll->status !== 'PAID')
                                             <form method="POST" action="{{ route(request()->routeIs('manager.*') ? 'manager.payroll.mark_paid' : 'admin.payroll.mark_paid', $payroll) }}">
                                                 @csrf
                                                 <button class="text-xs text-emerald-600 hover:underline">Paid</button>
                                             </form>
                                         @endif
+                                        @endcan
+                                        @can('action.payroll.delete')
                                         @if($payroll->status !== 'PAID')
                                             <form method="POST" action="{{ route(request()->routeIs('manager.*') ? 'manager.payroll.destroy' : 'admin.payroll.destroy', $payroll) }}" onsubmit="return confirm('Hapus payroll ini?')">
                                                 @csrf
@@ -218,6 +223,7 @@
                                                 <button class="text-xs text-red-600 hover:underline">Hapus</button>
                                             </form>
                                         @endif
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>

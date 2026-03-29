@@ -19,7 +19,10 @@ class EnsureMenuAccess
             return $next($request);
         }
 
-        foreach (config('menu_permissions.route_patterns', []) as $pattern => $permission) {
+        $patterns = collect(config('menu_permissions.route_patterns', []))
+            ->sortByDesc(fn ($permission, $pattern) => strlen($pattern));
+
+        foreach ($patterns as $pattern => $permission) {
             if (! Str::is($pattern, $routeName)) {
                 continue;
             }

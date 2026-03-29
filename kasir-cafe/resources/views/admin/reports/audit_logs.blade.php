@@ -13,7 +13,7 @@
         <h1 class="text-xl font-semibold">Audit Log</h1>
         <p class="text-sm text-gray-600">Riwayat perubahan sistem, stok, payroll, dan aktivitas penting lainnya.</p>
     </div>
-    @if (! $isManager)
+    @can('action.audit_logs.delete')
         <form method="POST" action="{{ route($destroyFilteredRoute) }}" onsubmit="return confirm('Hapus semua audit log sesuai filter saat ini? Tindakan ini tidak bisa dibatalkan.')">
             @csrf
             @method('DELETE')
@@ -24,7 +24,7 @@
                 Hapus Hasil Filter
             </button>
         </form>
-    @endif
+    @endcan
 </div>
 
 @if (session('status'))
@@ -84,7 +84,7 @@
                         <span class="font-medium">Objek:</span> {{ $log->auditableLabel() }}
                     </div>
                 </div>
-                @if (! $isManager)
+                @can('action.audit_logs.delete')
                     <form method="POST" action="{{ route($destroyRoute, $log) }}" onsubmit="return confirm('Hapus audit log ini?')">
                         @csrf
                         @method('DELETE')
@@ -92,7 +92,7 @@
                             Hapus
                         </button>
                     </form>
-                @endif
+                @endcan
             </div>
 
             @php($metaRows = $log->formattedMeta())

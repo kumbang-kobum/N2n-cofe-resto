@@ -381,6 +381,7 @@ Catatan penting:
 
 ### Dokumen Pendukung
 - Checklist UAT operasional: `docs/uat_absensi_payroll_checklist.md`
+- Checklist UAT role & hak akses: `docs/uat_role_access_checklist.md`
 - Panduan penggunaan lengkap: `docs/Panduan_Penggunaan_Sistem_n2N.pdf`
 - Panduan kasir singkat: `docs/Panduan_Kasir_1_Halaman.pdf`
 

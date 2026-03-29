@@ -39,6 +39,16 @@ return [
         'access.opname_variance_report' => ['label' => 'Laporan Selisih Opname', 'description' => 'Melihat selisih stock opname.'],
         'access.audit_logs' => ['label' => 'Audit Log', 'description' => 'Melihat audit log sistem.'],
         'access.profile' => ['label' => 'Ubah Password', 'description' => 'Mengubah password akun sendiri.'],
+        'action.expenses.approve' => ['label' => 'Approve Pengeluaran', 'description' => 'Menyetujui pengajuan pengeluaran operasional.'],
+        'action.expenses.reject' => ['label' => 'Reject Pengeluaran', 'description' => 'Menolak pengajuan pengeluaran operasional.'],
+        'action.expenses.delete' => ['label' => 'Hapus Pengeluaran', 'description' => 'Menghapus pengajuan pengeluaran operasional.'],
+        'action.payroll.approve' => ['label' => 'Approve Payroll', 'description' => 'Menyetujui draft payroll.'],
+        'action.payroll.mark_paid' => ['label' => 'Tandai Payroll Dibayar', 'description' => 'Menandai payroll sebagai sudah dibayar.'],
+        'action.payroll.delete' => ['label' => 'Hapus Payroll', 'description' => 'Menghapus data payroll yang belum final.'],
+        'action.leave_requests.approve' => ['label' => 'Approve Izin/Cuti/Sakit', 'description' => 'Menyetujui pengajuan izin, cuti, atau sakit.'],
+        'action.leave_requests.reject' => ['label' => 'Reject Izin/Cuti/Sakit', 'description' => 'Menolak pengajuan izin, cuti, atau sakit.'],
+        'action.petty_cash.close' => ['label' => 'Tutup Kas Kecil', 'description' => 'Melakukan penutupan dan rekonsiliasi kas kecil.'],
+        'action.audit_logs.delete' => ['label' => 'Hapus Audit Log', 'description' => 'Menghapus audit log satuan atau hasil filter.'],
     ],
 
     'groups' => [
@@ -87,14 +97,26 @@ return [
             'access.audit_logs',
             'access.profile',
         ],
+        'Approval & Kontrol' => [
+            'action.expenses.approve',
+            'action.expenses.reject',
+            'action.expenses.delete',
+            'action.payroll.approve',
+            'action.payroll.mark_paid',
+            'action.payroll.delete',
+            'action.leave_requests.approve',
+            'action.leave_requests.reject',
+            'action.petty_cash.close',
+            'action.audit_logs.delete',
+        ],
     ],
 
     'defaults' => [
         'admin' => [
-            'access.admin_dashboard','access.products','access.recipes','access.items','access.units','access.expense_categories','access.users','access.employees','access.attendance_shifts','access.attendance_late_rules','access.settings','access.assets','access.asset_categories','access.asset_locations','access.asset_incidents','access.receivings','access.expired','access.stock','access.stock_opname','access.attendance_schedules','access.attendances','access.attendance_review','access.attendance_kiosk','access.leave_requests','access.employee_meals','access.expenses','access.petty_cash','access.payroll','access.pos','access.sales_reports','access.top_products_report','access.finance_report','access.attendance_report','access.opname_variance_report','access.audit_logs','access.profile'
+            'access.admin_dashboard','access.products','access.recipes','access.items','access.units','access.expense_categories','access.users','access.employees','access.attendance_shifts','access.attendance_late_rules','access.settings','access.assets','access.asset_categories','access.asset_locations','access.asset_incidents','access.receivings','access.expired','access.stock','access.stock_opname','access.attendance_schedules','access.attendances','access.attendance_review','access.attendance_kiosk','access.leave_requests','access.employee_meals','access.expenses','access.petty_cash','access.payroll','access.pos','access.sales_reports','access.top_products_report','access.finance_report','access.attendance_report','access.opname_variance_report','access.audit_logs','access.profile','action.expenses.approve','action.expenses.reject','action.expenses.delete','action.payroll.approve','action.payroll.mark_paid','action.payroll.delete','action.leave_requests.approve','action.leave_requests.reject','action.petty_cash.close','action.audit_logs.delete'
         ],
         'manager' => [
-            'access.manager_dashboard','access.products','access.recipes','access.employees','access.attendance_shifts','access.attendance_late_rules','access.settings','access.assets','access.asset_categories','access.asset_locations','access.asset_incidents','access.attendance_schedules','access.attendances','access.attendance_review','access.attendance_kiosk','access.leave_requests','access.employee_meals','access.expenses','access.payroll','access.sales_reports','access.finance_report','access.attendance_report','access.opname_variance_report','access.audit_logs','access.profile'
+            'access.manager_dashboard','access.products','access.recipes','access.employees','access.attendance_shifts','access.attendance_late_rules','access.settings','access.assets','access.asset_categories','access.asset_locations','access.asset_incidents','access.attendance_schedules','access.attendances','access.attendance_review','access.attendance_kiosk','access.leave_requests','access.employee_meals','access.expenses','access.payroll','access.sales_reports','access.finance_report','access.attendance_report','access.opname_variance_report','access.audit_logs','access.profile','action.leave_requests.approve','action.leave_requests.reject'
         ],
         'cashier' => [
             'access.pos','access.attendance_kiosk','access.employee_meals','access.sales_reports','access.expenses','access.settings','access.profile'
@@ -173,5 +195,21 @@ return [
         'admin.reports.audit_logs*' => 'access.audit_logs',
         'manager.reports.audit_logs' => 'access.audit_logs',
         'profile.*' => 'access.profile',
+        'admin.expenses.approve' => 'action.expenses.approve',
+        'admin.expenses.reject' => 'action.expenses.reject',
+        'admin.expenses.destroy' => 'action.expenses.delete',
+        'admin.payroll.approve' => 'action.payroll.approve',
+        'manager.payroll.approve' => 'action.payroll.approve',
+        'admin.payroll.mark_paid' => 'action.payroll.mark_paid',
+        'manager.payroll.mark_paid' => 'action.payroll.mark_paid',
+        'admin.payroll.destroy' => 'action.payroll.delete',
+        'manager.payroll.destroy' => 'action.payroll.delete',
+        'admin.leave_requests.approve' => 'action.leave_requests.approve',
+        'manager.leave_requests.approve' => 'action.leave_requests.approve',
+        'admin.leave_requests.reject' => 'action.leave_requests.reject',
+        'manager.leave_requests.reject' => 'action.leave_requests.reject',
+        'admin.petty_cash.close' => 'action.petty_cash.close',
+        'admin.reports.audit_logs.destroy' => 'action.audit_logs.delete',
+        'admin.reports.audit_logs.destroy_filtered' => 'action.audit_logs.delete',
     ],
 ];

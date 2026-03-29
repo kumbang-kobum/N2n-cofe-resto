@@ -390,6 +390,16 @@ server {
   - `docs/uat_absensi_payroll_checklist.md`
 - Gunakan checklist ini sebelum fitur absensi dan payroll dipakai penuh di lapangan.
 
+## UAT Role & Hak Akses
+- Checklist uji akses per role tersedia di:
+  - `docs/uat_role_access_checklist.md`
+- Gunakan dokumen ini untuk menguji:
+  - `admin`
+  - `manager`
+  - `cashier`
+  - `petugas`
+- Checklist ini juga mencakup uji custom permission dari menu `Pengguna & Hak Akses`.
+
 ## Absensi & Payroll
 
 ### Modul yang Sudah Tersedia
@@ -427,6 +437,7 @@ server {
 
 ### Dokumen Pendukung
 - Checklist UAT operasional: `docs/uat_absensi_payroll_checklist.md`
+- Checklist UAT role & hak akses: `docs/uat_role_access_checklist.md`
 - Panduan penggunaan lengkap: `docs/Panduan_Penggunaan_Sistem_n2N.pdf`
 - Panduan kasir singkat: `docs/Panduan_Kasir_1_Halaman.pdf`
 
