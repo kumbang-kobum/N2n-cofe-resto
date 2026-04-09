@@ -1,48 +1,62 @@
 @extends('layouts.dashboard')
 
 @section('content')
-<h1 class="text-xl font-semibold mb-4">Stok Bahan (Master Bahan)</h1>
-
-@if (session('status'))
-  <div class="mb-4 rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-800">
-    {{ session('status') }}
+<div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+  <div>
+    <h1 class="text-xl font-semibold text-slate-900">Stok Bahan (Master Bahan)</h1>
+    <p class="mt-1 text-sm text-slate-600">Daftar bahan utama yang dipakai di resep, stok, receiving, dan stock opname.</p>
   </div>
-@endif
-
-<div class="mb-4 flex items-center justify-between gap-2">
-  <div class="text-sm text-gray-600">
-    Daftar bahan yang dipakai di resep & stok.
-  </div>
-  <a href="{{ route('admin.items.create') }}"
-     class="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">
+  <a href="{{ route('admin.items.create') }}" class="btn-primary">
     + Tambah Bahan
   </a>
 </div>
 
-<form method="GET" class="mb-4">
-  <div class="flex items-center gap-2">
+@if (session('status'))
+  <div class="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+    {{ session('status') }}
+  </div>
+@endif
+
+<div class="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+  <div class="stat-card">
+    <div class="stat-label">Total Bahan</div>
+    <div class="stat-value">{{ number_format($items->total(), 0, ',', '.') }}</div>
+    <div class="stat-meta">Termasuk bahan aktif dan nonaktif.</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Filter Aktif</div>
+    <div class="stat-value text-2xl">{{ !empty($q) ? $q : 'Semua' }}</div>
+    <div class="stat-meta">Gunakan pencarian untuk audit bahan lebih cepat.</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Halaman Saat Ini</div>
+    <div class="stat-value">{{ $items->currentPage() }}</div>
+    <div class="stat-meta">Navigasi data tetap ringan saat jumlah bahan bertambah.</div>
+  </div>
+</div>
+
+<div class="panel-section mb-4">
+  <form method="GET" class="flex flex-wrap items-center gap-2">
     <input type="text"
            name="q"
            value="{{ $q ?? '' }}"
            placeholder="Cari nama bahan..."
-           class="w-full max-w-sm rounded border px-3 py-2 text-sm">
-    <button type="submit"
-            class="rounded bg-slate-700 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">
+           class="dashboard-input max-w-sm">
+    <button type="submit" class="btn-primary">
       Cari
     </button>
     @if(!empty($q))
-      <a href="{{ route('admin.items.index') }}"
-         class="rounded border px-3 py-2 text-sm hover:bg-gray-50">
+      <a href="{{ route('admin.items.index') }}" class="btn-secondary">
         Reset
       </a>
     @endif
-  </div>
-</form>
+  </form>
+</div>
 
-<div class="rounded-lg border bg-white">
+<div class="table-shell">
   <div class="overflow-x-auto overflow-y-auto max-h-[65vh]">
     <table class="w-full text-left text-sm">
-    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+    <thead class="table-head">
       <tr>
         <th class="px-3 py-2 sticky top-0 z-10 bg-gray-50">Nama</th>
         <th class="px-3 py-2 text-right sticky top-0 z-10 bg-gray-50">Min Stok</th>
@@ -59,7 +73,7 @@
       @forelse ($items as $item)
         <tr class="border-t">
           <td class="px-3 py-2">
-            {{ $item->name }}
+            <div class="font-medium text-slate-900">{{ $item->name }}</div>
           </td>
           <td class="px-3 py-2 text-right">
             {{ number_format((float) $item->min_stock, 3, ',', '.') }}
@@ -92,14 +106,14 @@
           </td>
           <td class="px-3 py-2 text-right">
             <a href="{{ route('admin.items.edit', $item) }}"
-               class="text-xs text-blue-600 hover:underline">Edit</a>
+               class="text-xs font-medium text-blue-600 hover:underline">Edit</a>
             <form action="{{ route('admin.items.destroy', $item) }}"
                   method="POST"
                   class="inline"
                   onsubmit="return confirm('Hapus bahan ini?');">
               @csrf
               @method('DELETE')
-              <button type="submit" class="ml-2 text-xs text-red-600 hover:underline">Hapus</button>
+              <button type="submit" class="ml-2 text-xs font-medium text-red-600 hover:underline">Hapus</button>
             </form>
           </td>
         </tr>
@@ -115,7 +129,7 @@
   </div>
 </div>
 
-<div class="mt-3">
+<div class="mt-4">
   {{ $items->links() }}
 </div>
 @endsection

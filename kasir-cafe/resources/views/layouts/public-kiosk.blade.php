@@ -6,13 +6,7 @@
     <title>{{ config('app.name', 'Kasir Cafe') }} - Kiosk Absensi</title>
     <link rel="icon" type="image/png" href="{{ asset('n2Nlogo.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('n2Nlogo.png') }}">
-    <script>
-        (() => {
-            if (localStorage.getItem('n2n-theme') === 'dark') {
-                document.documentElement.classList.add('theme-dark');
-            }
-        })();
-    </script>
+    @include('partials.theme-init')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>
@@ -36,9 +30,10 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <button type="button" data-theme-toggle class="rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20">
-                    Dark Mode
-                </button>
+                @include('partials.theme-select', [
+                    'wrapperClass' => 'hidden sm:flex items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/20',
+                    'selectClass' => 'rounded-lg border border-white/10 bg-white/10 px-2 py-1 text-sm text-white outline-none',
+                ])
                 <a href="{{ route('landing') }}" class="rounded-xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20">
                     Kembali
                 </a>
@@ -50,27 +45,7 @@
         </main>
     </div>
 
-    <script>
-        (() => {
-            const buttons = document.querySelectorAll('[data-theme-toggle]');
-            const sync = () => {
-                const dark = document.documentElement.classList.contains('theme-dark');
-                buttons.forEach((button) => {
-                    button.textContent = dark ? 'Light Mode' : 'Dark Mode';
-                });
-            };
-
-            buttons.forEach((button) => {
-                button.addEventListener('click', () => {
-                    document.documentElement.classList.toggle('theme-dark');
-                    localStorage.setItem('n2n-theme', document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light');
-                    sync();
-                });
-            });
-
-            sync();
-        })();
-    </script>
+    @include('partials.theme-script')
     @stack('scripts')
 </body>
 </html>

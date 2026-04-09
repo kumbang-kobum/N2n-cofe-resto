@@ -1,6 +1,12 @@
 @extends('layouts.dashboard')
 
 @section('content')
+@php
+    $isManager = request()->routeIs('manager.*');
+    $reviewRoute = $isManager ? 'manager.attendances.review' : 'admin.attendances.review';
+    $storeRoute = $isManager ? 'manager.attendances.store' : 'admin.attendances.store';
+@endphp
+
 <div class="space-y-4">
     <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
@@ -8,7 +14,7 @@
             <p class="text-sm text-slate-600">Pantau jam masuk, jam pulang, selfie bukti, dan status verifikasi agar payroll lebih akurat dan mudah diaudit.</p>
         </div>
         <div class="flex flex-wrap gap-2">
-            <a href="{{ route(request()->routeIs('manager.*') ? 'manager.attendances.review' : 'admin.attendances.review') }}" class="inline-flex rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700 transition hover:bg-amber-100">
+            <a href="{{ route($reviewRoute) }}" class="inline-flex rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700 transition hover:bg-amber-100">
                 Review Wajah
             </a>
             <a href="{{ route('attendance.kiosk') }}" class="inline-flex rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-100">
@@ -41,7 +47,7 @@
             <h2 class="text-lg font-semibold text-slate-900">Input / Koreksi Absensi</h2>
             <p class="mt-1 text-sm text-slate-500">Gunakan form ini untuk koreksi manual atau input absensi yang belum sempat masuk dari kiosk.</p>
 
-            <form method="POST" action="{{ route(request()->routeIs('manager.*') ? 'manager.attendances.store' : 'admin.attendances.store') }}" class="mt-5 space-y-3">
+            <form method="POST" action="{{ route($storeRoute) }}" class="mt-5 space-y-3">
                 @csrf
                 <div>
                     <label class="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Karyawan</label>

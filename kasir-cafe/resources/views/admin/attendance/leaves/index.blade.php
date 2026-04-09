@@ -10,23 +10,23 @@
 
 <div class="mb-4 flex items-center justify-between">
     <div>
-        <h1 class="text-xl font-semibold">Izin / Cuti / Sakit</h1>
-        <p class="text-sm text-gray-600">Pengajuan dan approval status kehadiran non-hadir.</p>
+        <h1 class="text-xl font-semibold text-slate-900">Izin / Cuti / Sakit</h1>
+        <p class="text-sm text-slate-600">Pengajuan dan approval status kehadiran non-hadir untuk payroll dan rekap absensi.</p>
     </div>
 </div>
 
 @if(session('status'))
-    <div class="mb-3 rounded bg-green-100 px-3 py-2 text-sm text-green-700">{{ session('status') }}</div>
+    <div class="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('status') }}</div>
 @endif
 
 <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
-    <div class="rounded-lg border bg-white p-4">
-        <h2 class="mb-3 font-semibold">Ajukan</h2>
+    <div class="panel-section">
+        <h2 class="mb-3 font-semibold text-slate-900">Ajukan</h2>
         <form method="POST" action="{{ route($storeRoute) }}" class="space-y-3">
             @csrf
             <div>
-                <label class="mb-1 block text-xs text-gray-600">Karyawan</label>
-                <select name="employee_id" class="w-full rounded border px-3 py-2 text-sm" required>
+                <label class="mb-1 block text-xs text-slate-600">Karyawan</label>
+                <select name="employee_id" class="dashboard-input" required>
                     <option value="">Pilih</option>
                     @foreach($employees as $employee)
                         <option value="{{ $employee->id }}">{{ $employee->name }}</option>
@@ -34,8 +34,8 @@
                 </select>
             </div>
             <div>
-                <label class="mb-1 block text-xs text-gray-600">Jenis</label>
-                <select name="type" class="w-full rounded border px-3 py-2 text-sm">
+                <label class="mb-1 block text-xs text-slate-600">Jenis</label>
+                <select name="type" class="dashboard-input">
                     <option value="PERMISSION">Izin</option>
                     <option value="SICK">Sakit</option>
                     <option value="LEAVE">Cuti</option>
@@ -43,34 +43,34 @@
             </div>
             <div class="grid grid-cols-2 gap-2">
                 <div>
-                    <label class="mb-1 block text-xs text-gray-600">Mulai</label>
-                    <input type="date" name="start_date" class="w-full rounded border px-3 py-2 text-sm" required>
+                    <label class="mb-1 block text-xs text-slate-600">Mulai</label>
+                    <input type="date" name="start_date" class="dashboard-input" required>
                 </div>
                 <div>
-                    <label class="mb-1 block text-xs text-gray-600">Selesai</label>
-                    <input type="date" name="end_date" class="w-full rounded border px-3 py-2 text-sm" required>
+                    <label class="mb-1 block text-xs text-slate-600">Selesai</label>
+                    <input type="date" name="end_date" class="dashboard-input" required>
                 </div>
             </div>
             <div>
-                <textarea name="reason" rows="3" class="w-full rounded border px-3 py-2 text-sm" placeholder="Alasan / catatan"></textarea>
+                <textarea name="reason" rows="3" class="dashboard-input" placeholder="Alasan / catatan"></textarea>
             </div>
-            <button class="w-full rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white">Simpan Pengajuan</button>
+            <button class="btn-primary w-full">Simpan Pengajuan</button>
         </form>
     </div>
 
-    <div class="rounded-lg border bg-white p-4 xl:col-span-2">
+    <div class="panel-section xl:col-span-2">
         <form method="GET" class="mb-3 grid grid-cols-1 gap-3 md:grid-cols-4">
             <div>
-                <label class="mb-1 block text-xs text-gray-600">Dari</label>
-                <input type="date" name="from" value="{{ $from }}" class="w-full rounded border px-3 py-2 text-sm">
+                <label class="mb-1 block text-xs text-slate-600">Dari</label>
+                <input type="date" name="from" value="{{ $from }}" class="dashboard-input">
             </div>
             <div>
-                <label class="mb-1 block text-xs text-gray-600">Sampai</label>
-                <input type="date" name="to" value="{{ $to }}" class="w-full rounded border px-3 py-2 text-sm">
+                <label class="mb-1 block text-xs text-slate-600">Sampai</label>
+                <input type="date" name="to" value="{{ $to }}" class="dashboard-input">
             </div>
             <div>
-                <label class="mb-1 block text-xs text-gray-600">Status</label>
-                <select name="status" class="w-full rounded border px-3 py-2 text-sm">
+                <label class="mb-1 block text-xs text-slate-600">Status</label>
+                <select name="status" class="dashboard-input">
                     <option value="">Semua</option>
                     <option value="PENDING" @selected($status === 'PENDING')>Pending</option>
                     <option value="APPROVED" @selected($status === 'APPROVED')>Approved</option>
@@ -78,13 +78,14 @@
                 </select>
             </div>
             <div class="flex items-end">
-                <button class="w-full rounded bg-slate-700 px-3 py-2 text-sm text-white">Filter</button>
+                <button class="btn-primary w-full">Filter</button>
             </div>
         </form>
 
-        <div class="overflow-x-auto">
+        <div class="table-shell shadow-none">
+        <div class="overflow-x-auto overflow-y-auto max-h-[65vh]">
             <table class="w-full text-sm">
-                <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+                <thead class="table-head">
                     <tr>
                         <th class="px-3 py-2 text-left">Karyawan</th>
                         <th class="px-3 py-2 text-left">Jenis</th>
@@ -136,8 +137,9 @@
                 </tbody>
             </table>
         </div>
+        </div>
 
-        <div class="mt-3">
+        <div class="mt-4">
             {{ $leaves->links() }}
         </div>
     </div>

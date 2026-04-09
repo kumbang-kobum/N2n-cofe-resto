@@ -8,13 +8,7 @@
         <title>{{ config('app.name', 'n2N Kasir Cafe') }}</title>
         <link rel="icon" type="image/png" href="{{ asset('n2Nlogo.png') }}">
         <link rel="apple-touch-icon" href="{{ asset('n2Nlogo.png') }}">
-        <script>
-            (() => {
-                if (localStorage.getItem('n2n-theme') === 'dark') {
-                    document.documentElement.classList.add('theme-dark');
-                }
-            })();
-        </script>
+        @include('partials.theme-init')
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -85,9 +79,10 @@
                     <div class="mx-auto flex w-full max-w-lg flex-col justify-center">
                         <div class="rounded-[32px] border border-white/10 bg-white/95 px-6 py-6 shadow-[0_28px_80px_rgba(15,23,42,0.18)] backdrop-blur sm:px-8 sm:py-8">
                             <div class="mb-4 flex justify-end">
-                                <button type="button" data-theme-toggle class="inline-flex rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50">
-                                    Dark Mode
-                                </button>
+                                @include('partials.theme-select', [
+                                    'wrapperClass' => 'inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-50',
+                                    'selectClass' => 'rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-700 outline-none',
+                                ])
                             </div>
                             <div class="mb-6 flex items-center gap-3 lg:hidden">
                                 @if (!empty($settings?->logo_path))
@@ -115,26 +110,6 @@
                 </div>
             </div>
         </div>
-        <script>
-            (() => {
-                const buttons = document.querySelectorAll('[data-theme-toggle]');
-                const sync = () => {
-                    const dark = document.documentElement.classList.contains('theme-dark');
-                    buttons.forEach((button) => {
-                        button.textContent = dark ? 'Light Mode' : 'Dark Mode';
-                    });
-                };
-
-                buttons.forEach((button) => {
-                    button.addEventListener('click', () => {
-                        document.documentElement.classList.toggle('theme-dark');
-                        localStorage.setItem('n2n-theme', document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light');
-                        sync();
-                    });
-                });
-
-                sync();
-            })();
-        </script>
+        @include('partials.theme-script')
     </body>
 </html>

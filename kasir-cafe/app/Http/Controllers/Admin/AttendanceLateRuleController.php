@@ -10,7 +10,11 @@ class AttendanceLateRuleController extends Controller
 {
     public function index()
     {
-        $rules = AttendanceLateRule::query()->orderBy('sort_order')->orderBy('min_minutes')->get();
+        $rules = AttendanceLateRule::query()
+            ->orderBy('sort_order')
+            ->orderBy('min_minutes')
+            ->paginate(20)
+            ->withQueryString();
 
         return view('admin.attendance.late_rules.index', compact('rules'));
     }

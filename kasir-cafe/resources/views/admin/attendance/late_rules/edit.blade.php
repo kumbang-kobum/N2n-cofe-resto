@@ -1,5 +1,17 @@
 @extends('layouts.dashboard')
 @section('content')
-<h1 class="mb-4 text-xl font-semibold">Edit Rule Keterlambatan</h1>
-<form method="POST" action="{{ route($routePrefix . '.attendance_late_rules.update', $rule) }}" class="space-y-4 rounded-lg border bg-white p-4 max-w-3xl">@csrf @method('PUT') @include('admin.attendance.late_rules._form')<div class="flex gap-2"><a href="{{ route($routePrefix . '.attendance_late_rules.index') }}" class="rounded border px-3 py-2 text-sm">Batal</a><button type="submit" class="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white">Update</button></div></form>
+<div class="mb-5">
+    <h1 class="text-xl font-semibold text-slate-900">Edit Rule Keterlambatan</h1>
+    <p class="mt-1 text-sm text-slate-600">Perbarui rule agar perhitungan telat tetap konsisten tanpa mengubah histori absensi lama.</p>
+</div>
+
+<form method="POST" action="{{ route($routePrefix . '.attendance_late_rules.update', $rule) }}" class="panel-section max-w-3xl space-y-4">
+    @csrf
+    @method('PUT')
+    @include('admin.attendance.late_rules._form')
+    <div class="flex gap-2">
+        <a href="{{ route($routePrefix . '.attendance_late_rules.index') }}" class="btn-secondary">Batal</a>
+        <button type="submit" class="btn-primary">Update</button>
+    </div>
+</form>
 @endsection

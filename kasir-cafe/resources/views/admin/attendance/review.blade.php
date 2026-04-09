@@ -1,6 +1,12 @@
 @extends('layouts.dashboard')
 
 @section('content')
+@php
+    $isManager = request()->routeIs('manager.*');
+    $indexRoute = $isManager ? 'manager.attendances.index' : 'admin.attendances.index';
+    $reviewUpdateRoute = $isManager ? 'manager.attendances.review_update' : 'admin.attendances.review_update';
+@endphp
+
 <div class="space-y-4">
     <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
@@ -8,7 +14,7 @@
             <p class="text-sm text-slate-600">Antrian ini membantu admin dan manager meninjau selfie absensi yang perlu dicek manual sebelum benar-benar dianggap valid.</p>
         </div>
         <div class="flex gap-2">
-            <a href="{{ route(request()->routeIs('manager.*') ? 'manager.attendances.index' : 'admin.attendances.index') }}" class="inline-flex rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+            <a href="{{ route($indexRoute) }}" class="inline-flex rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                 Kembali ke Absensi
             </a>
             <a href="{{ route('attendance.kiosk') }}" class="inline-flex rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-100">
@@ -126,7 +132,7 @@
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route(request()->routeIs('manager.*') ? 'manager.attendances.review_update' : 'admin.attendances.review_update', $attendance) }}" class="mt-4 space-y-3">
+                <form method="POST" action="{{ route($reviewUpdateRoute, $attendance) }}" class="mt-4 space-y-3">
                     @csrf
                     <input type="hidden" name="verification_score" value="{{ $attendance->verification_score }}">
                     <div>
