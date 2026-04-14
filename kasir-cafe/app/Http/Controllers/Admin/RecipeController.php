@@ -8,8 +8,11 @@ use App\Models\Recipe;
 use App\Models\RecipeLine;
 use App\Models\Item;
 use App\Models\Unit;
+use App\Services\UnitConverter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 class RecipeController extends Controller
 {
@@ -50,7 +53,7 @@ class RecipeController extends Controller
         ));
     }
 
-    public function update(Request $request, int $productId)
+    public function update(Request $request, int $productId, UnitConverter $converter)
     {
         $request->validate([
             'lines' => ['required', 'array', 'min:1'],
@@ -58,6 +61,28 @@ class RecipeController extends Controller
             'lines.*.qty' => ['required', 'numeric', 'gt:0'],
             'lines.*.unit_id' => ['required', 'exists:units,id'],
         ]);
+
+        foreach ($request->input('lines', []) as $index => $line) {
+            $item = Item::find((int) $line['item_id']);
+
+            if (! $item || ! $item->base_unit_id) {
+                throw ValidationException::withMessages([
+                    "lines.{$index}.item_id" => 'Item atau base unit tidak valid.',
+                ]);
+            }
+
+            try {
+                $converter->toBase(
+                    (float) $line['qty'],
+                    (int) $line['unit_id'],
+                    (int) $item->base_unit_id
+                );
+            } catch (RuntimeException $e) {
+                throw ValidationException::withMessages([
+                    "lines.{$index}.unit_id" => 'Konversi unit belum diset untuk item "' . $item->name . '". Pilih unit yang sesuai atau tambahkan konversi satuannya.',
+                ]);
+            }
+        }
 
         DB::transaction(function () use ($request, $productId) {
             $product = Product::findOrFail($productId);

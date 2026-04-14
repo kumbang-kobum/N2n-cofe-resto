@@ -15,6 +15,68 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ReportController extends Controller
 {
+    protected function grossSaleAmount(Sale $sale): float
+    {
+        return (float) ($sale->grand_total ?: ((float) $sale->total - (float) ($sale->discount_amount ?? 0) + (float) ($sale->tax_amount ?? 0)));
+    }
+
+    protected function refundRatio(Sale $sale): float
+    {
+        $subtotal = (float) ($sale->total ?? 0);
+
+        if ($subtotal <= 0) {
+            return 0.0;
+        }
+
+        return max(0.0, min(1.0, (float) ($sale->refund_total ?? 0) / $subtotal));
+    }
+
+    protected function refundedGrossAmount(Sale $sale): float
+    {
+        return $this->grossSaleAmount($sale) * $this->refundRatio($sale);
+    }
+
+    protected function refundedNetSalesAmount(Sale $sale): float
+    {
+        $netSales = max(0, (float) ($sale->total ?? 0) - (float) ($sale->discount_amount ?? 0));
+
+        return $netSales * $this->refundRatio($sale);
+    }
+
+    protected function refundedCogsAmount(Sale $sale): float
+    {
+        return (float) ($sale->cogs_total ?? 0) * $this->refundRatio($sale);
+    }
+
+    protected function netSaleAmount(Sale $sale): float
+    {
+        $gross = $this->grossSaleAmount($sale);
+
+        return max(0, $gross - $this->refundedGrossAmount($sale));
+    }
+
+    protected function netCogsAmount(Sale $sale): float
+    {
+        return max(0, (float) ($sale->cogs_total ?? 0) - $this->refundedCogsAmount($sale));
+    }
+
+    protected function netProfitAmount(Sale $sale): float
+    {
+        $netSalesExTax = max(0, ((float) ($sale->total ?? 0) - (float) ($sale->discount_amount ?? 0)) - $this->refundedNetSalesAmount($sale));
+
+        return $netSalesExTax - $this->netCogsAmount($sale);
+    }
+
+    protected function decorateSaleMetrics(Sale $sale): Sale
+    {
+        $sale->effective_refund_total = $this->refundedGrossAmount($sale);
+        $sale->effective_net_payment_total = $this->netSaleAmount($sale);
+        $sale->effective_cogs_total = $this->netCogsAmount($sale);
+        $sale->effective_profit_gross = $this->netProfitAmount($sale);
+
+        return $sale;
+    }
+
     /**
      * Build query & summary untuk laporan penjualan.
      *
@@ -31,7 +93,7 @@ class ReportController extends Controller
 
         $query = Sale::query()
             ->with('cashier')
-            ->where('status', 'PAID')
+            ->whereIn('status', ['PAID', 'REFUND'])
             ->whereDate('paid_at', '>=', $from)
             ->whereDate('paid_at', '<=', $to);
 
@@ -43,19 +105,27 @@ class ReportController extends Controller
             $query->where('receipt_no', 'like', '%' . $receiptNo . '%');
         }
 
-        $summarySales = (clone $query)->orderByDesc('paid_at')->get();
+        $summarySales = (clone $query)
+            ->orderByDesc('paid_at')
+            ->get()
+            ->map(fn (Sale $sale) => $this->decorateSaleMetrics($sale));
+
         $sales = $paginate
             ? $query->orderByDesc('paid_at')->paginate($limit)->withQueryString()
             : $summarySales;
+
+        if ($paginate) {
+            $sales->getCollection()->transform(fn (Sale $sale) => $this->decorateSaleMetrics($sale));
+        }
 
         $summary = [
             'subtotal' => (float) $summarySales->sum('total'),
             'discount' => (float) $summarySales->sum('discount_amount'),
             'tax'      => (float) $summarySales->sum('tax_amount'),
             'omzet'    => (float) $summarySales->sum('grand_total'),
-            'refund'   => (float) $summarySales->sum('refund_total'),
-            'cogs'     => (float) $summarySales->sum('cogs_total'),
-            'profit'   => (float) $summarySales->sum('profit_gross'),
+            'refund'   => (float) $summarySales->sum('effective_refund_total'),
+            'cogs'     => (float) $summarySales->sum('effective_cogs_total'),
+            'profit'   => (float) $summarySales->sum('effective_profit_gross'),
             'per_payment' => [],
         ];
 
@@ -66,8 +136,7 @@ class ReportController extends Controller
                 $summary['per_payment'][$method] = 0;
             }
 
-            $fallbackTotal = (float) $s->total - (float) ($s->discount_amount ?? 0) + (float) ($s->tax_amount ?? 0);
-            $summary['per_payment'][$method] += (float) ($s->grand_total ?: $fallbackTotal);
+            $summary['per_payment'][$method] += $this->netSaleAmount($s);
         }
 
         return [$sales, $summary, $from, $to, $receiptNo, $limit];
@@ -105,6 +174,9 @@ class ReportController extends Controller
         $row = 2;
         foreach ($sales as $s) {
             $grand = $s->grand_total ?? ($s->total - ($s->discount_amount ?? 0) + ($s->tax_amount ?? 0));
+            $effectiveRefund = $s->effective_refund_total ?? $this->refundedGrossAmount($s);
+            $effectiveCogs = $s->effective_cogs_total ?? $this->netCogsAmount($s);
+            $effectiveProfit = $s->effective_profit_gross ?? $this->netProfitAmount($s);
 
             $sheet->setCellValue('A' . $row, optional($s->paid_at)->format('Y-m-d H:i:s'));
             $sheet->setCellValue('B' . $row, $s->id);
@@ -115,9 +187,9 @@ class ReportController extends Controller
             $sheet->setCellValue('G' . $row, (float) ($s->discount_amount ?? 0));
             $sheet->setCellValue('H' . $row, (float) ($s->tax_amount ?? 0));
             $sheet->setCellValue('I' . $row, (float) $grand);
-            $sheet->setCellValue('J' . $row, (float) ($s->refund_total ?? 0));
-            $sheet->setCellValue('K' . $row, (float) ($s->cogs_total ?? 0));
-            $sheet->setCellValue('L' . $row, (float) ($s->profit_gross ?? 0));
+            $sheet->setCellValue('J' . $row, (float) $effectiveRefund);
+            $sheet->setCellValue('K' . $row, (float) $effectiveCogs);
+            $sheet->setCellValue('L' . $row, (float) $effectiveProfit);
             $row++;
         }
 

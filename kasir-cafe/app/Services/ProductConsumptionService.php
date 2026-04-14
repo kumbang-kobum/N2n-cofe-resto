@@ -6,6 +6,7 @@ use App\Models\Item;
 use App\Models\StockMove;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 class ProductConsumptionService
 {
@@ -41,11 +42,17 @@ class ProductConsumptionService
                     ]);
                 }
 
-                $qtyBase = $this->converter->toBase(
-                    (float) $detail->qty,
-                    (int) $detail->unit_id,
-                    (int) $item->base_unit_id
-                ) * (float) ($line->qty ?? 0);
+                try {
+                    $qtyBase = $this->converter->toBase(
+                        (float) $detail->qty,
+                        (int) $detail->unit_id,
+                        (int) $item->base_unit_id
+                    ) * (float) ($line->qty ?? 0);
+                } catch (RuntimeException $e) {
+                    throw ValidationException::withMessages([
+                        'recipe' => 'Konversi unit belum diset untuk item "' . ($item->name ?? 'Unknown') . '" pada resep menu "' . ($product->name ?? 'Unknown') . '".',
+                    ]);
+                }
 
                 $needs[$item->id] = ($needs[$item->id] ?? 0) + $qtyBase;
             }

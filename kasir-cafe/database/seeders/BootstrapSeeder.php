@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use App\Models\User;
 use App\Models\Unit;
 use App\Models\UnitConversion;
@@ -53,23 +54,29 @@ class BootstrapSeeder extends Seeder
             ['name' => 'Admin', 'password' => Hash::make('password')]
         );
         $admin->syncRoles([$adminRole]);
+        $admin->syncPermissions(config('menu_permissions.defaults.admin', []));
 
         $cashier = User::firstOrCreate(
             ['email' => 'kasir@demo.local'],
             ['name' => 'Kasir', 'password' => Hash::make('password')]
         );
         $cashier->syncRoles([$cashierRole]);
+        $cashier->syncPermissions(config('menu_permissions.defaults.cashier', []));
 
         $manager = User::firstOrCreate(
             ['email' => 'manager@demo.local'],
             ['name' => 'Manager', 'password' => Hash::make('password')]
         );
         $manager->syncRoles([$managerRole]);
+        $manager->syncPermissions(config('menu_permissions.defaults.manager', []));
 
         $staff = User::firstOrCreate(
             ['email' => 'petugas@demo.local'],
             ['name' => 'Petugas', 'password' => Hash::make('password')]
         );
         $staff->syncRoles([$staffRole]);
+        $staff->syncPermissions(config('menu_permissions.defaults.petugas', []));
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }

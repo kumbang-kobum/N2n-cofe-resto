@@ -161,9 +161,9 @@
                             <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->discount_amount ?? 0, 0, ',', '.') }}</td>
                             <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->tax_amount ?? 0, 0, ',', '.') }}</td>
                             <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->grand_total ?? ($s->total - ($s->discount_amount ?? 0) + ($s->tax_amount ?? 0)), 0, ',', '.') }}</td>
-                            <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->refund_total ?? 0, 0, ',', '.') }}</td>
-                            <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->cogs_total ?? 0, 0, ',', '.') }}</td>
-                            <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->profit_gross ?? 0, 0, ',', '.') }}</td>
+                            <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->effective_refund_total ?? ($s->refund_total ?? 0), 0, ',', '.') }}</td>
+                            <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->effective_cogs_total ?? ($s->cogs_total ?? 0), 0, ',', '.') }}</td>
+                            <td class="px-3 py-2 text-right align-top whitespace-nowrap">Rp {{ number_format($s->effective_profit_gross ?? ($s->profit_gross ?? 0), 0, ',', '.') }}</td>
                             <td class="px-3 py-2 text-center align-top">
                                 <a href="{{ route($refundCreateRoute, $s) }}"
                                    class="text-xs font-medium text-blue-600 hover:underline">Refund</a>

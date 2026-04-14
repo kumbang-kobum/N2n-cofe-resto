@@ -10,6 +10,8 @@ use App\Models\SaleRefundLine;
 use App\Services\UnitConverter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 class SaleRefundController extends Controller
 {
@@ -78,11 +80,17 @@ class SaleRefundController extends Controller
                             continue;
                         }
 
-                        $qtyBase = $converter->toBase(
-                            (float) $detail->qty,
-                            (int) $detail->unit_id,
-                            (int) $item->base_unit_id
-                        ) * $qty;
+                        try {
+                            $qtyBase = $converter->toBase(
+                                (float) $detail->qty,
+                                (int) $detail->unit_id,
+                                (int) $item->base_unit_id
+                            ) * $qty;
+                        } catch (RuntimeException $e) {
+                            throw ValidationException::withMessages([
+                                'lines' => 'Konversi unit belum diset untuk item "' . ($item->name ?? 'Unknown') . '" pada resep refund.',
+                            ]);
+                        }
 
                         $itemsReturned[$item->id] = ($itemsReturned[$item->id] ?? 0) + $qtyBase;
                     }
@@ -139,9 +147,13 @@ class SaleRefundController extends Controller
             $refund->save();
 
             $sale->refund_total = (float) $sale->refund_total + $totalRefund;
-            if ($sale->refund_total >= (float) $sale->grand_total) {
-                $sale->status = 'REFUND';
-            }
+            $sale->load('lines.refundLines');
+            $isFullyRefunded = $sale->lines->every(function ($line) {
+                $refundedQty = (float) $line->refundLines->sum('qty');
+
+                return abs($refundedQty - (float) $line->qty) <= 0.000001;
+            });
+            $sale->status = $isFullyRefunded ? 'REFUND' : 'PAID';
             $sale->save();
 
             AuditLog::log(auth()->id(), 'SALE_REFUND', $sale, [
