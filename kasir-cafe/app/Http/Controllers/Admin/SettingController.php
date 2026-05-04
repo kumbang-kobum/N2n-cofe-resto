@@ -23,6 +23,7 @@ class SettingController extends Controller
             'restaurant_address' => ['nullable', 'string', 'max:255'],
             'restaurant_phone' => ['nullable', 'string', 'max:255'],
             'tax_enabled' => ['nullable', 'boolean'],
+            'pos_low_margin_warning_enabled' => ['nullable', 'boolean'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
             'tv_video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg,video/quicktime', 'max:102400'],
             'tv_running_text' => ['nullable', 'string', 'max:1000'],
@@ -43,6 +44,7 @@ class SettingController extends Controller
         $setting->restaurant_address = $data['restaurant_address'] ?? null;
         $setting->restaurant_phone = $data['restaurant_phone'] ?? null;
         $setting->tax_enabled = $request->boolean('tax_enabled');
+        $setting->pos_low_margin_warning_enabled = $request->boolean('pos_low_margin_warning_enabled');
         $setting->tv_running_text = $data['tv_running_text'] ?? null;
         $setting->license_key = $data['license_key'] ?? null;
 

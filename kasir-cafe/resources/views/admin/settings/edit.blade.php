@@ -58,6 +58,18 @@
       </div>
     </div>
 
+    <div class="rounded border border-gray-200 p-3">
+      <label class="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+        <input type="checkbox" name="pos_low_margin_warning_enabled" value="1"
+               @checked(old('pos_low_margin_warning_enabled', $setting->pos_low_margin_warning_enabled ?? false))
+               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+        Aktifkan peringatan harga jual sama / di bawah modal di POS
+      </label>
+      <div class="text-xs text-gray-500 mt-1">
+        Jika aktif, kasir akan melihat popup peringatan saat menambahkan menu yang harga jualnya sama dengan atau lebih rendah dari estimasi modal per porsi. Popup ini tidak membatalkan transaksi.
+      </div>
+    </div>
+
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">Logo (PNG/JPG/WebP)</label>
       <input type="file" name="logo" accept=".png,.jpg,.jpeg,.webp"

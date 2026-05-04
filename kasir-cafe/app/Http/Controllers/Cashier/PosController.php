@@ -16,11 +16,63 @@ use App\Services\ProductConsumptionService;
 use App\Services\UnitConverter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 
 class PosController extends Controller
 {
+    protected function estimateProductCost(Product $product, Collection $batchesByItem, UnitConverter $converter): ?float
+    {
+        $recipe = $product->recipe;
+
+        if (! $recipe || $recipe->lines->isEmpty()) {
+            return null;
+        }
+
+        $cost = 0.0;
+
+        foreach ($recipe->lines as $line) {
+            $item = $line->item;
+            if (! $item || ! $item->base_unit_id) {
+                return null;
+            }
+
+            $needBase = $converter->toBase(
+                (float) $line->qty,
+                (int) $line->unit_id,
+                (int) $item->base_unit_id
+            );
+
+            $remaining = $needBase;
+            $itemCost = 0.0;
+            $batches = $batchesByItem->get($item->id, collect());
+
+            foreach ($batches as $batch) {
+                if ($remaining <= 0.000001) {
+                    break;
+                }
+
+                $available = (float) $batch->qty_on_hand_base;
+                if ($available <= 0) {
+                    continue;
+                }
+
+                $take = min($remaining, $available);
+                $itemCost += $take * (float) $batch->unit_cost_base;
+                $remaining -= $take;
+            }
+
+            if ($remaining > 0.000001) {
+                return null;
+            }
+
+            $cost += $itemCost;
+        }
+
+        return $cost;
+    }
+
     protected function resolveTaxRate(): float
     {
         $setting = Setting::first();
@@ -127,6 +179,9 @@ class PosController extends Controller
             ->orderBy('name')
             ->get();
 
+        $setting = Setting::first();
+        $lowMarginWarningEnabled = (bool) ($setting?->pos_low_margin_warning_enabled ?? false);
+
         // Warning stok kosong (berdasarkan resep untuk 1 porsi)
         $today = now()->toDateString();
         $stockByItem = ItemBatch::query()
@@ -136,6 +191,15 @@ class PosController extends Controller
             ->whereDate('expired_at', '>=', $today)
             ->groupBy('item_id')
             ->pluck('qty', 'item_id');
+
+        $batchesByItem = ItemBatch::query()
+            ->where('status', 'ACTIVE')
+            ->where('qty_on_hand_base', '>', 0)
+            ->whereDate('expired_at', '>=', $today)
+            ->orderBy('expired_at')
+            ->orderBy('received_at')
+            ->get()
+            ->groupBy('item_id');
 
         $converter = app(UnitConverter::class);
 
@@ -177,6 +241,28 @@ class PosController extends Controller
             }
 
             $product->stock_warning = $warning;
+            $product->estimated_cost = null;
+            $product->low_margin_warning = null;
+
+            if ($lowMarginWarningEnabled) {
+                try {
+                    $estimatedCost = $this->estimateProductCost($product, $batchesByItem, $converter);
+                } catch (\Throwable $e) {
+                    $estimatedCost = null;
+                }
+
+                if ($estimatedCost !== null) {
+                    $product->estimated_cost = round($estimatedCost, 2);
+
+                    if ((float) $product->price_default <= $estimatedCost + 0.000001) {
+                        $cmp = abs((float) $product->price_default - $estimatedCost) <= 0.000001
+                            ? 'sama dengan'
+                            : 'lebih rendah dari';
+
+                        $product->low_margin_warning = 'Harga jual menu ini ' . $cmp . ' estimasi modal per porsi.';
+                    }
+                }
+            }
         }
 
         return view('cashier.pos', [
@@ -185,6 +271,7 @@ class PosController extends Controller
             'search'   => $search,
             'openSales' => $openSales,
             'openQuery' => $openQuery,
+            'lowMarginWarningEnabled' => $lowMarginWarningEnabled,
             'taxRate' => $this->resolveTaxRate(),
         ]);
     }

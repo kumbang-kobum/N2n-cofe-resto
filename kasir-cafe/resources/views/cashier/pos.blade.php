@@ -61,6 +61,9 @@
                                         class="product-card flex h-full flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_10px_28px_rgba(15,31,82,0.06)] transition duration-200 hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-[0_18px_34px_rgba(37,87,190,0.12)]"
                                         data-name="{{ Str::lower($p->name) }}"
                                         data-warning="{{ $p->stock_warning ?? '' }}"
+                                        data-margin-warning="{{ $p->low_margin_warning ?? '' }}"
+                                        data-price="{{ (float) $p->price_default }}"
+                                        data-estimated-cost="{{ (float) ($p->estimated_cost ?? 0) }}"
                                     >
                                         @csrf
                                         <input type="hidden" name="sale_id" value="{{ $sale->id }}">
@@ -433,6 +436,29 @@
     @endif
 </div>
 
+<div id="pos-low-margin-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/45 px-4">
+    <div class="w-full max-w-md rounded-[28px] border border-rose-200 bg-white p-6 shadow-[0_24px_60px_rgba(15,23,42,0.35)]">
+        <div class="flex items-start gap-3">
+            <div class="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-lg font-bold text-rose-600">
+                !
+            </div>
+            <div class="min-w-0">
+                <div class="text-lg font-semibold text-rose-700">Peringatan Harga Modal</div>
+                <div class="mt-2 text-sm leading-6 text-slate-700" id="pos-low-margin-modal-message"></div>
+            </div>
+        </div>
+        <div class="mt-5 flex justify-end">
+            <button
+                type="button"
+                id="pos-low-margin-modal-ok"
+                class="rounded-2xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-700"
+            >
+                OK, lanjutkan
+            </button>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -441,6 +467,43 @@
         const forms = document.querySelectorAll('.product-card');
         const discountInput = document.querySelector('input[name="discount_amount"]');
         const summaryEl = document.querySelector('[data-summary]');
+        const lowMarginModal = document.getElementById('pos-low-margin-modal');
+        const lowMarginModalMessage = document.getElementById('pos-low-margin-modal-message');
+        const lowMarginModalOk = document.getElementById('pos-low-margin-modal-ok');
+        let pendingLowMarginForm = null;
+
+        const formatRp = (n) => new Intl.NumberFormat('id-ID').format(n);
+
+        const showLowMarginModal = (form, message) => {
+            if (!lowMarginModal || !lowMarginModalMessage) return;
+
+            pendingLowMarginForm = form;
+            lowMarginModalMessage.textContent = message;
+            lowMarginModal.classList.remove('hidden');
+            lowMarginModal.classList.add('flex');
+        };
+
+        const closeLowMarginModal = () => {
+            if (!lowMarginModal) return;
+
+            lowMarginModal.classList.add('hidden');
+            lowMarginModal.classList.remove('flex');
+        };
+
+        if (lowMarginModalOk) {
+            lowMarginModalOk.addEventListener('click', function () {
+                if (!pendingLowMarginForm) {
+                    closeLowMarginModal();
+                    return;
+                }
+
+                const form = pendingLowMarginForm;
+                pendingLowMarginForm = null;
+                form.dataset.lowMarginWarningShown = '1';
+                closeLowMarginModal();
+                window.setTimeout(() => form.requestSubmit(), 60);
+            });
+        }
 
         if (searchInput) {
             searchInput.addEventListener('input', function () {
@@ -455,6 +518,20 @@
 
         forms.forEach(form => {
             form.addEventListener('submit', function (e) {
+                const marginWarning = (this.dataset.marginWarning || '').trim();
+                if (marginWarning && this.dataset.lowMarginWarningShown !== '1') {
+                    e.preventDefault();
+
+                    const price = parseFloat(this.dataset.price || '0');
+                    const estimatedCost = parseFloat(this.dataset.estimatedCost || '0');
+                    const message = marginWarning + ' Harga jual Rp ' + formatRp(price) + ' • estimasi modal Rp ' + formatRp(estimatedCost) + '. Item tetap akan ditambahkan ke keranjang.';
+
+                    showLowMarginModal(this, message);
+                    return;
+                }
+
+                this.dataset.lowMarginWarningShown = '0';
+
                 const warning = (this.dataset.warning || '').trim();
                 if (!warning) return;
 
@@ -489,8 +566,6 @@
             const totalDisplay = summaryEl.querySelector('[data-total]');
             const paidInput = document.querySelector('input[name="paid_amount"]');
             const changeDisplay = document.getElementById('change-display');
-
-            const formatRp = (n) => new Intl.NumberFormat('id-ID').format(n);
 
             const recalc = () => {
                 let discount = parseFloat(discountInput.value || '0');
