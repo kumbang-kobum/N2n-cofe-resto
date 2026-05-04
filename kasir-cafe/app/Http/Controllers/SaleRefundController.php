@@ -26,6 +26,8 @@ class SaleRefundController extends Controller
 
     public function store(Request $request, Sale $sale, UnitConverter $converter)
     {
+        $this->normalizeNumericInputs($request, ['lines.*.qty']);
+
         $sale->load(['lines.product.recipe.lines.item', 'lines.refundLines']);
 
         abort_if($sale->status === 'DRAFT', 400, 'Hanya transaksi PAID yang bisa di-refund.');

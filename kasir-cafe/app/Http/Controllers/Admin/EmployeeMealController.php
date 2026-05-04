@@ -79,6 +79,8 @@ class EmployeeMealController extends Controller
 
     public function store(Request $request, ProductConsumptionService $consumptionService)
     {
+        $this->normalizeNumericInputs($request, ['lines.*.qty']);
+
         $validated = $request->validate([
             'employee_id' => ['required', 'exists:employees,id'],
             'consumed_at' => ['required', 'date'],

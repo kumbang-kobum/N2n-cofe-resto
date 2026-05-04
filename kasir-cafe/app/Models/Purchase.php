@@ -10,6 +10,7 @@ class Purchase extends Model
 {
     protected $fillable = [
         'received_at',
+        'supplier_name',
         'created_by',
     ];
 

@@ -53,6 +53,8 @@ class ItemController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizeNumericInputs($request, ['min_stock']);
+
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:255'],
             'base_unit_id'  => ['required', 'exists:units,id'],
@@ -80,6 +82,8 @@ class ItemController extends Controller
 
     public function update(Request $request, Item $item)
     {
+        $this->normalizeNumericInputs($request, ['min_stock']);
+
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:255'],
             'base_unit_id'  => ['required', 'exists:units,id'],

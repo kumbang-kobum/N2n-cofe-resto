@@ -42,6 +42,8 @@ class EmployeeController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizeNumericInputs($request, ['meal_allowance_monthly']);
+
         $data = $request->validate([
             'employee_code' => ['nullable', 'string', 'max:50', 'unique:employees,employee_code'],
             'name' => ['required', 'string', 'max:255'],
@@ -87,6 +89,8 @@ class EmployeeController extends Controller
 
     public function update(Request $request, Employee $employee)
     {
+        $this->normalizeNumericInputs($request, ['meal_allowance_monthly']);
+
         $data = $request->validate([
             'employee_code' => ['nullable', 'string', 'max:50', Rule::unique('employees', 'employee_code')->ignore($employee->id)],
             'name' => ['required', 'string', 'max:255'],

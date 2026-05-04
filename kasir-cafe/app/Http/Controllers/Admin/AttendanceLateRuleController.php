@@ -58,6 +58,8 @@ class AttendanceLateRuleController extends Controller
 
     protected function validated(Request $request): array
     {
+        $this->normalizeNumericInputs($request, ['deduction_amount']);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'min_minutes' => ['required', 'integer', 'min:1'],

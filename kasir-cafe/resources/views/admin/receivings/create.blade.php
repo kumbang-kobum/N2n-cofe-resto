@@ -41,8 +41,8 @@
 </form>
 
 <script>
-  const items = @json($items->map(fn($it)=>['id'=>$it->id,'name'=>$it->name,'base'=>$it->baseUnit->symbol]));
-  const units = @json($units->map(fn($u)=>['id'=>$u->id,'symbol'=>$u->symbol]));
+  const items = @json($receivingItems);
+  const units = @json($receivingUnits);
   let idx = 0;
 
   function addLine(){
@@ -86,6 +86,15 @@
         </div>
       </div>
     `;
+    const itemSelect = el.querySelector('[name$="[item_id]"]');
+    const unitSelect = el.querySelector('[name$="[unit_id]"]');
+    const selectBaseUnit = () => {
+      const item = items.find(it => String(it.id) === String(itemSelect.value));
+      if (item && item.base_unit_id) unitSelect.value = String(item.base_unit_id);
+    };
+    itemSelect.addEventListener('change', selectBaseUnit);
+    selectBaseUnit();
+
     document.getElementById('lines').appendChild(el);
     idx++;
   }

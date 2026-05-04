@@ -37,6 +37,8 @@ class AssetIncidentController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizeNumericInputs($request, ['cost']);
+
         $data = $request->validate([
             'asset_id' => ['required', 'exists:assets,id'],
             'type' => ['required', 'in:DAMAGE,DISPOSAL'],
@@ -78,6 +80,8 @@ class AssetIncidentController extends Controller
 
     public function update(Request $request, AssetIncident $asset_incident)
     {
+        $this->normalizeNumericInputs($request, ['cost']);
+
         $data = $request->validate([
             'asset_id' => ['required', 'exists:assets,id'],
             'type' => ['required', 'in:DAMAGE,DISPOSAL'],

@@ -74,6 +74,8 @@ class AttendanceController extends Controller
 
     public function reviewUpdate(Request $request, Attendance $attendance)
     {
+        $this->normalizeNumericInputs($request, ['verification_score']);
+
         $data = $request->validate([
             'verification_status' => ['required', 'in:PHOTO_ONLY,FACE_VERIFIED,REVIEW_REQUIRED'],
             'verification_score' => ['nullable', 'numeric', 'min:0', 'max:100'],
@@ -152,6 +154,8 @@ class AttendanceController extends Controller
 
     public function kioskStore(Request $request)
     {
+        $this->normalizeNumericInputs($request, ['verification_score']);
+
         $data = $request->validate([
             'employee_id' => ['required', 'exists:employees,id'],
             'action_type' => ['required', 'in:CLOCK_IN,CLOCK_OUT'],

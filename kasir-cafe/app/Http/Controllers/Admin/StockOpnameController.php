@@ -12,10 +12,12 @@ use App\Models\StockOpname;
 use App\Models\StockOpnameLine;
 use App\Models\Unit;
 use App\Services\FefoAllocator;
+use App\Services\UnitConverter;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 class StockOpnameController extends Controller
 {
@@ -53,6 +55,8 @@ class StockOpnameController extends Controller
     public function store(Request $request)
     {
         @set_time_limit(300);
+
+        $this->normalizeNumericInputs($request, ['lines.*.physical_qty', 'lines.*.unit_cost']);
 
         $request->validate([
             'counted_at' => ['required', 'date'],
@@ -154,6 +158,8 @@ class StockOpnameController extends Controller
     public function update(Request $request, $id)
     {
         @set_time_limit(300);
+
+        $this->normalizeNumericInputs($request, ['lines.*.physical_qty_base', 'lines.*.unit_cost_base']);
 
         /** @var StockOpname $opname */
         $opname = StockOpname::with(['lines.item'])->findOrFail($id);
@@ -453,15 +459,35 @@ class StockOpnameController extends Controller
                 ]);
             }
 
-            $factor = (float) ($unit->to_base_factor ?? 1);
-            $physicalBase = (float) $line['physical_qty'] * $factor;
+            $physicalQty = (float) $line['physical_qty'];
+            try {
+                $physicalBase = app(UnitConverter::class)->toBase(
+                    $physicalQty,
+                    $unitId,
+                    (int) $item->base_unit_id
+                );
+            } catch (RuntimeException $e) {
+                throw ValidationException::withMessages([
+                    'lines' => ['Konversi unit opname belum diset untuk item "' . $item->name . '". Pilih unit base atau tambahkan konversi satuannya.'],
+                ]);
+            }
             $systemBase = (float) ($systemQtyMap[$itemId] ?? 0);
             $diffBase = $physicalBase - $systemBase;
 
             $unitCostBase = 0.0;
             if (isset($line['unit_cost']) && $line['unit_cost'] !== '') {
                 $inputCost = (float) $line['unit_cost'];
-                $unitCostBase = $factor > 0 ? $inputCost / $factor : 0;
+                try {
+                    $unitCostBase = app(UnitConverter::class)->costToBase(
+                        $inputCost,
+                        $unitId,
+                        (int) $item->base_unit_id
+                    );
+                } catch (RuntimeException $e) {
+                    throw ValidationException::withMessages([
+                        'lines' => ['Konversi harga opname belum diset untuk item "' . $item->name . '". Pilih unit base atau tambahkan konversi satuannya.'],
+                    ]);
+                }
             }
 
             $linesToInsert[] = [
@@ -470,6 +496,7 @@ class StockOpnameController extends Controller
                 'system_qty_base'   => $systemBase,
                 'physical_qty_base' => $physicalBase,
                 'diff_qty_base'     => $diffBase,
+                'physical_qty'      => $physicalQty,
                 'input_unit_id'     => $unitId,
                 'expired_at'        => $line['expired_at'] ?? null,
                 'unit_cost_base'    => $unitCostBase,

@@ -17,9 +17,11 @@ return new class extends Migration
         });
 
         // Support payroll untuk karyawan non-user aplikasi.
-        DB::statement('ALTER TABLE payrolls DROP FOREIGN KEY payrolls_employee_id_foreign');
-        DB::statement('ALTER TABLE payrolls MODIFY employee_id BIGINT UNSIGNED NULL');
-        DB::statement('ALTER TABLE payrolls ADD CONSTRAINT payrolls_employee_id_foreign FOREIGN KEY (employee_id) REFERENCES users(id)');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE payrolls DROP FOREIGN KEY payrolls_employee_id_foreign');
+            DB::statement('ALTER TABLE payrolls MODIFY employee_id BIGINT UNSIGNED NULL');
+            DB::statement('ALTER TABLE payrolls ADD CONSTRAINT payrolls_employee_id_foreign FOREIGN KEY (employee_id) REFERENCES users(id)');
+        }
 
         Schema::table('payrolls', function (Blueprint $table) {
             $table->unique(['period_month', 'employee_master_id'], 'payrolls_period_employee_master_unique');
@@ -61,8 +63,10 @@ return new class extends Migration
             $table->dropConstrainedForeignId('employee_master_id');
         });
 
-        DB::statement('ALTER TABLE payrolls DROP FOREIGN KEY payrolls_employee_id_foreign');
-        DB::statement('ALTER TABLE payrolls MODIFY employee_id BIGINT UNSIGNED NOT NULL');
-        DB::statement('ALTER TABLE payrolls ADD CONSTRAINT payrolls_employee_id_foreign FOREIGN KEY (employee_id) REFERENCES users(id)');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE payrolls DROP FOREIGN KEY payrolls_employee_id_foreign');
+            DB::statement('ALTER TABLE payrolls MODIFY employee_id BIGINT UNSIGNED NOT NULL');
+            DB::statement('ALTER TABLE payrolls ADD CONSTRAINT payrolls_employee_id_foreign FOREIGN KEY (employee_id) REFERENCES users(id)');
+        }
     }
 };

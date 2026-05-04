@@ -222,6 +222,8 @@ class PosController extends Controller
      */
     public function addLine(Request $request)
     {
+        $this->normalizeNumericInputs($request, ['qty']);
+
         $request->validate([
             'sale_id'    => ['required', 'exists:sales,id'],
             'product_id' => ['required', 'exists:products,id'],
@@ -274,6 +276,8 @@ class PosController extends Controller
      */
     public function updateLine(Request $request, SaleLine $line)
     {
+        $this->normalizeNumericInputs($request, ['qty']);
+
         $request->validate([
             'qty' => ['required', 'numeric', 'gt:0'],
         ]);
@@ -365,6 +369,8 @@ class PosController extends Controller
      */
     public function pay(Request $request, ProductConsumptionService $consumptionService)
     {
+        $this->normalizeNumericInputs($request, ['discount_amount', 'paid_amount']);
+
         $request->merge([
             'payment_method' => strtoupper((string) $request->input('payment_method')),
         ]);
@@ -378,66 +384,77 @@ class PosController extends Controller
             'customer_name' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $sale = Sale::with([
-            'lines.product.recipe.lines.item',
-        ])->findOrFail($request->sale_id);
-
-        abort_if(! in_array($sale->status, ['DRAFT', 'OPEN'], true), 400, 'Transaksi sudah dibayar.');
+        $saleId = (int) $request->sale_id;
 
         try {
-            DB::transaction(function () use ($request, $sale, $consumptionService) {
-            $consumption = $consumptionService->consumeProductLines(
-                $sale->lines,
-                'sale',
-                (int) $sale->id,
-                'POS #' . $sale->id
-            );
-            $cogs = (float) $consumption['cogs'];
-            $consumedItems = $consumption['items'];
+            DB::transaction(function () use ($request, $saleId, $consumptionService) {
+                /** @var Sale $sale */
+                $sale = Sale::whereKey($saleId)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-            // Update status & ringkasan keuangan sale
-            $taxRate = $this->resolveTaxRate();
-            $discount = (float) $request->input('discount_amount', 0);
-            if ($discount < 0) {
-                $discount = 0;
-            }
-            if ($discount > (float) $sale->total) {
-                $discount = (float) $sale->total;
-            }
+                abort_if(! in_array($sale->status, ['DRAFT', 'OPEN'], true), 400, 'Transaksi sudah dibayar.');
 
-            $taxBase = max(0, (float) $sale->total - $discount);
-            $taxAmount = round($taxBase * $taxRate, 0);
-            $grandTotal = round($taxBase + $taxAmount, 0);
+                $sale->load('lines.product.recipe.lines.item');
 
-            $paidAmount = (float) $request->input('paid_amount', 0);
-            if ($paidAmount < $grandTotal) {
-                throw ValidationException::withMessages([
-                    'paid_amount' => 'Uang dibayar kurang dari total.',
-                ]);
-            }
-            $changeAmount = $paidAmount - $grandTotal;
+                if ($sale->lines->isEmpty()) {
+                    throw ValidationException::withMessages([
+                        'sale_id' => 'Keranjang masih kosong.',
+                    ]);
+                }
 
-            $sale->table_no = trim((string) $request->input('table_no')) ?: $sale->table_no;
-            $sale->customer_name = trim((string) $request->input('customer_name')) ?: $sale->customer_name;
-            $sale->status         = 'PAID';
-            $sale->payment_method = $request->payment_method;
-            $sale->paid_at        = now();
-            $sale->cogs_total     = $cogs;
-            $sale->discount_amount = $discount;
-            $sale->tax_rate       = $taxRate;
-            $sale->tax_amount     = $taxAmount;
-            $sale->grand_total    = $grandTotal;
-            $sale->paid_amount    = $paidAmount;
-            $sale->change_amount  = $changeAmount;
-        $sale->profit_gross   = max(0, $taxBase) - $cogs;
-        $sale->save();
+                $consumption = $consumptionService->consumeProductLines(
+                    $sale->lines,
+                    'sale',
+                    (int) $sale->id,
+                    'POS #' . $sale->id
+                );
+                $cogs = (float) $consumption['cogs'];
+                $consumedItems = $consumption['items'];
 
-        if (! empty($consumedItems)) {
-            AuditLog::log(auth()->id(), 'STOCK_CONSUMED', $sale, [
-                'sale_id' => $sale->id,
-                'items' => $consumedItems,
-            ]);
-        }
+                // Update status & ringkasan keuangan sale
+                $taxRate = $this->resolveTaxRate();
+                $discount = (float) $request->input('discount_amount', 0);
+                if ($discount < 0) {
+                    $discount = 0;
+                }
+                if ($discount > (float) $sale->total) {
+                    $discount = (float) $sale->total;
+                }
+
+                $taxBase = max(0, (float) $sale->total - $discount);
+                $taxAmount = round($taxBase * $taxRate, 0);
+                $grandTotal = round($taxBase + $taxAmount, 0);
+
+                $paidAmount = (float) $request->input('paid_amount', 0);
+                if ($paidAmount < $grandTotal) {
+                    throw ValidationException::withMessages([
+                        'paid_amount' => 'Uang dibayar kurang dari total.',
+                    ]);
+                }
+                $changeAmount = $paidAmount - $grandTotal;
+
+                $sale->table_no = trim((string) $request->input('table_no')) ?: $sale->table_no;
+                $sale->customer_name = trim((string) $request->input('customer_name')) ?: $sale->customer_name;
+                $sale->status         = 'PAID';
+                $sale->payment_method = $request->payment_method;
+                $sale->paid_at        = now();
+                $sale->cogs_total     = $cogs;
+                $sale->discount_amount = $discount;
+                $sale->tax_rate       = $taxRate;
+                $sale->tax_amount     = $taxAmount;
+                $sale->grand_total    = $grandTotal;
+                $sale->paid_amount    = $paidAmount;
+                $sale->change_amount  = $changeAmount;
+                $sale->profit_gross   = $taxBase - $cogs;
+                $sale->save();
+
+                if (! empty($consumedItems)) {
+                    AuditLog::log(auth()->id(), 'STOCK_CONSUMED', $sale, [
+                        'sale_id' => $sale->id,
+                        'items' => $consumedItems,
+                    ]);
+                }
             });
         } catch (InsufficientStockException $e) {
             $item = Item::with('baseUnit')->find($e->itemId);
@@ -451,7 +468,7 @@ class PosController extends Controller
         }
 
         return redirect()
-            ->route('cashier.pos.receipt', $sale->id)
+            ->route('cashier.pos.receipt', $saleId)
             ->with('status', 'Pembayaran berhasil.');
     }
 

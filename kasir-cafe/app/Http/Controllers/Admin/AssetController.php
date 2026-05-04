@@ -27,6 +27,8 @@ class AssetController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizeNumericInputs($request, ['purchase_cost']);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'category_id' => ['nullable', 'exists:asset_categories,id'],
@@ -54,6 +56,8 @@ class AssetController extends Controller
 
     public function update(Request $request, Asset $asset)
     {
+        $this->normalizeNumericInputs($request, ['purchase_cost']);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'category_id' => ['nullable', 'exists:asset_categories,id'],

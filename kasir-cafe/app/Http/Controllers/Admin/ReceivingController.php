@@ -43,11 +43,29 @@ class ReceivingController extends Controller
 
         $units = Unit::orderBy('symbol')->get();
 
-        return view('admin.receivings.create', compact('items', 'units'));
+        $receivingItems = $items->map(function (Item $item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'base' => optional($item->baseUnit)->symbol ?? '',
+                'base_unit_id' => $item->base_unit_id,
+            ];
+        })->values();
+
+        $receivingUnits = $units->map(function (Unit $unit) {
+            return [
+                'id' => $unit->id,
+                'symbol' => $unit->symbol,
+            ];
+        })->values();
+
+        return view('admin.receivings.create', compact('items', 'units', 'receivingItems', 'receivingUnits'));
     }
 
     public function store(Request $request, UnitConverter $converter)
     {
+        $this->normalizeNumericInputs($request, ['lines.*.qty', 'lines.*.unit_cost']);
+
         $request->validate([
             'received_at' => ['required', 'date'],
             'supplier_name' => ['nullable', 'string'],
@@ -71,6 +89,7 @@ class ReceivingController extends Controller
             foreach ($request->lines as $line) {
                 $item = Item::findOrFail($line['item_id']);
                 $qty = (float) $line['qty'];
+                $unitId = (int) $line['unit_id'];
                 $costMode = (string) ($line['cost_mode'] ?? 'UNIT');
                 $inputCost = (float) $line['unit_cost'];
 
@@ -79,28 +98,35 @@ class ReceivingController extends Controller
                 // TOTAL = total harga untuk qty pada baris ini
                 $unitCost = $costMode === 'TOTAL' ? ($inputCost / max($qty, 0.000001)) : $inputCost;
 
-                // simpan audit purchase_line
-                $pl = PurchaseLine::create([
-                    'purchase_id' => $purchase->id,
-                    'item_id' => $item->id,
-                    'qty' => $qty,
-                    'unit_id' => $line['unit_id'],
-                    'unit_cost' => $unitCost,
-                    'expired_at' => $line['expired_at'],
-                ]);
-
-                // konversi ke base unit
+                // konversi ke base unit untuk stok; qty input tetap disimpan apa adanya
                 $qtyBase = $converter->toBase(
                     $qty,
-                    $line['unit_id'],
-                    $item->base_unit_id
+                    $unitId,
+                    (int) $item->base_unit_id
                 );
 
                 $costBase = $converter->costToBase(
                     $unitCost,
-                    $line['unit_id'],
-                    $item->base_unit_id
+                    $unitId,
+                    (int) $item->base_unit_id
                 );
+
+                // simpan audit purchase_line
+                $purchaseLineData = [
+                    'purchase_id' => $purchase->id,
+                    'item_id' => $item->id,
+                    'qty' => $qty,
+                    'unit_id' => $unitId,
+                    'unit_cost' => $unitCost,
+                    'expired_at' => $line['expired_at'],
+                ];
+                if (DB::getSchemaBuilder()->hasColumn('purchase_lines', 'qty_base')) {
+                    $purchaseLineData['qty_base'] = $qtyBase;
+                }
+                if (DB::getSchemaBuilder()->hasColumn('purchase_lines', 'unit_cost_base')) {
+                    $purchaseLineData['unit_cost_base'] = $costBase;
+                }
+                $pl = PurchaseLine::create($purchaseLineData);
 
                 // cek perubahan harga terakhir (unit_cost_base)
                 $lastCost = ItemBatch::where('item_id', $item->id)

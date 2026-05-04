@@ -55,6 +55,8 @@ class RecipeController extends Controller
 
     public function update(Request $request, int $productId, UnitConverter $converter)
     {
+        $this->normalizeNumericInputs($request, ['lines.*.qty']);
+
         $request->validate([
             'lines' => ['required', 'array', 'min:1'],
             'lines.*.item_id' => ['required', 'exists:items,id'],

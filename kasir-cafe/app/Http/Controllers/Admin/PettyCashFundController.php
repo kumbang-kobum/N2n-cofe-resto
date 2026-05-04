@@ -31,6 +31,8 @@ class PettyCashFundController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizeNumericInputs($request, ['opening_balance']);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'period_start' => ['required', 'date'],
@@ -61,6 +63,8 @@ class PettyCashFundController extends Controller
 
     public function close(Request $request, PettyCashFund $pettyCashFund)
     {
+        $this->normalizeNumericInputs($request, ['returned_amount', 'counted_cash_amount']);
+
         $validated = $request->validate([
             'returned_amount' => ['required', 'numeric', 'min:0'],
             'counted_cash_amount' => ['required', 'numeric', 'min:0'],

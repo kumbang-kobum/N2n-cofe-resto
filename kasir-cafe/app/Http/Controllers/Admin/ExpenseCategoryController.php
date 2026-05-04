@@ -22,6 +22,8 @@ class ExpenseCategoryController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizeNumericInputs($request, ['approval_limit_amount']);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100', 'unique:expense_categories,name'],
             'description' => ['nullable', 'string', 'max:1000'],
@@ -46,6 +48,8 @@ class ExpenseCategoryController extends Controller
 
     public function update(Request $request, ExpenseCategory $expenseCategory)
     {
+        $this->normalizeNumericInputs($request, ['approval_limit_amount']);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100', 'unique:expense_categories,name,' . $expenseCategory->id],
             'description' => ['nullable', 'string', 'max:1000'],

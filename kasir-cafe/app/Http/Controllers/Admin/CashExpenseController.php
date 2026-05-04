@@ -107,6 +107,8 @@ class CashExpenseController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizeNumericInputs($request, ['amount']);
+
         $validated = $request->validate([
             'expense_at' => ['required', 'date'],
             'expense_category_id' => ['nullable', 'exists:expense_categories,id'],

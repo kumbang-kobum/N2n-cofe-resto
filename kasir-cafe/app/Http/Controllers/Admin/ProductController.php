@@ -32,6 +32,8 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizeNumericInputs($request, ['price_default']);
+
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:255'],
             'price_default' => ['required', 'numeric', 'min:0'],
@@ -61,6 +63,8 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
+        $this->normalizeNumericInputs($request, ['price_default']);
+
         $data = $request->validate([
             'name'          => ['required', 'string', 'max:255'],
             'price_default' => ['required', 'numeric', 'min:0'],

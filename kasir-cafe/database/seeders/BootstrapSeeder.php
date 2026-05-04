@@ -22,22 +22,22 @@ class BootstrapSeeder extends Seeder
         $pcs = Unit::firstOrCreate(['symbol' => 'pcs'], ['name' => 'Pieces']);
 
         // === Unit Conversions ===
-        UnitConversion::firstOrCreate(
+        UnitConversion::updateOrCreate(
             ['from_unit_id' => $kg->id, 'to_unit_id' => $g->id],
             ['multiplier' => 1000]
         );
 
-        UnitConversion::firstOrCreate(
+        UnitConversion::updateOrCreate(
             ['from_unit_id' => $g->id, 'to_unit_id' => $kg->id],
             ['multiplier' => 0.001]
         );
 
-        UnitConversion::firstOrCreate(
+        UnitConversion::updateOrCreate(
             ['from_unit_id' => $l->id, 'to_unit_id' => $ml->id],
             ['multiplier' => 1000]
         );
 
-        UnitConversion::firstOrCreate(
+        UnitConversion::updateOrCreate(
             ['from_unit_id' => $ml->id, 'to_unit_id' => $l->id],
             ['multiplier' => 0.001]
         );

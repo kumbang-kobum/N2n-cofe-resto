@@ -7,11 +7,19 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement("ALTER TABLE sales MODIFY COLUMN status ENUM('DRAFT','OPEN','PAID','VOID','REFUND','CANCELLED') NOT NULL DEFAULT 'DRAFT'");
     }
 
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement("ALTER TABLE sales MODIFY COLUMN status ENUM('DRAFT','PAID','VOID','REFUND') NOT NULL DEFAULT 'DRAFT'");
     }
 };

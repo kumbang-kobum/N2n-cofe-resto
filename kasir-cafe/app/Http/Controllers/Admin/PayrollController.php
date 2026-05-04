@@ -97,6 +97,13 @@ class PayrollController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizeNumericInputs($request, [
+            'base_salary',
+            'overtime_amount',
+            'bonus_amount',
+            'deduction_amount',
+        ]);
+
         $validated = $request->validate([
             'period_month' => ['required', 'date_format:Y-m'],
             'employee_master_id' => ['required', 'exists:employees,id'],
