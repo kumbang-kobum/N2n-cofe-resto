@@ -236,6 +236,14 @@
                         </div>
 
                         <div class="mt-4 flex flex-wrap gap-2">
+                            @if ($sale->status === 'OPEN')
+                                <form method="POST" action="{{ route('cashier.pos.new') }}">
+                                    @csrf
+                                    <button type="submit" class="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100">
+                                        Pesanan Baru
+                                    </button>
+                                </form>
+                            @endif
                             @if ($sale->lines->count() > 0)
                                 <form method="POST" action="{{ route('cashier.pos.clear') }}" onsubmit="return confirm('Kosongkan semua item di keranjang?');">
                                     @csrf

@@ -122,11 +122,12 @@ class PosController extends Controller
                 ->find($request->sale_id);
         }
 
-        // Kalau belum ada, ambil DRAFT terakhir milik kasir
+        // Kalau belum ada, ambil DRAFT terakhir milik kasir.
+        // OPEN bill hanya dibuka saat dipilih eksplisit dari daftar Open Bills.
         if (!$sale) {
             $sale = Sale::with('lines.product')
                 ->where('cashier_id', auth()->id())
-                ->whereIn('status', ['DRAFT', 'OPEN'])
+                ->where('status', 'DRAFT')
                 ->orderByDesc('id')
                 ->first();
         }
