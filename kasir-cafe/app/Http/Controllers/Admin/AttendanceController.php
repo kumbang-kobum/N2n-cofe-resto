@@ -9,11 +9,16 @@ use App\Models\Employee;
 use App\Services\AttendanceCalculator;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class AttendanceController extends Controller
 {
+    private const MAX_SELFIE_BYTES = 5 * 1024 * 1024;
+
     public function __construct(private AttendanceCalculator $calculator)
     {
     }
@@ -254,22 +259,55 @@ class AttendanceController extends Controller
         return empty($parts) ? null : implode(' | ', array_unique($parts));
     }
 
-    protected function storeBase64Image(string $value, string $directory): ?string
+    protected function storeBase64Image(string $value, string $directory): string
+    {
+        [$extension, $decoded] = $this->decodeBase64Image($value);
+
+        if (strlen($decoded) > self::MAX_SELFIE_BYTES) {
+            throw ValidationException::withMessages([
+                'selfie_image' => 'Ukuran foto selfie terlalu besar. Ambil ulang selfie lalu coba simpan lagi.',
+            ]);
+        }
+
+        $path = $directory . '/' . now()->format('Y/m') . '/' . Str::uuid() . '.' . $extension;
+
+        try {
+            $stored = Storage::disk('public')->put($path, $decoded);
+        } catch (Throwable $exception) {
+            Log::error('Attendance selfie storage failed.', [
+                'directory' => $directory,
+                'message' => $exception->getMessage(),
+            ]);
+
+            $stored = false;
+        }
+
+        if (! $stored) {
+            throw ValidationException::withMessages([
+                'selfie_image' => 'Foto selfie gagal disimpan. Pastikan folder storage/app/public writable dan public/storage sudah aktif di server.',
+            ]);
+        }
+
+        return $path;
+    }
+
+    protected function decodeBase64Image(string $value): array
     {
         if (! preg_match('/^data:image\\/(png|jpe?g|webp);base64,/', $value, $matches)) {
-            return null;
+            throw ValidationException::withMessages([
+                'selfie_image' => 'Format foto selfie tidak valid. Ambil ulang selfie lalu coba simpan lagi.',
+            ]);
         }
 
         $extension = $matches[1] === 'jpeg' ? 'jpg' : $matches[1];
         $decoded = base64_decode(substr($value, strpos($value, ',') + 1), true);
 
         if ($decoded === false) {
-            return null;
+            throw ValidationException::withMessages([
+                'selfie_image' => 'Foto selfie tidak bisa dibaca. Ambil ulang selfie lalu coba simpan lagi.',
+            ]);
         }
 
-        $path = $directory . '/' . now()->format('Y/m') . '/' . Str::uuid() . '.' . $extension;
-        Storage::disk('public')->put($path, $decoded);
-
-        return $path;
+        return [$extension, $decoded];
     }
 }

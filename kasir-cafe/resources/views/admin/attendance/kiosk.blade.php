@@ -138,6 +138,8 @@
         const placeholder = document.getElementById('camera-placeholder');
         const form = document.getElementById('attendance-kiosk-form');
         const comparisonCanvas = document.createElement('canvas');
+        const selfieMaxSize = 720;
+        const selfieJpegQuality = 0.76;
 
         const setVerificationState = (status, message, tone = 'slate', score = null) => {
             verificationStatusInput.value = status;
@@ -289,11 +291,12 @@
                 return;
             }
 
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            const scale = Math.min(1, selfieMaxSize / Math.max(video.videoWidth, video.videoHeight));
+            canvas.width = Math.round(video.videoWidth * scale);
+            canvas.height = Math.round(video.videoHeight * scale);
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            const dataUrl = canvas.toDataURL('image/jpeg', selfieJpegQuality);
             preview.src = dataUrl;
             hiddenInput.value = dataUrl;
             previewWrap.classList.remove('hidden');
