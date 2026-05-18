@@ -38,6 +38,22 @@
         @error('role')<div class="mt-1 text-xs text-red-600">{{ $message }}</div>@enderror
       </div>
 
+      <div class="rounded-lg border border-amber-100 bg-amber-50 p-4 space-y-3">
+        <div>
+          <h2 class="text-sm font-semibold text-amber-900">Ubah Password</h2>
+          <p class="text-xs text-amber-700">Kosongkan jika tidak ingin mengubah password.</p>
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium text-gray-700">Password Baru</label>
+          <input type="password" name="password" autocomplete="new-password" class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+          @error('password')<div class="mt-1 text-xs text-red-600">{{ $message }}</div>@enderror
+        </div>
+        <div>
+          <label class="mb-1 block text-sm font-medium text-gray-700">Konfirmasi Password Baru</label>
+          <input type="password" name="password_confirmation" autocomplete="new-password" class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+        </div>
+      </div>
+
       <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
         <div class="mb-3 flex items-center justify-between gap-3">
           <div>

@@ -15,9 +15,12 @@ class EmployeeController extends Controller
     public function index(Request $request)
     {
         $q = trim((string) $request->query('q', ''));
+        $statusFilter = $request->query('status', 'active');
 
         $employees = Employee::query()
             ->with(['user', 'defaultShift'])
+            ->when($statusFilter === 'active', fn ($query) => $query->where('is_active', true))
+            ->when($statusFilter === 'inactive', fn ($query) => $query->where('is_active', false))
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($qq) use ($q) {
                     $qq->where('name', 'like', '%' . $q . '%')
@@ -30,7 +33,7 @@ class EmployeeController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('admin.employees.index', compact('employees', 'q'));
+        return view('admin.employees.index', compact('employees', 'q', 'statusFilter'));
     }
 
     public function create()

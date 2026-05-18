@@ -11,14 +11,22 @@ use Spatie\Permission\PermissionRegistrar;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
+        $roleFilter = $request->query('role', '');
+
         $users = User::query()
             ->with(['roles', 'permissions'])
+            ->when($roleFilter !== '', function ($q) use ($roleFilter) {
+                $q->whereHas('roles', fn ($r) => $r->where('name', $roleFilter));
+            })
             ->orderBy('name')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('admin.users.index', compact('users'));
+        $roles = ['admin', 'manager', 'cashier', 'petugas'];
+
+        return view('admin.users.index', compact('users', 'roles', 'roleFilter'));
     }
 
     public function create()
@@ -85,15 +93,21 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'role' => ['required', Rule::in($roles)],
+            'password' => ['nullable', 'string', 'min:6', 'confirmed'],
             'permissions_present' => ['nullable', 'boolean'],
             'permissions' => ['nullable', 'array'],
             'permissions.*' => ['string', Rule::in($this->availablePermissions())],
         ]);
 
-        $user->update([
+        $updateData = [
             'name' => $data['name'],
             'email' => $data['email'],
-        ]);
+        ];
+        if (! empty($data['password'])) {
+            $updateData['password'] = Hash::make($data['password']);
+        }
+
+        $user->update($updateData);
 
         $user->syncRoles([$data['role']]);
         $user->syncPermissions($this->resolvePermissions($request, $data['role']));

@@ -179,10 +179,10 @@
       </button>
 
       <a
-        href="{{ route('admin.products.index') }}"
+        href="{{ route('admin.recipes.index') }}"
         class="px-4 py-2 rounded border text-sm"
       >
-        Kembali
+        Kembali ke Daftar Resep
       </a>
     </div>
   </form>
