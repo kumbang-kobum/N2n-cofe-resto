@@ -35,6 +35,7 @@ return [
         'access.sales_reports' => ['label' => 'Laporan Penjualan', 'description' => 'Melihat laporan penjualan.'],
         'access.top_products_report' => ['label' => 'Top 10 Penjualan', 'description' => 'Melihat produk terlaris.'],
         'access.all_products_report' => ['label' => 'Semua Menu Terjual', 'description' => 'Melihat semua menu yang terjual.'],
+        'access.customers' => ['label' => 'Data Pelanggan', 'description' => 'Melihat daftar pelanggan beserta nomor HP.'],
         'access.finance_report' => ['label' => 'Laporan Keuangan', 'description' => 'Melihat laporan keuangan.'],
         'access.attendance_report' => ['label' => 'Rekap Absensi Bulanan', 'description' => 'Melihat rekap absensi bulanan.'],
         'access.opname_variance_report' => ['label' => 'Laporan Selisih Opname', 'description' => 'Melihat selisih stock opname.'],
@@ -93,6 +94,7 @@ return [
             'access.sales_reports',
             'access.top_products_report',
             'access.all_products_report',
+            'access.customers',
             'access.finance_report',
             'access.attendance_report',
             'access.opname_variance_report',
@@ -115,7 +117,7 @@ return [
 
     'defaults' => [
         'admin' => [
-            'access.admin_dashboard','access.products','access.recipes','access.items','access.units','access.expense_categories','access.users','access.employees','access.attendance_shifts','access.attendance_late_rules','access.settings','access.assets','access.asset_categories','access.asset_locations','access.asset_incidents','access.receivings','access.expired','access.stock','access.stock_opname','access.attendance_schedules','access.attendances','access.attendance_review','access.attendance_kiosk','access.leave_requests','access.employee_meals','access.expenses','access.petty_cash','access.payroll','access.pos','access.sales_reports','access.top_products_report','access.all_products_report','access.finance_report','access.attendance_report','access.opname_variance_report','access.audit_logs','access.profile','action.expenses.approve','action.expenses.reject','action.expenses.delete','action.payroll.approve','action.payroll.mark_paid','action.payroll.delete','action.leave_requests.approve','action.leave_requests.reject','action.petty_cash.close','action.audit_logs.delete'
+            'access.admin_dashboard','access.products','access.recipes','access.items','access.units','access.expense_categories','access.users','access.employees','access.attendance_shifts','access.attendance_late_rules','access.settings','access.assets','access.asset_categories','access.asset_locations','access.asset_incidents','access.receivings','access.expired','access.stock','access.stock_opname','access.attendance_schedules','access.attendances','access.attendance_review','access.attendance_kiosk','access.leave_requests','access.employee_meals','access.expenses','access.petty_cash','access.payroll','access.pos','access.sales_reports','access.top_products_report','access.all_products_report','access.customers','access.finance_report','access.attendance_report','access.opname_variance_report','access.audit_logs','access.profile','action.expenses.approve','action.expenses.reject','action.expenses.delete','action.payroll.approve','action.payroll.mark_paid','action.payroll.delete','action.leave_requests.approve','action.leave_requests.reject','action.petty_cash.close','action.audit_logs.delete'
         ],
         'manager' => [
             'access.manager_dashboard','access.products','access.recipes','access.employees','access.attendance_shifts','access.attendance_late_rules','access.settings','access.assets','access.asset_categories','access.asset_locations','access.asset_incidents','access.attendance_schedules','access.attendances','access.attendance_review','access.attendance_kiosk','access.leave_requests','access.employee_meals','access.expenses','access.payroll','access.sales_reports','access.finance_report','access.attendance_report','access.opname_variance_report','access.audit_logs','access.profile','action.leave_requests.approve','action.leave_requests.reject'
@@ -189,6 +191,7 @@ return [
         'cashier.reports.sales' => 'access.sales_reports',
         'admin.reports.top_products' => 'access.top_products_report',
         'admin.reports.all_products' => 'access.all_products_report',
+        'admin.customers.index' => 'access.customers',
         'admin.reports.finance*' => 'access.finance_report',
         'manager.reports.finance*' => 'access.finance_report',
         'admin.reports.attendance*' => 'access.attendance_report',

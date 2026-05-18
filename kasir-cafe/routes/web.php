@@ -215,6 +215,8 @@ Route::middleware(['auth', 'verified', 'license', 'menu.access'])->group(functio
                 ->name('reports.top_products');
             Route::get('/reports/all-products', [\App\Http\Controllers\Admin\ReportController::class, 'allProducts'])
                 ->name('reports.all_products');
+            Route::get('/customers', [\App\Http\Controllers\Admin\CustomerController::class, 'index'])
+                ->name('customers.index');
             Route::get('/sales/{sale}/receipt', [PosController::class, 'receipt'])->name('sales.receipt');
             Route::get('/reports/stock-opname-diff', [ReportController::class, 'stockOpnameDiff'])->name('reports.opname_variance');
             Route::get('/reports/audit-logs', [AuditLogController::class, 'index'])->name('reports.audit_logs');
