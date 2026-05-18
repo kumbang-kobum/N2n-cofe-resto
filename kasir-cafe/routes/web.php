@@ -217,6 +217,9 @@ Route::middleware(['auth', 'verified', 'license', 'menu.access'])->group(functio
                 ->name('reports.all_products');
             Route::get('/customers', [\App\Http\Controllers\Admin\CustomerController::class, 'index'])
                 ->name('customers.index');
+            Route::get('/refunds', [SaleRefundController::class, 'index'])->name('refunds.index');
+            Route::post('/refunds/{refund}/approve', [SaleRefundController::class, 'approve'])->name('refunds.approve');
+            Route::post('/refunds/{refund}/reject', [SaleRefundController::class, 'reject'])->name('refunds.reject');
             Route::get('/sales/{sale}/receipt', [PosController::class, 'receipt'])->name('sales.receipt');
             Route::get('/reports/stock-opname-diff', [ReportController::class, 'stockOpnameDiff'])->name('reports.opname_variance');
             Route::get('/reports/audit-logs', [AuditLogController::class, 'index'])->name('reports.audit_logs');
@@ -294,6 +297,9 @@ Route::middleware(['auth', 'verified', 'license', 'menu.access'])->group(functio
             Route::get('/reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
             Route::get('/reports/sales/export', [ReportController::class, 'exportSales'])->name('reports.sales.export');
             Route::get('/sales/{sale}/receipt', [PosController::class, 'receipt'])->name('sales.receipt');
+            Route::get('/refunds', [SaleRefundController::class, 'index'])->name('refunds.index');
+            Route::post('/refunds/{refund}/approve', [SaleRefundController::class, 'approve'])->name('refunds.approve');
+            Route::post('/refunds/{refund}/reject', [SaleRefundController::class, 'reject'])->name('refunds.reject');
             Route::get('/reports/stock-opname-diff', [ReportController::class, 'stockOpnameDiff'])->name('reports.opname_variance');
             Route::get('/reports/audit-logs', [AuditLogController::class, 'index'])->name('reports.audit_logs');
             Route::get('/reports/finance', [FinanceReportController::class, 'index'])->name('reports.finance');

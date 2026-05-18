@@ -14,16 +14,31 @@ class SaleRefund extends Model
         'refunded_at',
         'refunded_by',
         'note',
+        'status',
+        'approved_by',
+        'approved_at',
+        'rejection_note',
     ];
 
     protected $casts = [
         'total_refund' => 'float',
-        'refunded_at' => 'datetime',
+        'refunded_at'  => 'datetime',
+        'approved_at'  => 'datetime',
     ];
 
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);
+    }
+
+    public function requestedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'refunded_by');
+    }
+
+    public function approvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     public function lines(): HasMany

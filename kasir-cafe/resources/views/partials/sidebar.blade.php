@@ -87,6 +87,7 @@
                     <span class="text-sm" x-text="open.adminReports ? '−' : '+'"></span>
                 </button>
                 <div x-show="open.adminReports" class="space-y-1">
+                    @can('action.refund.approve')<a href="{{ route('admin.refunds.index') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('admin.refunds.*') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Antrian Refund</a>@endcan
                     @can('access.sales_reports')<a href="{{ route('admin.reports.sales') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('admin.reports.sales') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Laporan Penjualan</a>@endcan
                     @can('access.top_products_report')<a href="{{ route('admin.reports.top_products') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('admin.reports.top_products') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Top 10 Penjualan</a>@endcan
                     @can('access.all_products_report')<a href="{{ route('admin.reports.all_products') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('admin.reports.all_products') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Semua Menu Terjual</a>@endcan
@@ -132,6 +133,7 @@
                     <span class="text-sm" x-text="open.managerReports ? '−' : '+'"></span>
                 </button>
                 <div x-show="open.managerReports" class="space-y-1">
+                    @can('action.refund.approve')<a href="{{ route('manager.refunds.index') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('manager.refunds.*') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Antrian Refund</a>@endcan
                     @can('access.sales_reports')<a href="{{ route('manager.reports.sales') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('manager.reports.sales') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Laporan Penjualan</a>@endcan
                     @can('access.finance_report')<a href="{{ route('manager.reports.finance') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('manager.reports.finance') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Laporan Keuangan</a>@endcan
                     @can('access.attendance_report')<a href="{{ route('manager.reports.attendance') }}" class="flex items-center rounded-xl px-3 py-2.5 transition {{ request()->routeIs('manager.reports.attendance') ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-blue-50 hover:bg-white/10' }}">Rekap Absensi Bulanan</a>@endcan
