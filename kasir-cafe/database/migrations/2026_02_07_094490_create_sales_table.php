@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('sales', function (Blueprint $table) {
     $table->id();
-    $table->enum('status', ['DRAFT','PAID','VOID','REFUND'])->default('DRAFT');
+    $table->enum('status', ['DRAFT','OPEN','PAID','VOID','REFUND','CANCELLED'])->default('DRAFT');
     $table->dateTime('paid_at')->nullable();
     $table->decimal('total', 18, 2)->default(0);
     $table->decimal('cogs_total', 18, 2)->default(0);

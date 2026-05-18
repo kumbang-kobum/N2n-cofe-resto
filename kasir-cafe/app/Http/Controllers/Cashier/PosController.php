@@ -318,6 +318,7 @@ class PosController extends Controller
             'qty'        => ['required', 'numeric', 'gt:0'],
             'table_no' => ['nullable', 'string', 'max:50'],
             'customer_name' => ['nullable', 'string', 'max:100'],
+            'customer_phone' => ['nullable', 'string', 'max:20'],
         ]);
 
         /** @var Sale $sale */
@@ -333,12 +334,14 @@ class PosController extends Controller
         $product = Product::where('is_active', true)
             ->findOrFail($request->product_id);
 
-        // Simpan info meja/nama (jika ada)
+        // Simpan info meja/nama/hp (jika ada)
         $tableNo = trim((string) $request->input('table_no'));
         $customerName = trim((string) $request->input('customer_name'));
-        if ($tableNo !== '' || $customerName !== '') {
+        $customerPhone = trim((string) $request->input('customer_phone'));
+        if ($tableNo !== '' || $customerName !== '' || $customerPhone !== '') {
             $sale->table_no = $tableNo !== '' ? $tableNo : $sale->table_no;
             $sale->customer_name = $customerName !== '' ? $customerName : $sale->customer_name;
+            $sale->customer_phone = $customerPhone !== '' ? $customerPhone : $sale->customer_phone;
             $sale->save();
         }
 
@@ -470,6 +473,7 @@ class PosController extends Controller
             'paid_amount' => ['nullable', 'numeric', 'min:0'],
             'table_no' => ['nullable', 'string', 'max:50'],
             'customer_name' => ['nullable', 'string', 'max:100'],
+            'customer_phone' => ['nullable', 'string', 'max:20'],
         ]);
 
         $saleId = (int) $request->sale_id;
@@ -524,6 +528,7 @@ class PosController extends Controller
 
                 $sale->table_no = trim((string) $request->input('table_no')) ?: $sale->table_no;
                 $sale->customer_name = trim((string) $request->input('customer_name')) ?: $sale->customer_name;
+                $sale->customer_phone = trim((string) $request->input('customer_phone')) ?: $sale->customer_phone;
                 $sale->status         = 'PAID';
                 $sale->payment_method = $request->payment_method;
                 $sale->paid_at        = now();
@@ -569,6 +574,7 @@ class PosController extends Controller
             'sale_id' => ['required', 'exists:sales,id'],
             'table_no' => ['nullable', 'string', 'max:50'],
             'customer_name' => ['nullable', 'string', 'max:100'],
+            'customer_phone' => ['nullable', 'string', 'max:20'],
         ]);
 
         $sale = Sale::where('cashier_id', auth()->id())->findOrFail($data['sale_id']);
@@ -579,6 +585,7 @@ class PosController extends Controller
 
         $sale->table_no = trim((string) ($data['table_no'] ?? '')) ?: null;
         $sale->customer_name = trim((string) ($data['customer_name'] ?? '')) ?: null;
+        $sale->customer_phone = trim((string) ($data['customer_phone'] ?? '')) ?: null;
         $sale->status = 'OPEN';
         $sale->save();
 

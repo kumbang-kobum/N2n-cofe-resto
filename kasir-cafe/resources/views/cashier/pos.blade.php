@@ -70,6 +70,7 @@
                                         <input type="hidden" name="product_id" value="{{ $p->id }}">
                                         <input type="hidden" name="table_no" value="">
                                         <input type="hidden" name="customer_name" value="">
+                                        <input type="hidden" name="customer_phone" value="">
 
                                         <div class="relative h-36 overflow-hidden bg-slate-100">
                                             @if ($p->image_path)
@@ -283,6 +284,17 @@
                                     form="pos-payment-form"
                                     value="{{ $useOld ? old('customer_name') : ($sale->customer_name ?? '') }}"
                                     class="dashboard-input"
+                                >
+                            </div>
+                            <div class="sm:col-span-2 xl:col-span-1 2xl:col-span-2">
+                                <label class="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">No. HP Tamu</label>
+                                <input
+                                    type="tel"
+                                    name="customer_phone"
+                                    form="pos-payment-form"
+                                    value="{{ $useOld ? old('customer_phone') : ($sale->customer_phone ?? '') }}"
+                                    class="dashboard-input"
+                                    placeholder="08xxxxxxxxxx"
                                 >
                             </div>
                         </div>
@@ -554,14 +566,19 @@
             form.addEventListener('submit', function () {
                 const tableInput = document.querySelector('input[name="table_no"][form="pos-payment-form"]');
                 const nameInput = document.querySelector('input[name="customer_name"][form="pos-payment-form"]');
+                const phoneInput = document.querySelector('input[name="customer_phone"][form="pos-payment-form"]');
                 const tableHidden = form.querySelector('input[name="table_no"]');
                 const nameHidden = form.querySelector('input[name="customer_name"]');
+                const phoneHidden = form.querySelector('input[name="customer_phone"]');
 
                 if (tableHidden && tableInput) {
                     tableHidden.value = tableInput.value || '';
                 }
                 if (nameHidden && nameInput) {
                     nameHidden.value = nameInput.value || '';
+                }
+                if (phoneHidden && phoneInput) {
+                    phoneHidden.value = phoneInput.value || '';
                 }
             });
         });

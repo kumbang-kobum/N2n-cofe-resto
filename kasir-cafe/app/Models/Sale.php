@@ -13,6 +13,7 @@ class Sale extends Model
         'receipt_no',
         'table_no',
         'customer_name',
+        'customer_phone',
         'status',
         'cashier_id',
         'total',
