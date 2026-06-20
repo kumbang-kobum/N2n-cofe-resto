@@ -9,7 +9,7 @@
     <div>No. Nota: {{ $sale->receipt_no ?? ('#' . $sale->id) }}</div>
     <div>Tanggal: {{ optional($sale->paid_at)->format('d/m/Y H:i') }}</div>
     @if($sale->table_no || $sale->customer_name)
-        <div>Meja: {{ $sale->table_no ?? '-' }} | Tamu: {{ $sale->customer_name ?? '-' }}</div>
+        <div><strong class="font-bold text-black" style="font-weight: bold;">Meja: {{ $sale->table_no ?? '-' }}</strong> | Tamu: {{ $sale->customer_name ?? '-' }}</div>
     @endif
 </div>
 
@@ -34,7 +34,7 @@
         <tbody>
             @foreach($lines as $line)
                 <tr>
-                    <td class="pr-1 break-words">{{ $line->product->name }}</td>
+                    <td class="pr-1 break-words"><strong class="font-bold text-black" style="font-weight: bold;">{{ $line->product->name }}</strong></td>
                     <td class="text-right">{{ rtrim(rtrim(number_format((float) $line->qty, 3, '.', ''), '0'), '.') }}</td>
                 </tr>
             @endforeach
