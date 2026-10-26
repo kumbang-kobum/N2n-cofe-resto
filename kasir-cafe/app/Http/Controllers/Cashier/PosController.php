@@ -13,6 +13,7 @@ use App\Models\Setting;
 use App\Models\AuditLog;
 use App\Exceptions\InsufficientStockException;
 use App\Services\ProductConsumptionService;
+use App\Services\ThermalReceiptPrinter;
 use App\Services\UnitConverter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -609,5 +610,43 @@ class PosController extends Controller
         }
 
         return view('cashier.receipt', compact('sale'));
+    }
+
+    /**
+     * Cetak nota 80mm langsung ke printer thermal jaringan (ESC/POS via LAN).
+     *
+     * Perangkat kasir hanya memicu; server yang mengirim ke printer, sehingga
+     * tidak bergantung pada AirPrint/Bluetooth (mis. iPad Safari).
+     */
+    public function printReceipt(int $saleId)
+    {
+        $sale = Sale::with(['lines.product', 'cashier'])->findOrFail($saleId);
+
+        if (
+            $sale->cashier_id !== auth()->id()
+            && ! auth()->user()?->hasAnyRole(['admin', 'manager'])
+        ) {
+            abort(403);
+        }
+
+        if (! ThermalReceiptPrinter::isConfigured()) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Printer jaringan belum dikonfigurasi (PRINTER_HOST kosong).',
+            ], 422);
+        }
+
+        try {
+            ThermalReceiptPrinter::fromConfig()->printSale($sale);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'ok' => false,
+                'message' => 'Gagal terhubung ke printer: ' . $e->getMessage(),
+            ], 502);
+        }
+
+        return response()->json(['ok' => true]);
     }
 }

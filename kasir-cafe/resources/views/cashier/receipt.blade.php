@@ -8,10 +8,22 @@
            class="px-3 py-2 rounded-md border text-sm hover:bg-gray-50">
             Kembali
         </a>
-        <button onclick="window.print()"
-                class="px-3 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">
-            Cetak 3 Rangkap
-        </button>
+        @if (\App\Services\ThermalReceiptPrinter::isConfigured())
+            <button id="btn-print-net"
+                    data-url="{{ route('cashier.pos.receipt.print', $sale->id) }}"
+                    class="px-3 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-60">
+                Cetak 3 Rangkap
+            </button>
+            <button onclick="window.print()"
+                    class="px-3 py-2 rounded-md border text-sm hover:bg-gray-50">
+                Cetak via Browser
+            </button>
+        @else
+            <button onclick="window.print()"
+                    class="px-3 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">
+                Cetak 3 Rangkap
+            </button>
+        @endif
     </div>
 </div>
 
@@ -165,5 +177,43 @@
         text-align: right;
     }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+    (function () {
+        const btn = document.getElementById('btn-print-net');
+        if (!btn) return;
+
+        const label = btn.textContent.trim();
+
+        btn.addEventListener('click', async function () {
+            btn.disabled = true;
+            btn.textContent = 'Mencetak…';
+            try {
+                const res = await fetch(btn.dataset.url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.ok) {
+                    btn.textContent = '✓ Terkirim ke printer';
+                    setTimeout(() => { btn.textContent = label; btn.disabled = false; }, 2000);
+                } else {
+                    alert(data.message || 'Gagal mencetak. Coba "Cetak via Browser".');
+                    btn.textContent = label;
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert('Tidak dapat menghubungi server cetak. Coba "Cetak via Browser".');
+                btn.textContent = label;
+                btn.disabled = false;
+            }
+        });
+    })();
+</script>
 @endpush
 @endsection
