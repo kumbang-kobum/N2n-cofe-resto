@@ -98,3 +98,7 @@
 <div class="text-center text-[11px] text-gray-600">
     Terima kasih
 </div>
+<div class="mt-1 text-center text-[11px] leading-tight">
+    <div>Nama Wi-Fi: batrisya2</div>
+    <div>Password: batrisya02</div>
+</div>
